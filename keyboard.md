@@ -269,7 +269,6 @@ in English, so fast typing can't fire them:
 | `,`+`.` | `_` | not a letter pair |
 | `J`+`K` | `Esc` | vim escape; "jk" ~never occurs |
 | `.`+`'` | `:` | not a letter pair; `:` otherwise needs layer 2 + shift |
-| `F`+`J` | `QK_LEAD` (arm leader) | both index home keys - deliberate, and "fj" never occurs |
 | `Q`+`P` | lock keyboard | opposite corners, needs both hands |
 
 None touch the home-row-mod keys, so combos and mods can't interfere. `J`+`K` keeps that true by
@@ -295,12 +294,14 @@ One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` - tap twice 
 
 ### Leader - the tmux prefix
 
-`F`+`J` (combo) arms it; sequences are the if-chain in `leader_end_user()`. Design notes:
+Double-tap left Ctrl arms it; sequences are the if-chain in `leader_end_user()`. Design notes:
 
-- The requested trigger was double-tap `A`. Rejected: a tap dance on a letter cannot emit the
-  letter until the tapping term expires (the shift dance gets away with keydown-register because
-  shift is retractable; a printed `a` is not), so every single `a` would lag. The combo is instant
-  and "fj" doesn't occur in English.
+- Armed by **double-tapping left Ctrl** (`TD_CTL`, built like the shift dance: Ctrl registers on
+  keydown, so holds and chords cost nothing; only a clean tap-tap arms the prefix). Double-tap
+  *letters* were requested twice (`a`, then `f`) and rejected both times: a letter dance either
+  delays every press of that letter or must backspace what it typed, and "ff" appears in
+  off/coffee/different - it would arm mid-word constantly. A modifier gives the double-tap feel
+  for free. An `F`+`J` combo was the interim trigger before this.
 - `LEADER_NO_TIMEOUT` + `LEADER_PER_KEY_TIMING 300`: armed waits forever (tmux behaviour), then
   each sequence key buys 300ms. Core leader has no early-match - the action always fires one
   timeout after the last key. Don't chase that lag; it's structural.

@@ -15,7 +15,8 @@ layers:
   - I
   - O
   - P
-  - BSPC
+  - t: BSPC
+    s: ⇧ Del
   - t: TAB
     h: Nav
   - A
@@ -42,7 +43,8 @@ layers:
   - ','
   - .
   - ''''
-  - LCTL
+  - t: Ctrl
+    h: ×2 Leader
   - LGUI
   - LALT
   - t: SPC
@@ -71,7 +73,8 @@ layers:
   - F9
   - F10
   - DEL
-  - type: held
+  - t: held
+    type: held
   - HOME
   - PGDN
   - PGUP
@@ -143,7 +146,8 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - type: held
+  - t: held
+    type: held
   - t: ▽
     type: trans
   - t: ▽
@@ -246,7 +250,8 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - type: held
+  - t: held
+    type: held
   - t: ▽
     type: trans
   - t: ▽
@@ -527,7 +532,8 @@ layers:
   - ','
   - .
   - ''''
-  - LCTL
+  - t: Ctrl
+    h: ×2 Leader
   - LGUI
   - LALT
   - t: SPC
@@ -542,6 +548,60 @@ layers:
     h: approve
   - t: ✕
     h: interrupt
+  Leader (×2 Ctrl):
+  - ''
+  - t: :wq
+    h: after W
+  - t: :wq
+    h: then Q
+  - t: Email
+    h: types it
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - t: Play
+    h: pause
+  - ''
+  - ''
+  - ''
+  - t: Sleep
+    h: system
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - t: Lock
+    h: keyboard
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - t: Prev
+    h: track
+  - t: Next
+    h: track
+  - t: Mute
+  - ''
+  - ''
+  - ''
+  - t: Ctrl ×2
+    type: held
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
 combos:
 - p:
   - 1
@@ -592,16 +652,16 @@ combos:
   l:
   - Base
 - p:
-  - 16
-  - 19
-  k: Leader
+  - 1
+  - 10
+  k: Lock
   l:
   - Base
   draw_separate: true
 - p:
-  - 1
-  - 10
-  k: Lock
+  - 38
+  - 40
+  k: System
   l:
   - Base
   draw_separate: true

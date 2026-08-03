@@ -42,6 +42,7 @@ parse_config:
     "RM_TOGG": {t: "Backlight", h: "on/off"}
     # --- tap dances and specials ---
     "TD_SFT": {t: "⇧", h: "tap ×2 Caps"}
+    "TD_CTL": {t: "Ctrl", h: "×2 Leader"}
     "TD_MPLY": {t: "Play", h: "×2 next ×3 prev"}
     "QK_GESC": {t: "Esc", s: "~"}
     "QK_LLCK": {t: "Layer", h: "lock"}

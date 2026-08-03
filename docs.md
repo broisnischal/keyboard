@@ -104,13 +104,13 @@ English, so fast typing can't trigger them by accident.
 | `,` + `.` | `_` |
 | `J` + `K` | `Esc` (the vim escape, on the home row) |
 | `.` + `'` | `:` (otherwise needs a layer plus shift) |
-| `F` + `J` | **arm the prefix key** (see below) |
 | `Q` + `P` | **lock the keyboard** (see below) |
 
 ### The prefix key - like tmux's Ctrl-b
 
-Press `F`+`J` together (both index fingers, home position) and the three lamps turn **cyan**: the
-keyboard is armed and waiting for a command, exactly like tmux after its prefix. Then one short
+**Double-tap left `Ctrl`** and the three lamps turn **cyan**: the keyboard is armed and waiting
+for a command, exactly like tmux after its prefix. Ctrl itself is unaffected - it registers the
+instant you press it, so holds and shortcuts feel exactly as before. Then one short
 sequence runs an action:
 
 | Then press | Does |

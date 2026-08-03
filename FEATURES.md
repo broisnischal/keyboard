@@ -34,7 +34,8 @@ own keystrokes (**Rain**).
 
 ## A leader key, like tmux's Ctrl-b
 
-Press `F`+`J` together — the lamps turn cyan, the keyboard is armed and waits. Then one short
+Double-tap left `Ctrl` — the lamps turn cyan, the keyboard is armed and waits. Ctrl still
+registers instantly on every press, so nothing about normal typing or shortcuts changes. Then one short
 sequence runs an action:
 
 `S` sleep the PC · `P`/`N`/`B`/`M` music transport and mute · `L` lock the keyboard ·

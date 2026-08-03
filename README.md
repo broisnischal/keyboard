@@ -25,8 +25,9 @@ the two-key chords; pink cells mark the key you're holding to be on that layer.
 
 What you're looking at (the full tour is [`FEATURES.md`](FEATURES.md)):
 
-- **Leader key** - `F`+`J` together arms a tmux-style prefix (lamps go cyan), then one key runs an
-  action: sleep, music transport, mute, lock, type my email, vim `:wq`
+- **Leader key** - double-tap left `Ctrl` to arm a tmux-style prefix (lamps go cyan), then one
+  key runs an action: sleep, music transport, mute, lock, type my email, vim `:wq` - the drawn
+  Leader layer above is the cheat sheet
 - **Claude Code integration** - the three lamps mirror Claude's state live; `◆ ✓ ✕` focus,
   approve and interrupt it from anywhere
 - **Tri layer** - both space bars together open System, no Fn reach
@@ -42,7 +43,9 @@ Regenerate after a keymap change (config and combo positions live in [`drawings/
 
 ```bash
 qmk c2json --no-cpp -kb epomaker/th40 -km tapdance -o /tmp/th40.json
-keymap -c drawings/config.yaml parse -q /tmp/th40.json -l Base Nav Num System Code WM Git HRM \
+keymap -c drawings/config.yaml parse -q /tmp/th40.json \
+  -l Base Nav Numbers System Code Windows Git "Home-Row Mods" \
+  --virtual-layers "Leader (×2 Ctrl)" \
   | python3 drawings/postprocess.py > drawings/keymap.yaml
 keymap -c drawings/config.yaml draw drawings/keymap.yaml \
   -j qmk/keyboards/epomaker/th40/keyboard.json > drawings/keymap.svg

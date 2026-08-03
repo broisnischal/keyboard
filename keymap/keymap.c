@@ -199,10 +199,12 @@ static bool send_macro(uint16_t keycode) {
 enum tap_dance_index {
     TD_SFT_CAPS,
     TD_MEDIA_TRANSPORT,
+    TD_CTL_LEADER,
 };
 
 #define TD_SFT  TD(TD_SFT_CAPS)
 #define TD_MPLY TD(TD_MEDIA_TRANSPORT)
+#define TD_CTL  TD(TD_CTL_LEADER)
 
 // Register shift on the keydown itself, so shifted typing gains no latency.
 static void td_shift_each_tap(tap_dance_state_t *state, void *user_data) {
@@ -238,9 +240,35 @@ static void td_media_finished(tap_dance_state_t *state, void *user_data) {
     }
 }
 
+// Double-tap Left Ctrl arms the leader. Same construction as the shift dance,
+// so Ctrl registers on the keydown and holds/chords cost nothing. A double-tap
+// LETTER was requested and rejected twice (a, then f): a tap dance on a letter
+// either delays every press or has to backspace what it typed, and "ff" is in
+// off/coffee/different - it would arm the prefix constantly.
+static void td_ctl_each_tap(tap_dance_state_t *state, void *user_data) {
+    register_code(KC_LCTL);
+}
+
+static void td_ctl_each_release(tap_dance_state_t *state, void *user_data) {
+    unregister_code(KC_LCTL);
+}
+
+static void td_ctl_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->count == 2 && !state->pressed) {
+#ifdef LEADER_ENABLE
+        leader_start();
+#endif
+    }
+}
+
+static void td_ctl_reset(tap_dance_state_t *state, void *user_data) {
+    unregister_code(KC_LCTL);
+}
+
 tap_dance_action_t tap_dance_actions[] = {
     [TD_SFT_CAPS]        = ACTION_TAP_DANCE_FN_ADVANCED_WITH_RELEASE(td_shift_each_tap, td_shift_each_release, td_shift_finished, td_shift_reset),
     [TD_MEDIA_TRANSPORT] = ACTION_TAP_DANCE_FN(td_media_finished),
+    [TD_CTL_LEADER]      = ACTION_TAP_DANCE_FN_ADVANCED_WITH_RELEASE(td_ctl_each_tap, td_ctl_each_release, td_ctl_finished, td_ctl_reset),
 };
 
 // The global 130ms is what the LT() keys were tuned to; only the keys that
@@ -248,6 +276,7 @@ tap_dance_action_t tap_dance_actions[] = {
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case TD_SFT:
+        case TD_CTL:
             return 200;
         case HM_A: case HM_S: case HM_D: case HM_F:
         case HM_J: case HM_K: case HM_L:
@@ -638,11 +667,6 @@ const uint16_t PROGMEM combo_lock[]  = {KC_Q, KC_P, COMBO_END}; // opposite corn
 const uint16_t PROGMEM combo_vimesc[] = {KC_J, KC_K, COMBO_END};
 // Colon otherwise needs layer 2 plus shift; ".'" never occurs in prose.
 const uint16_t PROGMEM combo_coln[]   = {KC_DOT, KC_QUOT, COMBO_END};
-// Both index-finger home keys together arm the leader prefix. Plain keycodes
-// only, like jk - the combo doesn't exist on _HRM. (A double-tap letter was
-// considered and rejected: a tap dance can't emit the letter until the term
-// expires, so every single 'a' would lag - see the shift dance notes above.)
-const uint16_t PROGMEM combo_lead[]   = {KC_F, KC_J, COMBO_END};
 
 combo_t key_combos[] = {
     COMBO(combo_esc,    KC_ESC),
@@ -654,16 +678,16 @@ combo_t key_combos[] = {
     COMBO(combo_lock,   QK_SECURE_LOCK),
     COMBO(combo_vimesc, KC_ESC),
     COMBO(combo_coln,   KC_COLN),
-    COMBO(combo_lead,   QK_LEAD),
 };
 
 // ===========================================================================
 // Leader - a tmux-style prefix
 //
-// F+J arms it; the lamps hold cyan while it waits (slot 3, so a host script
-// using that slot is shadowed only for the moment the prefix is armed). Then
-// one short sequence runs an action. EDIT ME: each entry is one line, and an
-// unmatched sequence just fizzles out.
+// Double-tap Left Ctrl arms it (the TD_CTL dance above); the lamps hold cyan
+// while it waits (slot 3, so a host script using that slot is shadowed only
+// for the moment the prefix is armed). Then one short sequence runs an
+// action. EDIT ME: each entry is one line, and an unmatched sequence just
+// fizzles out.
 // ===========================================================================
 
 #ifdef LEADER_ENABLE
@@ -843,7 +867,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
         LT(1,KC_TAB), KC_A        , KC_S        , KC_D        , KC_F        , KC_G        , KC_H        , KC_J        , KC_K        , KC_L        , KC_ENT,
         TD_SFT      , OSL(2)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        KC_LCTL     , KC_LGUI     , KC_LALT     , LT(2,KC_SPC), LT(3,KC_SPC), LT(1,KC_SPC), KC_F21      , KC_F22      , KC_F23
+        TD_CTL      , KC_LGUI     , KC_LALT     , LT(2,KC_SPC), LT(3,KC_SPC), LT(1,KC_SPC), KC_F21      , KC_F22      , KC_F23
     ),
     // Nav / F-keys. Bottom-right cluster reaches the three new layers.
     [_NAV] = LAYOUT_tkl_ansi(
@@ -895,7 +919,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
         LT(1,KC_TAB), HM_A        , HM_S        , HM_D        , HM_F        , KC_G        , KC_H        , HM_J        , HM_K        , HM_L        , KC_ENT,
         TD_SFT      , OSL(2)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        KC_LCTL     , KC_LGUI     , KC_LALT     , LT(2,KC_SPC), LT(3,KC_SPC), LT(1,KC_SPC), KC_F21      , KC_F22      , KC_F23
+        TD_CTL      , KC_LGUI     , KC_LALT     , LT(2,KC_SPC), LT(3,KC_SPC), LT(1,KC_SPC), KC_F21      , KC_F22      , KC_F23
     )
 };
 // clang-format on
