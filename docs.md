@@ -1,4 +1,4 @@
-# TH40 — how to use it
+# TH40 - how to use it
 
 A user guide, not a build guide. For firmware internals, flashing and recovery see
 [`keyboard.md`](keyboard.md).
@@ -31,7 +31,7 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 
 | Layer | Hold | Contains |
 |---|---|---|
-| **1 · Nav** | `Tab` or `Space R` | F1–F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
+| **1 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
 | **2 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ?` |
 | **3 · System** | `Fn` | media, volume, and every setting key |
 | **4 · Code** | `Tab` **+** `◆` | operators and digraphs |
@@ -41,7 +41,7 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 The `/` key next to left Shift is a **one-shot** for layer 2: tap it, then press one key, and you get
 that key's layer-2 meaning without holding anything. Tap it again to cancel.
 
-Layers 4–6 are reached by holding `Tab` first, then holding one of the bottom-right keys — the same
+Layers 4-6 are reached by holding `Tab` first, then holding one of the bottom-right keys - the same
 three keys that are the Claude keys on the base layer.
 
 ---
@@ -70,7 +70,7 @@ out whole.
 
 ### Repeat key
 
-**What it is:** one key that repeats whatever you just typed — letter, word-part, or shortcut.
+**What it is:** one key that repeats whatever you just typed - letter, word-part, or shortcut.
 
 **Use it:** `Tab` + `B`. Or `Fn` + `F`.
 
@@ -80,7 +80,7 @@ Ctrl+Z       then Repeat ×3   →   four undos
 ```
 
 There's also **Alt-Repeat** on `Tab` + `N`, which does the *opposite* of the last key where one
-exists — after `Ctrl+Z` it redoes, after `Page Down` it pages up, after `→` it goes left.
+exists - after `Ctrl+Z` it redoes, after `Page Down` it pages up, after `→` it goes left.
 
 ### Combos
 
@@ -99,7 +99,7 @@ English, so fast typing can't trigger them by accident.
 
 ### One-shot modifiers
 
-**What it is:** tap a modifier, then tap a key — instead of holding both. Easier on the hands, and
+**What it is:** tap a modifier, then tap a key - instead of holding both. Easier on the hands, and
 useful for one-finger use.
 
 **Use it:** `Fn` + one of `/` `Z` `X` `C` = one-shot Shift, Ctrl, Alt, Gui.
@@ -114,7 +114,7 @@ Tap the same one-shot **twice** and it locks on until you tap it a third time.
 
 **What it is:** the keyboard mirrors itself. Press the key where `J` is and you get `F`; the whole
 right half becomes a mirror image of the left. It means you can reach every key on the board with
-one hand — useful when your other hand is holding a coffee, a phone, or a cable.
+one hand - useful when your other hand is holding a coffee, a phone, or a cable.
 
 **Use it:** `Fn` + `S` toggles it. Press again to go back.
 
@@ -123,20 +123,20 @@ normal:   A S D F  G   H  J K L
 mirrored: L K J H  G   F  D S A
 ```
 
-Muscle memory is the catch — your fingers know where letters are, and half of them have moved. It's
+Muscle memory is the catch - your fingers know where letters are, and half of them have moved. It's
 a tool for occasional one-handed stretches, not a way to type all day.
 
-### Home row mods — off by default
+### Home row mods - off by default
 
 **What it is:** holding `A` gives Super, `S` Alt, `D` Ctrl, `F` Shift, mirrored on `J K L`. Tapping
 them still types letters. Your hands never leave home position to reach a modifier.
 
-**They're switched off** because they made typing feel laggy — a mod-tap can't emit the letter until
+**They're switched off** because they made typing feel laggy - a mod-tap can't emit the letter until
 it knows whether you're tapping or holding, so it fires on release rather than press.
 
 **To try them again:** `Fn` + `T`. It swaps the base layer and remembers across reboots. Same key
 switches back. Chordal Hold and Flow Tap are configured, so same-hand rolls type letters normally
-and holds are suppressed entirely while you're mid-flow — but the first key after a pause still
+and holds are suppressed entirely while you're mid-flow - but the first key after a pause still
 resolves late, and that's inherent to the technique.
 
 ### Keyboard lock
@@ -148,7 +148,7 @@ resolves late, and that's inherent to the technique.
 **To unlock:** press the **top-left key**, then type **N → E → E → S** within 5 seconds. Any wrong
 key cancels and re-locks.
 
-Two things worth knowing. It does **not** lock automatically — not at boot, not on idle — unless you
+Two things worth knowing. It does **not** lock automatically - not at boot, not on idle - unless you
 turn that on with `Fn` + `Q`. And it isn't security: the pattern is in the firmware source, and
 anyone who can unplug the board can reflash it. It stops someone walking past your desk.
 
@@ -164,7 +164,7 @@ Home row is the things you type constantly:
 |---|---|
 | `A` `S` `D` `F` | `->` `=>` `!=` `==` |
 | `G` `H` | `&&` `\|\|` |
-| `J` `K` `L` | `()` `[]` `{}` — **both halves, cursor placed between them** |
+| `J` `K` `L` | `()` `[]` `{}` - **both halves, cursor placed between them** |
 
 Bottom row: `~` `` ` `` `\` `|` `<` `>`, then `<=` `>=` `::` and `""`.
 
@@ -174,8 +174,8 @@ Sends the chords omarchy already binds, so there's nothing to configure.
 
 | Row | Does |
 |---|---|
-| `Q`…`P` | switch to workspace 1–10 |
-| `A`…`L` | move the current window to workspace 1–9 |
+| `Q`…`P` | switch to workspace 1-10 |
+| `A`…`L` | move the current window to workspace 1-9 |
 | `Z` `X` | close window, fullscreen |
 | `C` `V` `B` `N` | focus left / down / up / right |
 
@@ -191,7 +191,7 @@ Sends the chords omarchy already binds, so there's nothing to configure.
 | `D` `F` `G` | `lazygit` · `cd ..` · `ls -la` |
 
 **These are guesses at your workflow.** They live in one table at the top of
-`qmk/keyboards/epomaker/th40/keymaps/tapdance/keymap.c` — changing a command is a one-line edit.
+`qmk/keyboards/epomaker/th40/keymaps/tapdance/keymap.c` - changing a command is a one-line edit.
 
 ---
 
@@ -205,8 +205,8 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `W` | turn the Claude lamps on/off |
 | `E` / `R` | lamp brightness down / up |
 | `T` | switch the base layer to the home-row-mod version |
-| `Y` | **Aura** effect — board mirrors the lamps |
-| `U` | **Rain** effect — Matrix rain, seeded by your typing |
+| `Y` | **Aura** effect - board mirrors the lamps |
+| `U` | **Rain** effect - Matrix rain, seeded by your typing |
 | `I` | backlight off (keys dark, lamps stay alive) |
 | `A` | lock the keyboard |
 | `S` | one-handed mode |
@@ -215,7 +215,7 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `G`…`L` | prev / play / next / vol− / vol+ |
 | `/` `Z` `X` `C` | one-shot Shift / Ctrl / Alt / Gui |
 
-Settings reset to defaults after a firmware update — that's the same mechanism that reloads your
+Settings reset to defaults after a firmware update - that's the same mechanism that reloads your
 keymap, so it's expected.
 
 ---
@@ -230,21 +230,21 @@ The lights above the keys mirror what Claude Code is doing.
 | Amber pulse | thinking |
 | Amber chase, left to right | running a tool |
 | **Red blink** | **needs your approval** |
-| Green triple-flash | finished — settles back to green breath |
+| Green triple-flash | finished - settles back to green breath |
 | Red solid | something failed |
 
 Red is reserved. Nothing routine is red, so red in the corner of your eye is always worth looking at.
 
 With the **Aura** effect on (`Fn` + `Y`), the whole keyboard does the same animation at the same
-instant — the board is split into thirds and each third follows the lamp above it.
+instant - the board is split into thirds and each third follows the lamp above it.
 
 ### The Claude keys
 
 | Key | Does |
 |---|---|
 | `◆` | focus the terminal running Claude Code, or launch it |
-| `✓` | send Enter to it — approve a permission prompt |
-| `✕` | send Escape to it — interrupt |
+| `✓` | send Enter to it - approve a permission prompt |
+| `✕` | send Escape to it - interrupt |
 
 `✓` and `✕` find the window themselves, so they work even while you're in the browser.
 
@@ -252,7 +252,7 @@ instant — the board is split into thirds and each third follows the lamp above
 
 ## Using the lamps for your own things
 
-The lamps are a four-slot priority bus. Slot 0 is Claude; slots 1–3 are yours. The highest-priority
+The lamps are a four-slot priority bus. Slot 0 is Claude; slots 1-3 are yours. The highest-priority
 live slot wins.
 
 ```bash
@@ -295,18 +295,18 @@ th40 --help
 
 ## When something seems wrong
 
-**Lamps dark.** Check the backlight isn't off in a way that predates the fix — press `Fn` + `Y` to
+**Lamps dark.** Check the backlight isn't off in a way that predates the fix - press `Fn` + `Y` to
 select Aura. If they're still dark, `th40 selftest` will tell you whether the keyboard is receiving
 anything at all.
 
 **Lamps stuck on a colour.** A script set a bus slot without a TTL. `th40 clear 1` (and 2, 3).
 
-**Lamps don't follow Claude Code.** The hooks live in a plugin that loads at session start — restart
+**Lamps don't follow Claude Code.** The hooks live in a plugin that loads at session start - restart
 Claude Code. `th40 status working` should still work by hand regardless.
 
-**A layer key does nothing.** Layers 4–6 need `Tab` held *first*, then the bottom-right key.
+**A layer key does nothing.** Layers 4-6 need `Tab` held *first*, then the bottom-right key.
 
-**Keyboard completely dead.** You may have locked it — press the top-left key, then type `N E E S`.
+**Keyboard completely dead.** You may have locked it - press the top-left key, then type `N E E S`.
 
 **Typing feels laggy.** Check you haven't switched to the home-row-mod layer with `Fn` + `T`. Press
 it again to go back.

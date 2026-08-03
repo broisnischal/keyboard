@@ -8,10 +8,10 @@ indicator lamps from Claude Code.
 | File | What it is |
 |---|---|
 | `keymap/` | **The actual work.** Symlinked into the QMK tree; this is what git tracks. |
-| `qmk/` | 1.4 GB clone of the fork. **Gitignored** — recreate with `./setup.sh`. |
+| `qmk/` | 1.4 GB clone of the fork. **Gitignored** - recreate with `./setup.sh`. |
 | `keyboard.md` | Build/flash runbook and every hard-won finding. **Read before touching firmware.** |
 | `docs.md` | End-user guide: what each feature is and how to use it. |
-| `plugins/th40/` | Claude Code plugin — the `th40` CLI, `/th40` command, a skill. |
+| `plugins/th40/` | Claude Code plugin - the `th40` CLI, `/th40` command, a skill. |
 | `flash-th40.sh` | Waits for the bootloader, writes, verifies. |
 | `setup.sh` | Rebuilds the environment from a fresh clone. |
 | `TH40_factory_firmware.zip` | Stock firmware, for rolling back. |
@@ -27,7 +27,7 @@ cd qmk && make -j$(nproc) epomaker/th40:tapdance
 ```
 
 **Never edit inside `qmk/`.** `th40.c` owns the `*_user` callbacks, so the keymap overrides the
-`*_kb` variants and calls through. The fork is unmodified and must stay that way — `git -C qmk
+`*_kb` variants and calls through. The fork is unmodified and must stay that way - `git -C qmk
 status` should show only the untracked symlink.
 
 **128 KB is the hard flash ceiling.** Currently ~81 KB. Watch the size line on every build.
@@ -43,7 +43,7 @@ print([len([x for x in re.split(r',(?![^(]*\))', m.group(1)) if x.strip()])
 EOF
 ```
 
-## Things that cost real time — do not rediscover them
+## Things that cost real time - do not rediscover them
 
 - **Upstream QMK has no ES32/FS026 port.** Only `github.com/carlosedp/qmk_firmware` works.
 - **The bootloader is LUFA mass-storage** (`03eb:2045`), not DFU. You copy `FIRMWARE.BIN` onto a
@@ -54,10 +54,10 @@ EOF
 - **QMK raw HID reads exactly 32 bytes.** With hidapi that means writing **33** (report ID + 32). A
   short write makes healthy firmware look completely dead.
 - **VIA replies put the payload at different offsets.** `id_dynamic_keymap_get_keycode` returns the
-  keycode at bytes 4–5; `id_custom_get_value` returns its value at byte **3**. Misreading this once
+  keycode at bytes 4-5; `id_custom_get_value` returns its value at byte **3**. Misreading this once
   produced a completely wrong diagnosis.
 - **`rgb_matrix.c` skips the indicator callback when the effect index is 0.** So disabling the
-  matrix — or selecting `RGB_MATRIX_NONE` — kills the Claude lamps. `CLAUDE_BLACKOUT` exists to be a
+  matrix - or selecting `RGB_MATRIX_NONE` - kills the Claude lamps. `CLAUDE_BLACKOUT` exists to be a
   non-zero effect that renders black.
 - **VIA cannot discover custom effect names.** There is no protocol message for it. Custom effects
   only appear in VIA if the definition JSON lists their indices explicitly.
@@ -98,7 +98,7 @@ The plugin is registered via `.claude-plugin/marketplace.json` here and enabled 
 
 ## Style
 
-The three docs have distinct jobs — keep them that way. `keyboard.md` is for whoever maintains the
+The three docs have distinct jobs - keep them that way. `keyboard.md` is for whoever maintains the
 firmware, `docs.md` is for whoever types on it, this file is for whoever picks up the work.
 
 State what was measured and what was assumed. Several findings above are recorded specifically

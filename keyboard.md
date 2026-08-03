@@ -1,4 +1,4 @@
-# Epomaker TH40 — QMK setup & flashing runbook
+# Epomaker TH40 - QMK setup & flashing runbook
 
 Everything needed to rebuild and reflash this keyboard from scratch.
 Last flashed: **2026-08-03**.
@@ -26,13 +26,13 @@ Combos, no Caps Word. Those are compile-time features, so getting them means bui
 
 ## 2. Firmware source
 
-Upstream QMK does **not** support this board — the ES32/FS026 port lives only in a community fork:
+Upstream QMK does **not** support this board - the ES32/FS026 port lives only in a community fork:
 
 ```
 https://github.com/carlosedp/qmk_firmware        # master; TH40 is on its "tested" list
 ```
 
-Do not use `carlosedp/qmk_firmware_th40` — that's the older, abandoned repo; its own README points
+Do not use `carlosedp/qmk_firmware_th40` - that's the older, abandoned repo; its own README points
 at the one above.
 
 | | |
@@ -42,7 +42,7 @@ at the one above.
 | Keyboard dir | `keyboards/epomaker/th40/` |
 | Our keymap | `keyboards/epomaker/th40/keymaps/tapdance/` |
 
-Fresh clone (only the two ARM submodules are needed — a full `git submodule update` pulls ~4 GB of
+Fresh clone (only the two ARM submodules are needed - a full `git submodule update` pulls ~4 GB of
 things this board never touches):
 
 ```bash
@@ -77,8 +77,8 @@ matter if you ever redo that conversion:
 
 | Layer | Reached by | Contents |
 |---|---|---|
-| 0 `_BASE` | — | alphas, home-row mods, three Claude keys |
-| 1 `_NAV` | hold Tab, or `LT(1,SPC)` | F1–F12, arrows, Home/End/PgUp/PgDn, browser back/fwd, `QK_REP`/`QK_AREP` |
+| 0 `_BASE` | - | alphas, home-row mods, three Claude keys |
+| 1 `_NAV` | hold Tab, or `LT(1,SPC)` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/fwd, `QK_REP`/`QK_AREP` |
 | 2 `_NUM` | `OSL(2)`, or `LT(2,SPC)` | digits, everyday symbols |
 | 3 `_MEDIA` | `LT(3,SPC)` | transport, volume, **and the system/settings keys** |
 | 4 `_CODE` | **layer 1 + bottom-right key 1** | operators, digraphs, paired delimiters |
@@ -89,20 +89,20 @@ The bottom-right cluster is the Claude keys on layer 0 and the layer-reach keys 
 layer 1, so everything "extra" lives under one thumb-adjacent group. Eight dynamic-keymap
 layers exist (`lib/rdmctmzt_common/fs026_eeprom.h`), so there is one spare.
 
-**Layer 4 — code.** Number row is `! @ # $ % ^ & * - +`. Home row is the digraphs you
+**Layer 4 - code.** Number row is `! @ # $ % ^ & * - +`. Home row is the digraphs you
 actually type: `-> => != == && ||` then `() [] {}` which insert both delimiters and put the
 cursor between them. Bottom row is `~ \` \ | < >` plus `<= >= ::` and `""`.
 
-**Layer 5 — Hyprland.** Sends real chords (`SUPER+1..0`, `SUPER+SHIFT+1..9`, `SUPER+arrows`,
+**Layer 5 - Hyprland.** Sends real chords (`SUPER+1..0`, `SUPER+SHIFT+1..9`, `SUPER+arrows`,
 `SUPER+W/F/J/P/C/V`) that omarchy's own bindings already catch, so there is no WM config to
 maintain. Workspace binds use `code:10..19`, i.e. physical keycodes, so the shifted variants
 work correctly.
 
-**Layer 6 — git/shell.** `SEND_STRING` macros. **These strings are guesses at the workflow** —
+**Layer 6 - git/shell.** `SEND_STRING` macros. **These strings are guesses at the workflow** -
 they live in one `send_macro()` table at the top of `keymap.c`; changing a command is a
 one-line edit.
 
-### Layer 3 — media + system
+### Layer 3 - media + system
 
 The old media layer had three empty rows, so the settings keys live there:
 
@@ -118,17 +118,17 @@ Four bytes of `EECONFIG_USER_DATA` hold `lock_on_boot`, `claude_leds`, `led_brig
 top-row keys above write them immediately, so they survive unplugging.
 
 **They do not survive a reflash.** VIA derives its EEPROM magic from `QMK_BUILDDATE`, so every new
-build invalidates the block and `eeconfig_init_user()` restores the defaults — lock off, LEDs on,
+build invalidates the block and `eeconfig_init_user()` restores the defaults - lock off, LEDs on,
 full brightness. That is the same mechanism that reloads your keymap automatically, so it's a
 feature, not a bug, but re-set your preferences after flashing.
 
-### Secure — pattern to unlock
+### Secure - pattern to unlock
 
 **Default is off, deliberately.** QMK's Secure boots `SECURE_LOCKED` *and* re-locks after 60 s idle
 by default. Wired straight to "swallow all keypresses" that is a keyboard which is dead on plug-in
 and dead again every minute you stop typing. So:
 
-- `SECURE_IDLE_TIMEOUT 0` — no auto-lock, ever. Locking is only ever explicit.
+- `SECURE_IDLE_TIMEOUT 0` - no auto-lock, ever. Locking is only ever explicit.
 - The firmware calls `secure_unlock()` at boot **unless** the EEPROM `lock_on_boot` flag is set, and
   that flag ships off. Turn it on with the top-row key only after you've confirmed the pattern.
 
@@ -145,7 +145,7 @@ Pattern is `N → E → E → S` as matrix positions, in `config.h`:
 **Change it.** And be clear-eyed about what it is: the pattern is in the firmware source and anyone
 who can unplug the board can reflash it. It stops a passer-by; it is not security.
 
-### Why the Claude lamps died with the backlight — and the fix
+### Why the Claude lamps died with the backlight - and the fix
 
 `quantum/rgb_matrix/rgb_matrix.c:421`:
 
@@ -159,7 +159,7 @@ case RENDERING:
 ```
 
 Disabling the matrix sets `rgb_current_effect = 0`, and that `if (effect)` skips the indicator
-callback entirely — so the three lamps went out with the key backlight.
+callback entirely - so the three lamps went out with the key backlight.
 
 Note this also rules out the obvious workaround: selecting `RGB_MATRIX_NONE` instead of disabling
 doesn't help, because `RGB_MATRIX_NONE` **is** effect 0.
@@ -170,14 +170,14 @@ and switches to it instead of calling `rgb_matrix_disable()`; the previous mode 
 EEPROM and restored on the next press. `keyboard_post_init_kb()` also force-enables the matrix,
 since indicators render only while it runs.
 
-Effects never touch LEDs 44–46 anyway: they carry `flags = 0`, and `RGB_MATRIX_TEST_LED_FLAGS()`
-skips them. The flip side is that nothing else clears them either — so when there's no Claude state
+Effects never touch LEDs 44-46 anyway: they carry `flags = 0`, and `RGB_MATRIX_TEST_LED_FLAGS()`
+skips them. The flip side is that nothing else clears them either - so when there's no Claude state
 to show, the indicator handler writes them black explicitly, or they'd hold a stale colour forever.
 
 ### The lamp status bus
 
 The lamps are no longer Claude-specific. Four priority slots; the highest-priority live slot owns
-all three lamps. Slot 0 is Claude Code, slots 1–3 are free for anything on the machine.
+all three lamps. Slot 0 is Claude Code, slots 1-3 are free for anything on the machine.
 
 ```bash
 th40 status working                           # slot 0
@@ -188,7 +188,7 @@ th40 selftest                                 # walk every pattern
 ```
 
 Patterns `off solid breath pulse chase blink strobe`; colours by name or `#rrggbb`.
-Give transient alerts a TTL — the firmware expires them locally, so a crashed script can't strand
+Give transient alerts a TTL - the firmware expires them locally, so a crashed script can't strand
 the lamps lit and no follow-up call is needed.
 
 ### Why the colours looked wrong
@@ -197,9 +197,9 @@ Three separate causes, all fixed:
 
 | Cause | Fix |
 |---|---|
-| Colours lighting all three channels read as **white** through the diffuser | saturated hues only — at least one channel at zero |
+| Colours lighting all three channels read as **white** through the diffuser | saturated hues only - at least one channel at zero |
 | A WS2812 green at 255 is perceptually several times brighter than blue, so a "traffic light" of raw 255s has a blinding green and a murky blue | per-channel gain: `R 205 / G 100 / B 255` |
-| PWM is linear, sight is not — a linear breathe spends most of its time near full, which reads as cheap and flickery | gamma ≈ 2.0 on the animation curve |
+| PWM is linear, sight is not - a linear breathe spends most of its time near full, which reads as cheap and flickery | gamma ≈ 2.0 on the animation curve |
 
 **Blue was also just the wrong hue here.** On a diffused indicator it reads dim and cold next to
 green and red, and no amount of gain fixes a hue problem. Working/loading are now **amber**, which
@@ -207,7 +207,7 @@ makes the set a literal traffic light: green = your turn, amber = busy, red = ne
 
 `DONE` was a separate bug entirely: **no hook ever sent it.** `Stop` sent `idle`, so the finish
 state could never fire. `Stop` now sends `done`, which strobes three times and expires to `idle`
-after 2.2 s — finish, then "waiting for you", without the host sending a second message.
+after 2.2 s - finish, then "waiting for you", without the host sending a second message.
 
 ### The Claude Code plugin
 
@@ -217,12 +217,12 @@ Packaged at `/home/nees/key/plugins/th40`, listed by the local marketplace at
 
 | Path | What |
 |---|---|
-| `bin/th40` | the whole CLI — status, bus, scan-rate, selftest |
+| `bin/th40` | the whole CLI - status, bus, scan-rate, selftest |
 | `hooks/hooks.json` | all nine lifecycle hooks, `async` so they never delay a tool call |
 | `commands/th40.md` | `/th40` slash command |
 | `skills/th40-keyboard/SKILL.md` | loads the hard-won facts when working on the keyboard |
 
-The hand-written hooks were **removed from `settings.json`** when the plugin took over — keeping
+The hand-written hooks were **removed from `settings.json`** when the plugin took over - keeping
 both would double-fire, and `Stop` would send `idle` and `done` at once. Plugin hooks load at
 session start, so they take effect after a restart.
 
@@ -232,22 +232,22 @@ session start, so they take effect after a restart.
 
 | Effect | Key | Behaviour |
 |---|---|---|
-| `CLAUDE_BLACKOUT` | `RM_TOGG` | keys dark, lamps alive — the "backlight off" state |
+| `CLAUDE_BLACKOUT` | `RM_TOGG` | keys dark, lamps alive - the "backlight off" state |
 | `CLAUDE_AURA` | layer 3, top row | whole board takes the Claude state colour: breathing while thinking, a band sweeping left-to-right while a tool runs, a hard full-board strobe when permission is needed |
 | `CLAUDE_RAIN` | layer 3, top row | Matrix rain in the Claude state colour, and **every keypress drops a fresh bright head on that column** |
 
 The rain seeds itself from `claude_rain_kick[]`, written by `process_record_kb` with the exact
-matrix column you hit — more precise than going through the hit tracker's pixel coordinates, and it
+matrix column you hit - more precise than going through the hit tracker's pixel coordinates, and it
 costs nothing since that hook already sees every keypress. Column heads advance in 1/16-row units on
 a 28 ms tick, each at its own speed, and the simulation steps only when `params->iter == 0` so it
 runs once per frame rather than once per render block.
 
-State is shared with the effects through `keymaps/tapdance/claude_led.h` — the `.inc` is compiled
+State is shared with the effects through `keymaps/tapdance/claude_led.h` - the `.inc` is compiled
 inside `rgb_matrix.c`, so `claude_state` has to be a real global, not a file-static.
 
 ### EEPROM writes are deferred
 
-Holding a brightness key fires many changes a second, and this board's EEPROM is emulated in flash —
+Holding a brightness key fires many changes a second, and this board's EEPROM is emulated in flash -
 committing each one stalls the matrix scan and burns write cycles. Settings changes now mark a dirty
 flag and `housekeeping_task_kb()` flushes once **750 ms** after the last change.
 
@@ -256,7 +256,7 @@ flag and `housekeeping_task_kb()` flushes once **750 ms** after the last change.
 `caps_word_press_user()` keeps the word alive through `-` and `_` so `SCREAMING_SNAKE_CASE` and
 `CONST-NAMES` survive; anything else ends it.
 
-Combos (`COMBO_TERM 40`). The pairs matter more than the term — each is a digraph that barely occurs
+Combos (`COMBO_TERM 40`). The pairs matter more than the term - each is a digraph that barely occurs
 in English, so fast typing can't fire them:
 
 | Combo | Sends | Why this pair |
@@ -271,10 +271,10 @@ in English, so fast typing can't fire them:
 
 None touch the home-row-mod keys, so combos and mods can't interfere.
 
-One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` — tap twice to lock a mod on.
+One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` - tap twice to lock a mod on.
 
 `hand_swap_config` mirrors **each row across its own centre**, not a blanket `11 - col`: the rows
-have different key spans on this board (row 1 is cols 1–11, row 2 is cols 0–10, row 4 is sparse), so
+have different key spans on this board (row 1 is cols 1-11, row 2 is cols 0-10, row 4 is sparse), so
 a uniform mirror would map several keys onto holes.
 
 ### Home row mods (GACS)
@@ -285,7 +285,7 @@ rather than infuriating:
 | Setting | Why |
 |---|---|
 | `CHORDAL_HOLD` | Same-hand chords settle as **taps**, so rolling `df` types "df" instead of firing Ctrl. Handedness comes from `chordal_hold_layout` in `keymap.c`; the three thumbs are `'*'` so they chord with either hand. |
-| `FLOW_TAP_TERM 150` | While you're actually typing, holds are disabled outright — **no home-row-mod latency mid-word**. Mods only engage after a pause. |
+| `FLOW_TAP_TERM 150` | While you're actually typing, holds are disabled outright - **no home-row-mod latency mid-word**. Mods only engage after a pause. |
 | `PERMISSIVE_HOLD` | Opposite-hand mods engage without waiting out the tapping term. Safe here because Chordal Hold already guards same-hand rolls. |
 | `QUICK_TAP_TERM 0` | Holding `A` after tapping it gives GUI, not "aaaa". Key repeat moved to `QK_REP`. |
 
@@ -296,7 +296,7 @@ seven mod keys and **200 ms** for the shift dance, via `get_tapping_term()`.
 `LT(2,KC_SPC)` as a typing key and would swallow the space-layers whenever you reached for one
 straight after a letter. The override exempts all layer-taps.
 
-Want mods to engage even harder? Add `#define HOLD_ON_OTHER_KEY_PRESS` — safe alongside
+Want mods to engage even harder? Add `#define HOLD_ON_OTHER_KEY_PRESS` - safe alongside
 Chordal Hold, at the cost of more misfires on fast opposite-hand rolls.
 
 ### Typing latency: what was already optimal
@@ -305,7 +305,7 @@ Worth recording so it isn't "optimised" again pointlessly:
 
 | | State | Verdict |
 |---|---|---|
-| Debounce algorithm | `asym_eager_defer_pk` | **Already zero added press latency** — eager press fires on the first edge; only the release is deferred. This is also the correct anti-chatter design, so raising `DEBOUNCE` would add latency and fix nothing. |
+| Debounce algorithm | `asym_eager_defer_pk` | **Already zero added press latency** - eager press fires on the first edge; only the release is deferred. This is also the correct anti-chatter design, so raising `DEBOUNCE` would add latency and fix nothing. |
 | USB poll rate | `bInterval 1` = 1000 Hz | Already maxed (confirmed in the descriptors) |
 | MCU idle | `CORTEX_ENABLE_WFI_IDLE FALSE` | Already disabled, no wake latency |
 
@@ -318,7 +318,7 @@ th40-claude-status scan-rate      # -> "N matrix scans/sec"
 
 **Measured 2026-08-03: 3083 scans/sec** (0.32 ms per scan) with RGB running. Full input latency
 is therefore ~0.16 ms scan + 0 ms debounce + ~0.5 ms USB = **~0.7 ms average, ~1.3 ms worst case**,
-which is the floor for USB HID. There is no latency here left to reclaim — don't go looking.
+which is the floor for USB HID. There is no latency here left to reclaim - don't go looking.
 
 If it ever drops below ~1000/s, the knobs are `RGB_MATRIX_LED_FLUSH_LIMIT` and
 `RGB_MATRIX_LED_PROCESS_LIMIT` in the keyboard's `config.h`. Compare against RGB off (`RM_TOGG`)
@@ -326,7 +326,7 @@ to isolate the lighting cost.
 
 ### Tap dance: double-tap shift → Caps Lock
 
-Lives on left shift (matrix `3,0`) on layers 0–2. Layer 3 leaves it transparent.
+Lives on left shift (matrix `3,0`) on layers 0-2. Layer 3 leaves it transparent.
 
 | Action | Result |
 |---|---|
@@ -345,7 +345,7 @@ it waits out the tapping term before shift fires, which wrecks fast typing. Inst
 Typing `Shift+H` can't false-trigger Caps: the letter's keypress interrupts the dance, which
 finishes it at `count == 1` and resets on release, so the next shift press starts a fresh dance.
 
-Tapping term is **130 ms globally** (the board default — your `LT(1,KC_TAB)`, `OSL(2)` and the three
+Tapping term is **130 ms globally** (the board default - your `LT(1,KC_TAB)`, `OSL(2)` and the three
 `LT(n,KC_SPC)` spaces are tuned to it) with a **200 ms** per-key override for the tap dance only, so
 the double tap is comfortable without loosening the layer taps. That's `TAPPING_TERM_PER_KEY` in
 `keymaps/tapdance/config.h` plus `get_tapping_term()` in `keymap.c`.
@@ -360,7 +360,7 @@ TAP_DANCE_ENABLE = yes
 
 ### Known quirk in the current layout
 
-The **bottom-right three keys** (the Alt / Menu / Ctrl positions right of the third space —
+The **bottom-right three keys** (the Alt / Menu / Ctrl positions right of the third space -
 matrix `4,8` `4,9` `4,10`) are `KC_NO` on layer 0, i.e. dead. That came straight from the VIA
 export; it was carried over faithfully rather than second-guessed. Change it in `keymap.c` and
 rebuild if it wasn't intentional.
@@ -376,7 +376,7 @@ make -j$(nproc) epomaker/th40:tapdance
 
 Output: `/home/nees/key/qmk/.build/epomaker_th40_tapdance.bin` (also copied to the repo root).
 
-Watch the size line — **128 KB is the hard ceiling**. Current build is ~71 KB, so there's plenty of
+Watch the size line - **128 KB is the hard ceiling**. Current build is ~71 KB, so there's plenty of
 room for Combos, Caps Word, etc.
 
 ---
@@ -389,28 +389,28 @@ room for Combos, Caps Word, etc.
 
 1. Back switch → **wired/USB** position
 2. **Unplug** the cable
-3. **Hold the top-left key** (matrix `0,0` — labelled Esc, mapped to `QK_GESC`)
+3. **Hold the top-left key** (matrix `0,0` - labelled Esc, mapped to `QK_GESC`)
 4. **Plug the cable back in** while holding, release after ~2 s
 
 There's also a reset button on the back of the PCB, but that means opening the case.
 
-**There is currently no working software method — the physical sequence above is required.**
+**There is currently no working software method - the physical sequence above is required.**
 Three things were tried, all documented here so they aren't re-attempted blindly:
 
 | Attempt | Result |
 |---|---|
-| VIA `id_bootloader_jump` (`0x0B`) on stock firmware | `ff` — Epomaker stripped the handler |
-| VIA `id_bootloader_jump` on our QMK build | `ff` — this fork's `via.c` never implements it (`grep bootloader quantum/via.c` returns nothing) |
+| VIA `id_bootloader_jump` (`0x0B`) on stock firmware | `ff` - Epomaker stripped the handler |
+| VIA `id_bootloader_jump` on our QMK build | `ff` - this fork's `via.c` never implements it (`grep bootloader quantum/via.c` returns nothing) |
 | Our own `0xC1 0xB0` → `bootloader_jump()` | Board **reboots but re-enters the application**, not the bootloader |
 
 The third is implemented and still in the keymap (`CLAUDE_SUB_BOOTLOADER`, chosen far outside the
 `0..6` status range so a stray LED update can never reboot the board). It is *not* wired into
-`flash-th40.sh` by default — run with `TH40_TRY_SOFT_JUMP=1` to exercise it.
+`flash-th40.sh` by default - run with `TH40_TRY_SOFT_JUMP=1` to exercise it.
 
 **Next thing to try:** the vendor's `bootloader_jump()` in `lib/rdmctmzt_common/user_system.c` spins
 on `Spi_Send_Recv_Flg` / `ES_SPI_ACK_IO` / `Reset_Save_Flash` before remapping flash to boot. We call
 it from `via_command_kb()`, which runs in the USB callback context, where those flags likely never
-settle — so it times out after 36000 iterations and resets *without* the remap. Deferring the call to
+settle - so it times out after 36000 iterations and resets *without* the remap. Deferring the call to
 the main loop (set a flag in `via_command_kb()`, act on it in a `housekeeping_task_kb()` override
 that still calls `housekeeping_task_user()`) is the standard fix for exactly this class of problem.
 
@@ -421,7 +421,7 @@ lsusb | grep 03eb:2045          # -> "Atmel Corp. LUFA Mass Storage Demo Applica
 lsblk -o NAME,SIZE,FSTYPE,MODEL # -> sda, ~106K, vfat, "RDMCTMZT DFU"
 ```
 
-It is **mass storage, not DFU** — `dfu-util` will never see it, despite the "RDMCTMZT DFU" product
+It is **mass storage, not DFU** - `dfu-util` will never see it, despite the "RDMCTMZT DFU" product
 string. QMK Toolbox calls this bootloader class "LUFA MS".
 
 ### 5c. Write the firmware
@@ -433,7 +433,7 @@ sync
 udisksctl unmount -b /dev/sda
 ```
 
-The board flashes on write and reboots itself — errors from `sync`/`unmount` at that point are
+The board flashes on write and reboots itself - errors from `sync`/`unmount` at that point are
 normal, not a failure. Confirm the block device is the keyboard before writing; `/dev/sda` is only
 correct because this machine's real disk is NVMe.
 
@@ -441,7 +441,7 @@ Or use the helper: `./flash-th40.sh`
 
 ### 5d. Verify the right firmware is running
 
-Don't trust the reboot — check the USB identity, which comes from the firmware itself:
+Don't trust the reboot - check the USB identity, which comes from the firmware itself:
 
 ```bash
 lsusb -d 36b0:304e -v 2>/dev/null | grep -E "bcdDevice|iManufacturer"
@@ -459,7 +459,7 @@ lsusb -d 36b0:304e -v 2>/dev/null | grep -E "bcdDevice|iManufacturer"
 `dynamic_keymap_reset()` reloads it from the compiled one automatically.
 
 The corollary: **anything remapped in the VIA app is wiped by the next flash.** Compile changes into
-`keymap.c` rather than clicking them into VIA. And don't rewrite the shift key in VIA at all — that
+`keymap.c` rather than clicking them into VIA. And don't rewrite the shift key in VIA at all - that
 replaces the tap dance with a plain keycode.
 
 ---
@@ -511,7 +511,7 @@ print(h.read(32,1000)[:3].hex(' '))"     # -> 01 00 0d  (VIA protocol 13)
 ## 8. Claude Code status LEDs
 
 The three lamps above the key grid (LEDs **44 / 45 / 46**) mirror what Claude Code is doing. They
-sit outside the key matrix with `flags = 0`, so RGB animations skip them — which is exactly why
+sit outside the key matrix with `flags = 0`, so RGB animations skip them - which is exactly why
 they're free to repurpose.
 
 | State | LEDs | Fired by |
@@ -532,14 +532,14 @@ strand the lights.
 | | |
 |---|---|
 | Firmware | `via_command_kb()` + `rgb_matrix_indicators_advanced_user()` in `keymaps/tapdance/keymap.c` |
-| Wire protocol | raw HID, `[0xC1, state]` — command `0xC1` is outside VIA's `0x01..0x15` range |
+| Wire protocol | raw HID, `[0xC1, state]` - command `0xC1` is outside VIA's `0x01..0x15` range |
 | Host sender | `~/.local/bin/th40-claude-status <state>` |
 | Hooks | `~/.claude/settings.json`, all `async: true` so an LED update never delays a tool call |
 
 `th40.c` needed a one-line patch for this: its `rgb_matrix_indicators_advanced_user` was a strong
 symbol, so a keymap couldn't override it. It's now `__attribute__((weak))`, and our version calls
 `kb_rgb_matrix_indicators_common()` first to keep battery/mode/caps feedback. **A `git pull` in the
-fork will revert that** — reapply it if the LEDs stop responding after an update.
+fork will revert that** - reapply it if the LEDs stop responding after an update.
 
 Manual test, independent of Claude Code:
 
@@ -558,8 +558,8 @@ bound in `~/.config/hypr/bindings.conf` to `~/.local/bin/claude-key`:
 | Key | Action |
 |---|---|
 | F21 | focus the terminal running Claude Code, or launch one |
-| F22 | send Return to it — accept a permission prompt |
-| F23 | send Escape to it — interrupt |
+| F22 | send Return to it - accept a permission prompt |
+| F23 | send Escape to it - interrupt |
 
 `claude-key` locates the window with `hyprctl clients -j`, preferring an `Alacritty` window whose
 title matches `claude` and falling back to any terminal, so approve/interrupt work from the browser
@@ -571,7 +571,7 @@ too. If you switch terminals, change `TERM_CLASS` at the top of that script.
 
 `TAP_DANCE_ENABLE` is already on, and there's ~56 KB of flash headroom. Worth considering:
 
-- `CAPS_WORD_ENABLE` — auto-shifts one word, often what people actually want from double-tap shift
-- `COMBO_ENABLE` — chords, which suit a 40% well
-- Wire `done` / `error` to a hook — `PostToolUseFailure` is the obvious home for `error`
+- `CAPS_WORD_ENABLE` - auto-shifts one word, often what people actually want from double-tap shift
+- `COMBO_ENABLE` - chords, which suit a 40% well
+- Wire `done` / `error` to a hook - `PostToolUseFailure` is the obvious home for `error`
 - More dances (the code is written generically; adding one is an enum entry plus a `tap_dance_actions[]` row)

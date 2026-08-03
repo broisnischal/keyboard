@@ -6,7 +6,7 @@ description: Use when working on the Epomaker TH40 keyboard - building or flashi
 # Epomaker TH40
 
 The full runbook is `/home/nees/key/keyboard.md`. **Read it before changing firmware** rather than
-re-deriving anything — it records several findings that cost real time to discover.
+re-deriving anything - it records several findings that cost real time to discover.
 
 ## Facts worth not rediscovering
 
@@ -30,7 +30,7 @@ cd /home/nees/key/qmk && make -j$(nproc) epomaker/th40:tapdance
 
 Watch the size line: **128 KB is the hard ceiling.**
 
-Verify the right firmware is running — this comes from the firmware itself, so it is the only
+Verify the right firmware is running - this comes from the firmware itself, so it is the only
 trustworthy check:
 
 ```bash
@@ -39,7 +39,7 @@ lsusb -d 36b0:304e -v 2>/dev/null | grep -E "bcdDevice|iManufacturer"   # EPOMAK
 
 ## The lamp bus
 
-Three lamps, four priority slots. Slot 0 is Claude Code; 1–3 are free.
+Three lamps, four priority slots. Slot 0 is Claude Code; 1-3 are free.
 
 ```bash
 th40 status working                              # slot 0
@@ -54,7 +54,7 @@ Patterns: `off solid breath pulse chase blink strobe`.
 Colours: `red green amber orange yellow cyan blue violet pink` or `#rrggbb`.
 
 **Use saturated colours only.** Anything lighting all three channels reads as white through the
-diffuser — that is a property of the hardware, not a preference.
+diffuser - that is a property of the hardware, not a preference.
 
 Higher priority wins. Give a transient alert a TTL so it clears itself rather than needing a
 follow-up call; the firmware expires it locally, which also means a crashed script can't strand the
@@ -62,7 +62,7 @@ lamps lit.
 
 ## When editing the keymap
 
-The keymap lives in `qmk/keyboards/epomaker/th40/keymaps/tapdance/`. **Do not modify the fork** —
+The keymap lives in `qmk/keyboards/epomaker/th40/keymaps/tapdance/`. **Do not modify the fork** -
 `th40.c` owns the `*_user` callbacks, so the keymap overrides the `*_kb` variants and calls through.
 That keeps `git status` clean and survives a `git pull`.
 
