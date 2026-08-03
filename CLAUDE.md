@@ -1,0 +1,105 @@
+# CLAUDE.md
+
+Custom QMK firmware for an **Epomaker TH40**, plus the host tooling that drives its three
+indicator lamps from Claude Code.
+
+## Orientation
+
+| File | What it is |
+|---|---|
+| `keymap/` | **The actual work.** Symlinked into the QMK tree; this is what git tracks. |
+| `qmk/` | 1.4 GB clone of the fork. **Gitignored** — recreate with `./setup.sh`. |
+| `keyboard.md` | Build/flash runbook and every hard-won finding. **Read before touching firmware.** |
+| `docs.md` | End-user guide: what each feature is and how to use it. |
+| `plugins/th40/` | Claude Code plugin — the `th40` CLI, `/th40` command, a skill. |
+| `flash-th40.sh` | Waits for the bootloader, writes, verifies. |
+| `setup.sh` | Rebuilds the environment from a fresh clone. |
+| `TH40_factory_firmware.zip` | Stock firmware, for rolling back. |
+| `th40-via-keymap-backup.json` | The original VIA export the keymap was derived from. |
+| `th40-via-definition.json` | VIA definition with the custom effects added to the dropdown. |
+
+## Working here
+
+```bash
+./setup.sh                       # first time, or after cloning
+cd qmk && make -j$(nproc) epomaker/th40:tapdance
+./flash-th40.sh                  # then do the physical bootloader sequence
+```
+
+**Never edit inside `qmk/`.** `th40.c` owns the `*_user` callbacks, so the keymap overrides the
+`*_kb` variants and calls through. The fork is unmodified and must stay that way — `git -C qmk
+status` should show only the untracked symlink.
+
+**128 KB is the hard flash ceiling.** Currently ~81 KB. Watch the size line on every build.
+
+Every layer must have exactly 44 entries:
+
+```bash
+python3 - <<'EOF'
+import re
+s=open("keymap/keymap.c").read()
+print([len([x for x in re.split(r',(?![^(]*\))', m.group(1)) if x.strip()])
+       for m in re.finditer(r'LAYOUT_tkl_ansi\((.*?)\n\s*\)', s, re.S)])
+EOF
+```
+
+## Things that cost real time — do not rediscover them
+
+- **Upstream QMK has no ES32/FS026 port.** Only `github.com/carlosedp/qmk_firmware` works.
+- **The bootloader is LUFA mass-storage** (`03eb:2045`), not DFU. You copy `FIRMWARE.BIN` onto a
+  mounted volume. `dfu-util` will never see it despite the "RDMCTMZT DFU" product string.
+- **There is no working software bootloader entry.** Three approaches were tried and all failed;
+  `keyboard.md §5a` records which, so they are not re-attempted. Flashing always needs the physical
+  hold-top-left-key-while-plugging-in sequence.
+- **QMK raw HID reads exactly 32 bytes.** With hidapi that means writing **33** (report ID + 32). A
+  short write makes healthy firmware look completely dead.
+- **VIA replies put the payload at different offsets.** `id_dynamic_keymap_get_keycode` returns the
+  keycode at bytes 4–5; `id_custom_get_value` returns its value at byte **3**. Misreading this once
+  produced a completely wrong diagnosis.
+- **`rgb_matrix.c` skips the indicator callback when the effect index is 0.** So disabling the
+  matrix — or selecting `RGB_MATRIX_NONE` — kills the Claude lamps. `CLAUDE_BLACKOUT` exists to be a
+  non-zero effect that renders black.
+- **VIA cannot discover custom effect names.** There is no protocol message for it. Custom effects
+  only appear in VIA if the definition JSON lists their indices explicitly.
+- **Every reflash resets the EEPROM.** VIA derives its magic from `QMK_BUILDDATE`, so the keymap
+  reloads automatically (good) and user settings return to defaults (expected).
+- **Only one flasher at a time.** Two waiting instances both wake on the same bootloader and both
+  write `FIRMWARE.BIN`, corrupting the image. `flash-th40.sh` now holds a `flock`.
+
+## Verifying, rather than assuming
+
+The keyboard is the source of truth. Read it back:
+
+```bash
+lsusb -d 36b0:304e -v 2>/dev/null | grep -E "bcdDevice|iManufacturer"  # EPOMAKER / 0.04
+th40 config          # persistent settings + lock state
+th40 scan-rate       # ~3100/sec is healthy
+th40 selftest        # walk every lamp pattern
+```
+
+Reading a keycode straight out of the keyboard's EEPROM, which is how every claim about the keymap
+in this repo was checked:
+
+```python
+import hid
+p=[d for d in hid.enumerate(0x36B0,0x304E) if d['usage_page']==0xFF60][0]
+h=hid.Device(path=p['path'])
+h.write(bytes([0x00,0x04,layer,row,col]+[0x00]*28))   # 33 bytes total
+r=h.read(32,1500); print(hex(r[4]<<8 | r[5]))
+```
+
+## Host side
+
+Hooks live in `~/.claude/settings.json`, **not** in the plugin. Plugin hooks only load at session
+start; settings.json hot-reloads. The plugin's `hooks/` directory was deliberately deleted so there
+is exactly one source and no double-firing.
+
+The plugin is registered via `.claude-plugin/marketplace.json` here and enabled as `th40@nees-local`.
+
+## Style
+
+The three docs have distinct jobs — keep them that way. `keyboard.md` is for whoever maintains the
+firmware, `docs.md` is for whoever types on it, this file is for whoever picks up the work.
+
+State what was measured and what was assumed. Several findings above are recorded specifically
+because a confident guess was wrong the first time.
