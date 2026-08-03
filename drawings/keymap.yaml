@@ -4,7 +4,7 @@ layout:
 layers:
   Base:
   - t: Esc
-    s: '` ~'
+    s: '~'
   - Q
   - W
   - E
@@ -29,8 +29,8 @@ layers:
   - L
   - ENT
   - t: ⇧
-    s: ××Caps
-  - t: Num
+    h: tap ×2 Caps
+  - t: Numbers
     h: sticky
   - Z
   - X
@@ -46,20 +46,20 @@ layers:
   - LGUI
   - LALT
   - t: SPC
-    h: Num
+    h: Numbers
   - t: SPC
     h: System
   - t: SPC
     h: Nav
   - t: ◆
-    s: Claude
+    h: Claude
   - t: ✓
-    s: approve
+    h: approve
   - t: ✕
-    s: interrupt
+    h: interrupt
   Nav:
   - t: Esc
-    s: '` ~'
+    s: '~'
   - F1
   - F2
   - F3
@@ -83,7 +83,7 @@ layers:
   - RIGHT
   - ENT
   - t: ⇧
-    s: ××Caps
+    h: tap ×2 Caps
   - t: ▽
     type: trans
   - PSCR
@@ -96,7 +96,7 @@ layers:
   - F11
   - F12
   - t: Layer
-    s: lock
+    h: lock
   - t: ▽
     type: trans
   - t: ▽
@@ -108,13 +108,16 @@ layers:
   - t: ▽
     type: trans
   - t: SPC
-    h: Num
-  - Code
-  - WM
-  - Git
-  Num:
+    h: Numbers
+  - t: Code
+    h: layer
+  - t: Windows
+    h: layer
+  - t: Git
+    h: layer
+  Numbers:
   - t: Esc
-    s: '` ~'
+    s: '~'
   - '1'
   - '2'
   - '3'
@@ -139,7 +142,7 @@ layers:
   - '?'
   - ENT
   - t: ⇧
-    s: ××Caps
+    h: tap ×2 Caps
   - type: held
   - t: ▽
     type: trans
@@ -153,11 +156,12 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - NUBS
+  - t: \
+    s: '|'
   - ','
   - .
   - t: Layer
-    s: lock
+    h: lock
   - t: ▽
     type: trans
   - t: ▽
@@ -179,19 +183,21 @@ layers:
   - t: ▽
     type: trans
   - t: Lock
-    s: at boot
+    h: at boot
   - t: Lamps
-    s: on/off
-  - t: Lamp
-    s: bright −
-  - t: Lamp
-    s: bright +
+    h: on/off
+  - t: Lamp −
+    h: bright
+  - t: Lamp +
+    h: bright
   - t: HRM
-    s: base swap
-  - Aura
-  - Rain
+    h: base swap
+  - t: Aura
+    h: effect
+  - t: Rain
+    h: effect
   - t: Backlight
-    s: on/off
+    h: on/off
   - ''
   - ''
   - t: ▽
@@ -199,17 +205,18 @@ layers:
   - t: ▽
     type: trans
   - t: Lock
-    s: keyboard
+    h: keyboard
   - t: Mirror
-    s: one-hand
-  - CW TOGG
+    h: one-hand
+  - t: Caps
+    h: Word
   - Repeat
-  - MPRV
-  - t: ⏯
-    s: ×× ⏭  ××× ⏮
-  - MNXT
-  - VOLD
-  - VOLU
+  - Prev
+  - t: Play
+    h: ×2 next ×3 prev
+  - Next
+  - Vol −
+  - Vol +
   - t: ▽
     type: trans
   - t: ▽
@@ -223,14 +230,14 @@ layers:
   - t: LGUI
     h: sticky
   - t: Key
-    s: lock
+    h: lock
   - ''
   - ''
   - ''
   - ''
   - ''
   - t: Layer
-    s: lock
+    h: lock
   - t: ▽
     type: trans
   - t: ▽
@@ -271,9 +278,12 @@ layers:
   - ==
   - '&&'
   - '||'
-  - ( )
-  - '[ ]'
-  - '{ }'
+  - t: ( )
+    h: cursor in
+  - t: '[ ]'
+    h: cursor in
+  - t: '{ }'
+    h: cursor in
   - t: ▽
     type: trans
   - t: ▽
@@ -287,7 +297,8 @@ layers:
   - <=
   - '>='
   - '::'
-  - '" "'
+  - t: '" "'
+    h: cursor in
   - t: ▽
     type: trans
   - t: ▽
@@ -308,42 +319,67 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  WM:
+  Windows:
   - t: ▽
     type: trans
-  - Gui+1
-  - Gui+2
-  - Gui+3
-  - Gui+4
-  - Gui+5
-  - Gui+6
-  - Gui+7
-  - Gui+8
-  - Gui+9
-  - Gui+0
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - Gui+Sft+1
-  - Gui+Sft+2
-  - Gui+Sft+3
-  - Gui+Sft+4
-  - Gui+Sft+5
-  - Gui+Sft+6
-  - Gui+Sft+7
-  - Gui+Sft+8
-  - Gui+Sft+9
+  - t: '1'
+    h: go to ws
+  - t: '2'
+    h: go to ws
+  - t: '3'
+    h: go to ws
+  - t: '4'
+    h: go to ws
+  - t: '5'
+    h: go to ws
+  - t: '6'
+    h: go to ws
+  - t: '7'
+    h: go to ws
+  - t: '8'
+    h: go to ws
+  - t: '9'
+    h: go to ws
+  - t: '10'
+    h: go to ws
   - t: ▽
     type: trans
   - t: ▽
     type: trans
-  - Gui+W
-  - Gui+F
-  - Gui+LEFT
-  - Gui+DOWN
-  - Gui+UP
-  - Gui+RIGHT
+  - t: '1'
+    h: move to ws
+  - t: '2'
+    h: move to ws
+  - t: '3'
+    h: move to ws
+  - t: '4'
+    h: move to ws
+  - t: '5'
+    h: move to ws
+  - t: '6'
+    h: move to ws
+  - t: '7'
+    h: move to ws
+  - t: '8'
+    h: move to ws
+  - t: '9'
+    h: move to ws
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: Close
+    h: window
+  - t: Full
+    h: screen
+  - t: ◀
+    h: focus
+  - t: ▼
+    h: focus
+  - t: ▲
+    h: focus
+  - t: ▶
+    h: focus
   - Gui+J
   - Gui+P
   - Gui+C
@@ -371,29 +407,44 @@ layers:
   Git:
   - t: ▽
     type: trans
-  - git status
-  - git add -A
-  - git commit
-  - git push
-  - git pull
-  - git log
-  - git diff
-  - git checkout
-  - git branch
-  - git stash
+  - t: status
+    h: git
+  - t: add -A
+    h: git
+  - t: commit
+    h: git
+  - t: push
+    h: git
+  - t: pull
+    h: git
+  - t: log
+    h: git
+  - t: diff
+    h: git
+  - t: checkout
+    h: git
+  - t: branch
+    h: git
+  - t: stash
+    h: git
   - t: ▽
     type: trans
   - t: ▽
     type: trans
   - claude
-  - claude -c
+  - t: claude
+    h: continue
   - lazygit
   - cd ..
   - ls -la
-  - ⏺ 1
-  - ▶ 1
-  - ⏺ 2
-  - ▶ 2
+  - t: ⏺ 1
+    h: record
+  - t: ▶ 1
+    h: play
+  - t: ⏺ 2
+    h: record
+  - t: ▶ 2
+    h: play
   - t: ▽
     type: trans
   - t: ▽
@@ -404,12 +455,13 @@ layers:
   - ''
   - ''
   - ''
-  - ⏹
+  - t: ⏹
+    h: stop rec
   - ''
   - ''
   - ''
   - t: Layer
-    s: lock
+    h: lock
   - t: ▽
     type: trans
   - t: ▽
@@ -428,9 +480,9 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  HRM:
+  Home-Row Mods:
   - t: Esc
-    s: '` ~'
+    s: '~'
   - Q
   - W
   - E
@@ -462,8 +514,8 @@ layers:
     h: Alt
   - ENT
   - t: ⇧
-    s: ××Caps
-  - t: Num
+    h: tap ×2 Caps
+  - t: Numbers
     h: sticky
   - Z
   - X
@@ -479,17 +531,17 @@ layers:
   - LGUI
   - LALT
   - t: SPC
-    h: Num
+    h: Numbers
   - t: SPC
     h: System
   - t: SPC
     h: Nav
   - t: ◆
-    s: Claude
+    h: Claude
   - t: ✓
-    s: approve
+    h: approve
   - t: ✕
-    s: interrupt
+    h: interrupt
 combos:
 - p:
   - 1
@@ -545,10 +597,11 @@ combos:
   k: Leader
   l:
   - Base
+  draw_separate: true
 - p:
   - 1
   - 10
   k: Lock
   l:
   - Base
-  a: top
+  draw_separate: true

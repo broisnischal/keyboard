@@ -1,10 +1,7 @@
-# keymap-drawer config for the TH40. Regenerate the SVG with:
-#   qmk c2json --no-cpp -kb epomaker/th40 -km tapdance -o /tmp/th40.json
-#   keymap parse -c drawings/config.yaml -q /tmp/th40.json > /tmp/th40.yaml
-#   (re-add layer names/combos - see drawings/postprocess.py)
-#   keymap draw /tmp/th40.yaml -j qmk/keyboards/epomaker/th40/keyboard.json > drawings/keymap.svg
+# keymap-drawer config for the TH40. Regeneration recipe is in the README.
 parse_config:
   raw_binding_map:
+    # --- code macros (send_macro table in keymap.c) ---
     "M_ARROW": "->"
     "M_FATAR": "=>"
     "M_NEQ": "!="
@@ -14,43 +11,54 @@ parse_config:
     "M_LTE": "<="
     "M_GTE": ">="
     "M_SCOPE": "::"
-    "M_PAREN": "( )"
-    "M_BRACK": "[ ]"
-    "M_BRACE": "{ }"
-    "M_QUOT2": "\" \""
-    "G_STATUS": "git status"
-    "G_ADD": "git add -A"
-    "G_COMMIT": "git commit"
-    "G_PUSH": "git push"
-    "G_PULL": "git pull"
-    "G_LOG": "git log"
-    "G_DIFF": "git diff"
-    "G_CO": "git checkout"
-    "G_BRANCH": "git branch"
-    "G_STASH": "git stash"
+    "M_PAREN": {t: "( )", h: "cursor in"}
+    "M_BRACK": {t: "[ ]", h: "cursor in"}
+    "M_BRACE": {t: "{ }", h: "cursor in"}
+    "M_QUOT2": {t: "\" \"", h: "cursor in"}
+    # --- git / shell macros ---
+    "G_STATUS": {t: "status", h: "git"}
+    "G_ADD": {t: "add -A", h: "git"}
+    "G_COMMIT": {t: "commit", h: "git"}
+    "G_PUSH": {t: "push", h: "git"}
+    "G_PULL": {t: "pull", h: "git"}
+    "G_LOG": {t: "log", h: "git"}
+    "G_DIFF": {t: "diff", h: "git"}
+    "G_CO": {t: "checkout", h: "git"}
+    "G_BRANCH": {t: "branch", h: "git"}
+    "G_STASH": {t: "stash", h: "git"}
     "S_CLAUDE": "claude"
-    "S_CLAUDEC": "claude -c"
+    "S_CLAUDEC": {t: "claude", h: "continue"}
     "S_LAZYGIT": "lazygit"
     "S_CDUP": "cd .."
     "S_LS": "ls -la"
-    "UC_LOCKB": {t: "Lock", s: "at boot"}
-    "UC_CLEDS": {t: "Lamps", s: "on/off"}
-    "UC_BRTU": {t: "Lamp", s: "bright +"}
-    "UC_BRTD": {t: "Lamp", s: "bright −"}
-    "UC_HRM": {t: "HRM", s: "base swap"}
-    "UC_AURA": "Aura"
-    "UC_RAIN": "Rain"
-    "TD(TD_SFT_CAPS)": {t: "⇧", s: "××Caps"}
-    "TD(TD_MEDIA_TRANSPORT)": {t: "⏯", s: "××⏭ ×××⏮"}
-    "QK_LLCK": {t: "Layer", s: "lock"}
-    "QK_LOCK": {t: "Key", s: "lock"}
-    "SE_LOCK": {t: "Lock", s: "keyboard"}
-    "KC_F21": {t: "◆", s: "Claude"}
-    "KC_F22": {t: "✓", s: "approve"}
-    "KC_F23": {t: "✕", s: "interrupt"}
-    "RM_TOGG": {t: "Backlight", s: "on/off"}
-    "QK_GESC": {t: "Esc", s: "` ~"}
-    # c2json --no-cpp keeps keymap.c's #define names - map those too
+    # --- persistent settings keys ---
+    "UC_LOCKB": {t: "Lock", h: "at boot"}
+    "UC_CLEDS": {t: "Lamps", h: "on/off"}
+    "UC_BRTU": {t: "Lamp +", h: "bright"}
+    "UC_BRTD": {t: "Lamp −", h: "bright"}
+    "UC_HRM": {t: "HRM", h: "base swap"}
+    "UC_AURA": {t: "Aura", h: "effect"}
+    "UC_RAIN": {t: "Rain", h: "effect"}
+    "RM_TOGG": {t: "Backlight", h: "on/off"}
+    # --- tap dances and specials ---
+    "TD_SFT": {t: "⇧", h: "tap ×2 Caps"}
+    "TD_MPLY": {t: "Play", h: "×2 next ×3 prev"}
+    "QK_GESC": {t: "Esc", s: "~"}
+    "QK_LLCK": {t: "Layer", h: "lock"}
+    "QK_LOCK": {t: "Key", h: "lock"}
+    "SE_LOCK": {t: "Lock", h: "keyboard"}
+    "CW_TOGG": {t: "Caps", h: "Word"}
+    "QK_REP": "Repeat"
+    "QK_AREP": "AltRep"
+    "CG_TOGG": {t: "Ctrl⇄Gui"}
+    "SH_TOGG": {t: "Mirror", h: "one-hand"}
+    "S(KC_SLSH)": "?"
+    "KC_NUBS": {t: "\\", s: "|"}
+    # --- Claude keys ---
+    "KC_F21": {t: "◆", h: "Claude"}
+    "KC_F22": {t: "✓", h: "approve"}
+    "KC_F23": {t: "✕", h: "interrupt"}
+    # --- home row mods (HRM layer) ---
     "HM_A": {t: "A", h: "Gui"}
     "HM_S": {t: "S", h: "Alt"}
     "HM_D": {t: "D", h: "Ctrl"}
@@ -58,24 +66,70 @@ parse_config:
     "HM_J": {t: "J", h: "Shift"}
     "HM_K": {t: "K", h: "Ctrl"}
     "HM_L": {t: "L", h: "Alt"}
-    "TD_SFT": {t: "⇧", s: "××Caps"}
-    "TD_MPLY": {t: "⏯", s: "×× ⏭  ××× ⏮"}
-    "MO(_CODE)": "Code"
-    "MO(_WM)": "WM"
-    "MO(_GIT)": "Git"
-    "MO(4)": "Code"
-    "MO(5)": "WM"
-    "MO(6)": "Git"
-    "QK_REP": "Repeat"
-    "QK_AREP": "AltRep"
-    "CG_TOGG": {t: "Ctrl⇄Gui"}
-    "SH_TOGG": {t: "Mirror", s: "one-hand"}
-    "S(KC_SLSH)": "?"
-    "DM_REC1": "⏺ 1"
-    "DM_PLY1": "▶ 1"
-    "DM_REC2": "⏺ 2"
-    "DM_PLY2": "▶ 2"
-    "DM_RSTP": "⏹"
+    # --- layer reach keys on Nav ---
+    "MO(_CODE)": {t: "Code", h: "layer"}
+    "MO(_WM)": {t: "Windows", h: "layer"}
+    "MO(_GIT)": {t: "Git", h: "layer"}
+    "MO(4)": {t: "Code", h: "layer"}
+    "MO(5)": {t: "Windows", h: "layer"}
+    "MO(6)": {t: "Git", h: "layer"}
+    # --- media ---
+    "KC_MPRV": "Prev"
+    "KC_MNXT": "Next"
+    "KC_VOLD": "Vol −"
+    "KC_VOLU": "Vol +"
+    # --- dynamic macros ---
+    "DM_REC1": {t: "⏺ 1", h: "record"}
+    "DM_PLY1": {t: "▶ 1", h: "play"}
+    "DM_REC2": {t: "⏺ 2", h: "record"}
+    "DM_PLY2": {t: "▶ 2", h: "play"}
+    "DM_RSTP": {t: "⏹", h: "stop rec"}
+    # --- Hyprland layer, labelled by what omarchy does with the chord ---
+    "LGUI(KC_1)": {t: "1", h: "go to ws"}
+    "LGUI(KC_2)": {t: "2", h: "go to ws"}
+    "LGUI(KC_3)": {t: "3", h: "go to ws"}
+    "LGUI(KC_4)": {t: "4", h: "go to ws"}
+    "LGUI(KC_5)": {t: "5", h: "go to ws"}
+    "LGUI(KC_6)": {t: "6", h: "go to ws"}
+    "LGUI(KC_7)": {t: "7", h: "go to ws"}
+    "LGUI(KC_8)": {t: "8", h: "go to ws"}
+    "LGUI(KC_9)": {t: "9", h: "go to ws"}
+    "LGUI(KC_0)": {t: "10", h: "go to ws"}
+    "LGUI(LSFT(KC_1))": {t: "1", h: "move to ws"}
+    "LGUI(LSFT(KC_2))": {t: "2", h: "move to ws"}
+    "LGUI(LSFT(KC_3))": {t: "3", h: "move to ws"}
+    "LGUI(LSFT(KC_4))": {t: "4", h: "move to ws"}
+    "LGUI(LSFT(KC_5))": {t: "5", h: "move to ws"}
+    "LGUI(LSFT(KC_6))": {t: "6", h: "move to ws"}
+    "LGUI(LSFT(KC_7))": {t: "7", h: "move to ws"}
+    "LGUI(LSFT(KC_8))": {t: "8", h: "move to ws"}
+    "LGUI(LSFT(KC_9))": {t: "9", h: "move to ws"}
+    "LGUI(KC_W)": {t: "Close", h: "window"}
+    "LGUI(KC_F)": {t: "Full", h: "screen"}
+    "LGUI(KC_LEFT)": {t: "◀", h: "focus"}
+    "LGUI(KC_DOWN)": {t: "▼", h: "focus"}
+    "LGUI(KC_UP)": {t: "▲", h: "focus"}
+    "LGUI(KC_RIGHT)": {t: "▶", h: "focus"}
+    "LGUI(KC_J)": "Gui+J"
+    "LGUI(KC_P)": "Gui+P"
+    "LGUI(KC_C)": "Gui+C"
+    "LGUI(KC_V)": "Gui+V"
 draw_config:
   dark_mode: auto
   n_columns: 2
+  key_w: 78
+  key_h: 64
+  combo_w: 34
+  combo_h: 26
+  inner_pad_w: 3
+  inner_pad_h: 3
+  small_pad: 3
+  shrink_wide_legends: 10
+  append_colon_to_layer_header: false
+  footer_text: "broisnischal/keyboard · Epomaker TH40 · custom QMK"
+  svg_extra_style: |
+    svg.keymap { font-family: "Inter", "Segoe UI", "Noto Sans", "Helvetica Neue", sans-serif; }
+    rect.key.trans { opacity: 0.45; }
+    text.trans { opacity: 0.35; }
+    text.label { font-weight: 650; font-size: 15px; }
+    text.combo { font-size: 10px; }

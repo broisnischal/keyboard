@@ -12,8 +12,8 @@ COMBOS = [
     {"p": [31, 32], "k": "-",         "l": ["Base"]},
     {"p": [32, 33], "k": "_",         "l": ["Base"]},
     {"p": [33, 34], "k": ":",         "l": ["Base"]},
-    {"p": [16, 19], "k": "Leader",    "l": ["Base"]},  # F+J prefix
-    {"p": [1, 10],  "k": "Lock",      "l": ["Base"], "a": "top"},
+    {"p": [16, 19], "k": "Leader",    "l": ["Base"], "draw_separate": True},  # F+J prefix
+    {"p": [1, 10],  "k": "Lock",      "l": ["Base"], "draw_separate": True},
 ]
 
 doc = yaml.safe_load(sys.stdin)

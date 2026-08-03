@@ -23,6 +23,21 @@ the two-key chords; pink cells mark the key you're holding to be on that layer.
 
 ![The TH40 keymap: eight layers with combos](drawings/keymap.svg)
 
+What you're looking at (the full tour is [`FEATURES.md`](FEATURES.md)):
+
+- **Leader key** - `F`+`J` together arms a tmux-style prefix (lamps go cyan), then one key runs an
+  action: sleep, music transport, mute, lock, type my email, vim `:wq`
+- **Claude Code integration** - the three lamps mirror Claude's state live; `◆ ✓ ✕` focus,
+  approve and interrupt it from anywhere
+- **Tri layer** - both space bars together open System, no Fn reach
+- **Layer lock** - the `'` key on any hold layer makes it stick; auto-releases after a minute
+- **Combos** - `Q+W`/`J+K`→Esc, `Z+X`→undo, `C+V`→Caps Word, `N+M`→Del, `,+.`→`_`, `.+'`→`:`,
+  `Q+P`→lock the keyboard
+- **Dynamic macros** - record any key sequence on the Git layer (`⏺ ▶ ⏹`), replay all day
+- **Caps Word, Repeat/AltRep, Shift+⌫→Del, key lock, one-shot mods, one-handed mirror,
+  pattern lock** - and opt-in home-row mods on their own base layer
+- **5,300+ scans/sec** - eager debounce, 1000 Hz USB, LTO; ~0.7 ms average input latency
+
 Regenerate after a keymap change (config and combo positions live in [`drawings/`](drawings)):
 
 ```bash
