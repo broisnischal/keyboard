@@ -1,0 +1,7 @@
+{
+  "name": "th40",
+  "version": "0.2.0",
+  "description": "Drives the three indicator lamps on an Epomaker TH40 from Claude Code's lifecycle, and exposes them as a general-purpose status bus for anything else on the machine.",
+  "author": { "name": "nees" },
+  "keywords": ["qmk", "keyboard", "hardware", "status", "hid"]
+}

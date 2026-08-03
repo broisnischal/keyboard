@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""th40 - drive the Epomaker TH40's three indicator lamps from the host.
+
+  th40 status <state>              Claude Code state (slot 0)
+  th40 bus <slot> <pattern> <colour> [--ttl S] [--priority N]
+  th40 clear <slot>
+  th40 config                      show persistent settings + lock state
+  th40 lock-on-boot on|off         require the unlock pattern at power-up
+  th40 unlock                      unlock over USB (escape hatch)
+  th40 scan-rate                   matrix scans/second
+  th40 bootloader                  reboot into the flashing bootloader
+  th40 selftest                    walk every pattern so you can eyeball it
+
+The lamps are a four-slot priority bus. Slot 0 is Claude Code; slots 1-3 are
+yours - low disk, wifi down, a build that failed. Highest live priority wins.
+
+  th40 bus 1 blink red --ttl 30 --priority 95     # something needs you now
+  th40 bus 2 breath amber --priority 15           # background grumble
+  th40 clear 2
+
+Never fails loudly: it runs from Claude Code hooks, so every error path exits 0.
+"""
+import sys
+
+VID, PID = 0x36B0, 0x304E
+USAGE_PAGE = 0xFF60
+CMD = 0xC1
+
+SUB_BOOTLOADER = 0xB0
+SUB_SCANRATE = 0xB1
+SUB_BUS_SET = 0xB2
+SUB_BUS_CLEAR = 0xB3
+SUB_CFG_GET = 0xB4
+SUB_CFG_SET = 0xB5
+SUB_UNLOCK = 0xB6
+
+STATES = {"off": 0, "idle": 1, "working": 2, "loading": 3,
+          "permission": 4, "done": 5, "error": 6}
+
+PATTERNS = {"off": 0, "solid": 1, "breath": 2, "pulse": 3,
+            "chase": 4, "blink": 5, "strobe": 6}
+
+# Saturated only - anything lighting all three channels reads as white through
+# the diffuser. The firmware applies per-channel gain and gamma on top.
+COLOURS = {
+    "red":    (255, 0, 0),
+    "green":  (0, 255, 0),
+    "amber":  (255, 120, 0),
+    "orange": (255, 60, 0),
+    "yellow": (255, 220, 0),
+    "cyan":   (0, 255, 180),
+    "blue":   (0, 60, 255),
+    "violet": (140, 0, 255),
+    "pink":   (255, 0, 110),
+}
+
+
+def _open():
+    import hid
+    devs = [d for d in hid.enumerate(VID, PID) if d["usage_page"] == USAGE_PAGE]
+    if not devs:
+        return None
+    return hid.Device(path=devs[0]["path"])
+
+
+def _send(h, payload, want_reply=True):
+    # report id + a FULL 32-byte payload; QMK reads exactly RAW_EPSIZE and
+    # silently drops anything shorter.
+    h.write(bytes([0x00] + payload + [0x00] * (32 - len(payload))))
+    return h.read(32, 1000) if want_reply else None
+
+
+def parse_colour(text):
+    if text in COLOURS:
+        return COLOURS[text]
+    t = text.lstrip("#")
+    if len(t) == 6:
+        try:
+            return tuple(int(t[i:i + 2], 16) for i in (0, 2, 4))
+        except ValueError:
+            pass
+    return None
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        return 0
+
+    cmd, args = argv[0], argv[1:]
+    verbose = "--verify" in args or "-v" in args
+    args = [a for a in args if a not in ("--verify", "-v")]
+
+    def opt(name, default=None):
+        if name in args:
+            i = args.index(name)
+            if i + 1 < len(args):
+                return args[i + 1]
+        return default
+
+    positional = []
+    skip = False
+    for i, a in enumerate(args):
+        if skip:
+            skip = False
+            continue
+        if a.startswith("--"):
+            skip = True
+            continue
+        positional.append(a)
+
+    try:
+        h = _open()
+        if h is None:
+            if verbose or cmd in ("scan-rate", "selftest"):
+                print("keyboard not found (unplugged, or on BT/2.4G)", file=sys.stderr)
+            return 0
+
+        if cmd == "status":
+            if not positional:
+                print(" ".join(STATES))
+                return 0
+            st = STATES.get(positional[0].lower())
+            if st is None:
+                return 0
+            r = _send(h, [CMD, st])
+            if verbose:
+                if not r:
+                    print("no reply")
+                elif r[0] != CMD:
+                    print(f"not handled (byte0=0x{r[0]:02X}) - old firmware?")
+                else:
+                    print(f"sent {positional[0]} -> keyboard is now in state {r[1]}")
+
+        elif cmd == "bus":
+            if len(positional) < 3:
+                print("usage: th40 bus <slot 1-3> <pattern> <colour> [--ttl S] [--priority N]",
+                      file=sys.stderr)
+                print(f"  patterns: {' '.join(PATTERNS)}", file=sys.stderr)
+                print(f"  colours : {' '.join(COLOURS)} or #rrggbb", file=sys.stderr)
+                return 0
+            slot = int(positional[0])
+            pat = PATTERNS.get(positional[1].lower())
+            col = parse_colour(positional[2].lower())
+            if pat is None or col is None:
+                print("unknown pattern or colour", file=sys.stderr)
+                return 0
+            ttl = int(opt("--ttl", "0"))
+            prio = int(opt("--priority", "50"))
+            _send(h, [CMD, SUB_BUS_SET, slot, pat, col[0], col[1], col[2],
+                      prio, ttl & 0xFF, (ttl >> 8) & 0xFF])
+            if verbose:
+                print(f"slot {slot}: {positional[1]} {positional[2]} prio={prio} ttl={ttl or 'none'}")
+
+        elif cmd == "clear":
+            slot = int(positional[0]) if positional else 1
+            _send(h, [CMD, SUB_BUS_CLEAR, slot])
+
+        elif cmd == "config":
+            r = _send(h, [CMD, SUB_CFG_GET])
+            if r and r[0] == CMD:
+                print(f"  lock on boot   : {'on' if r[2] else 'off'}")
+                print(f"  claude lamps   : {'on' if r[3] else 'off'}")
+                print(f"  lamp brightness: {r[4]}")
+                print(f"  saved rgb mode : {r[5]}")
+                print(f"  currently      : {'LOCKED' if r[6] else 'unlocked'}")
+            else:
+                print("firmware too old for 'config'")
+
+        elif cmd == "lock-on-boot":
+            if not positional or positional[0] not in ("on", "off"):
+                print("usage: th40 lock-on-boot on|off", file=sys.stderr)
+                return 0
+            want = 1 if positional[0] == "on" else 0
+            _send(h, [CMD, SUB_CFG_SET, 0, want])
+            r = _send(h, [CMD, SUB_CFG_GET])
+            got = r[2] if r and r[0] == CMD else None
+            print(f"lock on boot: {'on' if got else 'off'}" +
+                  ("" if got == want else "  <-- did NOT take"))
+            if want:
+                print("Test the pattern BEFORE you rely on it: lock the board, then")
+                print("press the top-left key and type N E E S. If that fails,")
+                print("'th40 unlock' gets you back in.")
+
+        elif cmd == "unlock":
+            _send(h, [CMD, SUB_UNLOCK])
+            r = _send(h, [CMD, SUB_CFG_GET])
+            print("unlocked" if r and r[0] == CMD and not r[6] else "still locked")
+
+        elif cmd == "scan-rate":
+            r = _send(h, [CMD, SUB_SCANRATE])
+            if r and r[0] == CMD:
+                print(f"{r[2] | (r[3] << 8)} matrix scans/sec")
+            else:
+                print("no scan-rate reply - firmware too old")
+
+        elif cmd == "bootloader":
+            _send(h, [CMD, SUB_BOOTLOADER], want_reply=False)
+            print("bootloader jump sent (known not to work on this board - see keyboard.md)")
+
+        elif cmd == "selftest":
+            import time
+            for name, st in [("idle", 1), ("working", 2), ("loading", 3),
+                             ("permission", 4), ("done", 5), ("error", 6)]:
+                _send(h, [CMD, st])
+                print(f"  {name}")
+                time.sleep(4)
+            _send(h, [CMD, 1])
+            print("  back to idle")
+
+        else:
+            print(__doc__)
+
+        h.close()
+    except Exception as exc:
+        if verbose:
+            print(f"error: {exc}", file=sys.stderr)
+    return 0
+
+
+sys.exit(main(sys.argv[1:]))

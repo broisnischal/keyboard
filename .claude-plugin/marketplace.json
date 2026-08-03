@@ -1,0 +1,11 @@
+{
+  "name": "nees-local",
+  "owner": { "name": "nees" },
+  "plugins": [
+    {
+      "name": "th40",
+      "source": "./plugins/th40",
+      "description": "Epomaker TH40 status lamps: Claude Code lifecycle on slot 0, a general-purpose priority bus on slots 1-3."
+    }
+  ]
+}
