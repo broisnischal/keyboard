@@ -1,0 +1,13 @@
+# The QMK fork is a 1.4 GB clone with submodules - recreate it with ./setup.sh.
+# The keymap itself lives in ./keymap and is symlinked into the tree, so nothing
+# of ours is inside here.
+qmk/
+
+# build artefacts
+*.bin
+*.hex
+*.elf
+
+# session artefacts
+.claude/phobos-*.log
+.claude/phobos-state.md
