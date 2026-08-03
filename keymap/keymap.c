@@ -371,6 +371,12 @@ static void bus_set(uint8_t slot, uint8_t pattern, uint8_t r, uint8_t g, uint8_t
     bus[slot].set_at   = timer_read32();
 }
 
+// Priority order matters as much as the colours: permission (90) > done (85) >
+// error (80) > working/loading (20) > idle (10). done outranks error so that
+// finishing a turn always lands on green, even if something failed along the
+// way - otherwise a stale red sits on top of the green finish for its whole TTL
+// and you never see it.
+//
 // Claude states are just a preset row in the bus. Amber replaces the old blue:
 // blue on a diffused indicator reads dim and cold next to green and red, and no
 // amount of gain fixes that - the hue itself was the problem.
@@ -381,7 +387,7 @@ static void bus_set_claude(uint8_t st) {
         case CLAUDE_WORKING:    bus_set(BUS_SLOT_CLAUDE, PAT_PULSE, 255, 120,   0, 20,    0); break;
         case CLAUDE_LOADING:    bus_set(BUS_SLOT_CLAUDE, PAT_CHASE, 255, 120,   0, 20,    0); break;
         case CLAUDE_PERMISSION: bus_set(BUS_SLOT_CLAUDE, PAT_BLINK, 255,   0,   0, 90,    0); break;
-        case CLAUDE_DONE:       bus_set(BUS_SLOT_CLAUDE, PAT_STROBE3, 0, 255,   0, 60, 2200); break;
+        case CLAUDE_DONE:       bus_set(BUS_SLOT_CLAUDE, PAT_STROBE3, 0, 255,   0, 85, 2200); break;
         case CLAUDE_ERROR:      bus_set(BUS_SLOT_CLAUDE, PAT_SOLID, 255,   0,   0, 80, 4000); break;
         default:                bus_set(BUS_SLOT_CLAUDE, PAT_OFF,     0,   0,   0,  0,    0); break;
     }
