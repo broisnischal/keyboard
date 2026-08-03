@@ -15,6 +15,24 @@ git clone https://github.com/broisnischal/keyboard.git && cd keyboard
 | [`keyboard.md`](keyboard.md) | **Maintaining the firmware** - build, flash, recover, and every gotcha |
 | [`CLAUDE.md`](CLAUDE.md) | **Continuing the work** - orientation for a coding agent or future you |
 
+## The keymap at a glance
+
+All eight layers, drawn from the real `keymap.c` by
+[keymap-drawer](https://github.com/caksoylar/keymap-drawer). Combo chips on the base layer show
+the two-key chords; pink cells mark the key you're holding to be on that layer.
+
+![The TH40 keymap: eight layers with combos](drawings/keymap.svg)
+
+Regenerate after a keymap change (config and combo positions live in [`drawings/`](drawings)):
+
+```bash
+qmk c2json --no-cpp -kb epomaker/th40 -km tapdance -o /tmp/th40.json
+keymap -c drawings/config.yaml parse -q /tmp/th40.json -l Base Nav Num System Code WM Git HRM \
+  | python3 drawings/postprocess.py > drawings/keymap.yaml
+keymap -c drawings/config.yaml draw drawings/keymap.yaml \
+  -j qmk/keyboards/epomaker/th40/keyboard.json > drawings/keymap.svg
+```
+
 ---
 
 ## The QMK situation, and why it's not the normal one
@@ -129,12 +147,14 @@ commit, push, open the PR against `master`. QMK's own guidance is in
 
 Full detail in [`docs.md`](docs.md).
 
-**Typing** - double-tap Shift for Caps Lock (zero added latency), Caps Word, Repeat and Alt-Repeat,
-7 combos, one-shot modifiers, one-handed mirror mode, pattern lock, opt-in home-row mods with
-Chordal Hold and Flow Tap.
+**Typing** - a tmux-style leader key (`F`+`J`, lamps go cyan while armed), double-tap Shift for
+Caps Lock (zero added latency), Caps Word, Repeat and Alt-Repeat, 10 combos, Shift+Backspace →
+Delete, dynamic macros, key lock, one-shot modifiers, one-handed mirror mode, pattern lock, opt-in
+home-row mods with Chordal Hold and Flow Tap.
 
 **Layers** - nav/F-keys, numbers, media+system, code operators and digraphs, Hyprland window
-control, git and shell macros, plus a plain-letters base.
+control, git and shell macros, plus a plain-letters base. Tri layer (both spaces → system), and
+layer lock on every hold layer with a one-minute safety release.
 
 **Lamps** - a four-slot priority bus. Slot 0 tracks Claude Code; 1-3 are yours.
 
@@ -142,7 +162,7 @@ control, git and shell macros, plus a plain-letters base.
 th40 status working
 th40 bus 1 blink red --ttl 60 --priority 95    # disk full, CI failed, wifi down
 th40 config                                    # persistent settings + lock state
-th40 scan-rate                                 # ~3100 matrix scans/sec
+th40 scan-rate                                 # ~5300 matrix scans/sec
 ```
 
 **Custom RGB effects** - `claude_aura` (whole board mirrors the lamps, same frame),
@@ -156,7 +176,7 @@ th40 scan-rate                                 # ~3100 matrix scans/sec
 | MCU | es32fs026, Cortex-M0, 128 KB flash, 16 KB RAM |
 | Bootloader | LUFA mass-storage (`03eb:2045`) - **not** DFU, `dfu-util` will never see it |
 | Flashing | copy `FIRMWARE.BIN` onto the volume that appears; there is no software entry |
-| Build size | ~81 KB of 128 KB |
+| Build size | ~75 KB with LTO - **images over ~83 KB of real code do not boot** (see `keyboard.md`) |
 
 Epomaker also shipped VIA-only TH40s. If `lsusb` shows a different ID, none of this applies to your
 unit.

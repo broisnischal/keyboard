@@ -1,0 +1,554 @@
+layout:
+  qmk_keyboard: epomaker/th40
+  layout_name: LAYOUT_tkl_ansi
+layers:
+  Base:
+  - t: Esc
+    s: '` ~'
+  - Q
+  - W
+  - E
+  - R
+  - T
+  - Y
+  - U
+  - I
+  - O
+  - P
+  - BSPC
+  - t: TAB
+    h: Nav
+  - A
+  - S
+  - D
+  - F
+  - G
+  - H
+  - J
+  - K
+  - L
+  - ENT
+  - t: ⇧
+    s: ××Caps
+  - t: Num
+    h: sticky
+  - Z
+  - X
+  - C
+  - V
+  - B
+  - N
+  - M
+  - ','
+  - .
+  - ''''
+  - LCTL
+  - LGUI
+  - LALT
+  - t: SPC
+    h: Num
+  - t: SPC
+    h: System
+  - t: SPC
+    h: Nav
+  - t: ◆
+    s: Claude
+  - t: ✓
+    s: approve
+  - t: ✕
+    s: interrupt
+  Nav:
+  - t: Esc
+    s: '` ~'
+  - F1
+  - F2
+  - F3
+  - F4
+  - F5
+  - F6
+  - F7
+  - F8
+  - F9
+  - F10
+  - DEL
+  - type: held
+  - HOME
+  - PGDN
+  - PGUP
+  - END
+  - INS
+  - LEFT
+  - DOWN
+  - UP
+  - RIGHT
+  - ENT
+  - t: ⇧
+    s: ××Caps
+  - t: ▽
+    type: trans
+  - PSCR
+  - Ctrl⇄Gui
+  - WBAK
+  - WFWD
+  - Repeat
+  - AltRep
+  - ''
+  - F11
+  - F12
+  - t: Layer
+    s: lock
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: SPC
+    h: Num
+  - Code
+  - WM
+  - Git
+  Num:
+  - t: Esc
+    s: '` ~'
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  - '8'
+  - '9'
+  - '0'
+  - BSPC
+  - t: ▽
+    type: trans
+  - '-'
+  - '='
+  - ;
+  - ''''
+  - '`'
+  - '['
+  - ']'
+  - /
+  - '?'
+  - ENT
+  - t: ⇧
+    s: ××Caps
+  - type: held
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - NUBS
+  - ','
+  - .
+  - t: Layer
+    s: lock
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - SPC
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  System:
+  - t: ▽
+    type: trans
+  - t: Lock
+    s: at boot
+  - t: Lamps
+    s: on/off
+  - t: Lamp
+    s: bright −
+  - t: Lamp
+    s: bright +
+  - t: HRM
+    s: base swap
+  - Aura
+  - Rain
+  - t: Backlight
+    s: on/off
+  - ''
+  - ''
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: Lock
+    s: keyboard
+  - t: Mirror
+    s: one-hand
+  - CW TOGG
+  - Repeat
+  - MPRV
+  - t: ⏯
+    s: ×× ⏭  ××× ⏮
+  - MNXT
+  - VOLD
+  - VOLU
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: LSFT
+    h: sticky
+  - t: LCTL
+    h: sticky
+  - t: LALT
+    h: sticky
+  - t: LGUI
+    h: sticky
+  - t: Key
+    s: lock
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - t: Layer
+    s: lock
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - type: held
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  Code:
+  - t: ▽
+    type: trans
+  - '!'
+  - '@'
+  - '#'
+  - $
+  - '%'
+  - ^
+  - '&'
+  - '*'
+  - '-'
+  - +
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - ->
+  - =>
+  - '!='
+  - ==
+  - '&&'
+  - '||'
+  - ( )
+  - '[ ]'
+  - '{ }'
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - '~'
+  - '`'
+  - \
+  - '|'
+  - <
+  - '>'
+  - <=
+  - '>='
+  - '::'
+  - '" "'
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  WM:
+  - t: ▽
+    type: trans
+  - Gui+1
+  - Gui+2
+  - Gui+3
+  - Gui+4
+  - Gui+5
+  - Gui+6
+  - Gui+7
+  - Gui+8
+  - Gui+9
+  - Gui+0
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - Gui+Sft+1
+  - Gui+Sft+2
+  - Gui+Sft+3
+  - Gui+Sft+4
+  - Gui+Sft+5
+  - Gui+Sft+6
+  - Gui+Sft+7
+  - Gui+Sft+8
+  - Gui+Sft+9
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - Gui+W
+  - Gui+F
+  - Gui+LEFT
+  - Gui+DOWN
+  - Gui+UP
+  - Gui+RIGHT
+  - Gui+J
+  - Gui+P
+  - Gui+C
+  - Gui+V
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  Git:
+  - t: ▽
+    type: trans
+  - git status
+  - git add -A
+  - git commit
+  - git push
+  - git pull
+  - git log
+  - git diff
+  - git checkout
+  - git branch
+  - git stash
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - claude
+  - claude -c
+  - lazygit
+  - cd ..
+  - ls -la
+  - ⏺ 1
+  - ▶ 1
+  - ⏺ 2
+  - ▶ 2
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ⏹
+  - ''
+  - ''
+  - ''
+  - t: Layer
+    s: lock
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  HRM:
+  - t: Esc
+    s: '` ~'
+  - Q
+  - W
+  - E
+  - R
+  - T
+  - Y
+  - U
+  - I
+  - O
+  - P
+  - BSPC
+  - t: TAB
+    h: Nav
+  - t: A
+    h: Gui
+  - t: S
+    h: Alt
+  - t: D
+    h: Ctrl
+  - t: F
+    h: Shift
+  - G
+  - H
+  - t: J
+    h: Shift
+  - t: K
+    h: Ctrl
+  - t: L
+    h: Alt
+  - ENT
+  - t: ⇧
+    s: ××Caps
+  - t: Num
+    h: sticky
+  - Z
+  - X
+  - C
+  - V
+  - B
+  - N
+  - M
+  - ','
+  - .
+  - ''''
+  - LCTL
+  - LGUI
+  - LALT
+  - t: SPC
+    h: Num
+  - t: SPC
+    h: System
+  - t: SPC
+    h: Nav
+  - t: ◆
+    s: Claude
+  - t: ✓
+    s: approve
+  - t: ✕
+    s: interrupt
+combos:
+- p:
+  - 1
+  - 2
+  k: Esc
+  l:
+  - Base
+- p:
+  - 19
+  - 20
+  k: Esc
+  l:
+  - Base
+- p:
+  - 25
+  - 26
+  k: Undo
+  l:
+  - Base
+- p:
+  - 27
+  - 28
+  k: Caps Word
+  l:
+  - Base
+- p:
+  - 30
+  - 31
+  k: Del
+  l:
+  - Base
+- p:
+  - 31
+  - 32
+  k: '-'
+  l:
+  - Base
+- p:
+  - 32
+  - 33
+  k: _
+  l:
+  - Base
+- p:
+  - 33
+  - 34
+  k: ':'
+  l:
+  - Base
+- p:
+  - 16
+  - 19
+  k: Leader
+  l:
+  - Base
+- p:
+  - 1
+  - 10
+  k: Lock
+  l:
+  - Base
+  a: top

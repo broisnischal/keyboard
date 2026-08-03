@@ -1,0 +1,81 @@
+# keymap-drawer config for the TH40. Regenerate the SVG with:
+#   qmk c2json --no-cpp -kb epomaker/th40 -km tapdance -o /tmp/th40.json
+#   keymap parse -c drawings/config.yaml -q /tmp/th40.json > /tmp/th40.yaml
+#   (re-add layer names/combos - see drawings/postprocess.py)
+#   keymap draw /tmp/th40.yaml -j qmk/keyboards/epomaker/th40/keyboard.json > drawings/keymap.svg
+parse_config:
+  raw_binding_map:
+    "M_ARROW": "->"
+    "M_FATAR": "=>"
+    "M_NEQ": "!="
+    "M_EQEQ": "=="
+    "M_AND": "&&"
+    "M_OR": "||"
+    "M_LTE": "<="
+    "M_GTE": ">="
+    "M_SCOPE": "::"
+    "M_PAREN": "( )"
+    "M_BRACK": "[ ]"
+    "M_BRACE": "{ }"
+    "M_QUOT2": "\" \""
+    "G_STATUS": "git status"
+    "G_ADD": "git add -A"
+    "G_COMMIT": "git commit"
+    "G_PUSH": "git push"
+    "G_PULL": "git pull"
+    "G_LOG": "git log"
+    "G_DIFF": "git diff"
+    "G_CO": "git checkout"
+    "G_BRANCH": "git branch"
+    "G_STASH": "git stash"
+    "S_CLAUDE": "claude"
+    "S_CLAUDEC": "claude -c"
+    "S_LAZYGIT": "lazygit"
+    "S_CDUP": "cd .."
+    "S_LS": "ls -la"
+    "UC_LOCKB": {t: "Lock", s: "at boot"}
+    "UC_CLEDS": {t: "Lamps", s: "on/off"}
+    "UC_BRTU": {t: "Lamp", s: "bright +"}
+    "UC_BRTD": {t: "Lamp", s: "bright −"}
+    "UC_HRM": {t: "HRM", s: "base swap"}
+    "UC_AURA": "Aura"
+    "UC_RAIN": "Rain"
+    "TD(TD_SFT_CAPS)": {t: "⇧", s: "××Caps"}
+    "TD(TD_MEDIA_TRANSPORT)": {t: "⏯", s: "××⏭ ×××⏮"}
+    "QK_LLCK": {t: "Layer", s: "lock"}
+    "QK_LOCK": {t: "Key", s: "lock"}
+    "SE_LOCK": {t: "Lock", s: "keyboard"}
+    "KC_F21": {t: "◆", s: "Claude"}
+    "KC_F22": {t: "✓", s: "approve"}
+    "KC_F23": {t: "✕", s: "interrupt"}
+    "RM_TOGG": {t: "Backlight", s: "on/off"}
+    "QK_GESC": {t: "Esc", s: "` ~"}
+    # c2json --no-cpp keeps keymap.c's #define names - map those too
+    "HM_A": {t: "A", h: "Gui"}
+    "HM_S": {t: "S", h: "Alt"}
+    "HM_D": {t: "D", h: "Ctrl"}
+    "HM_F": {t: "F", h: "Shift"}
+    "HM_J": {t: "J", h: "Shift"}
+    "HM_K": {t: "K", h: "Ctrl"}
+    "HM_L": {t: "L", h: "Alt"}
+    "TD_SFT": {t: "⇧", s: "××Caps"}
+    "TD_MPLY": {t: "⏯", s: "×× ⏭  ××× ⏮"}
+    "MO(_CODE)": "Code"
+    "MO(_WM)": "WM"
+    "MO(_GIT)": "Git"
+    "MO(4)": "Code"
+    "MO(5)": "WM"
+    "MO(6)": "Git"
+    "QK_REP": "Repeat"
+    "QK_AREP": "AltRep"
+    "CG_TOGG": {t: "Ctrl⇄Gui"}
+    "SH_TOGG": {t: "Mirror", s: "one-hand"}
+    "S(KC_SLSH)": "?"
+    "DM_REC1": "⏺ 1"
+    "DM_PLY1": "▶ 1"
+    "DM_REC2": "⏺ 2"
+    "DM_PLY2": "▶ 2"
+    "DM_RSTP": "⏹"
+draw_config:
+  dark_mode: auto
+  n_columns: 2
