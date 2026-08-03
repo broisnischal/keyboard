@@ -33,7 +33,7 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 |---|---|---|
 | **1 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
 | **2 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ?` |
-| **3 · System** | `Fn` | media, volume, and every setting key |
+| **3 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
 | **4 · Code** | `Tab` **+** `◆` | operators and digraphs |
 | **5 · Windows** | `Tab` **+** `✓` | Hyprland workspaces and windows |
 | **6 · Git** | `Tab` **+** `✕` | git and shell one-liners |
@@ -43,6 +43,13 @@ that key's layer-2 meaning without holding anything. Tap it again to cancel.
 
 Layers 4-6 are reached by holding `Tab` first, then holding one of the bottom-right keys - the same
 three keys that are the Claude keys on the base layer.
+
+### Locking a layer
+
+While holding a layer, tap the `'` key (bottom-right corner) and the layer **stays** when you let
+go - useful for one-handed arrow work or a run of digits. Tap the same key again to release it.
+Safety net: a locked layer releases itself after a minute of no typing, so it can never leave the
+board feeling broken. Works on Nav, Numbers, System and Git.
 
 ---
 
@@ -95,7 +102,55 @@ English, so fast typing can't trigger them by accident.
 | `N` + `M` | `Delete` |
 | `M` + `,` | `-` |
 | `,` + `.` | `_` |
+| `J` + `K` | `Esc` (the vim escape, on the home row) |
+| `.` + `'` | `:` (otherwise needs a layer plus shift) |
+| `F` + `J` | **arm the prefix key** (see below) |
 | `Q` + `P` | **lock the keyboard** (see below) |
+
+### The prefix key - like tmux's Ctrl-b
+
+Press `F`+`J` together (both index fingers, home position) and the three lamps turn **cyan**: the
+keyboard is armed and waiting for a command, exactly like tmux after its prefix. Then one short
+sequence runs an action:
+
+| Then press | Does |
+|---|---|
+| `S` | put the computer to sleep |
+| `P` | music: pause / play |
+| `N` | music: next track |
+| `B` | music: back a track |
+| `M` | mute |
+| `L` | lock the keyboard |
+| `E` | type your email address |
+| `W` `Q` | vim: Esc `:wq` Enter - save and quit |
+
+There's no rush - the armed prefix waits for you (the cyan lamp shows it's live). Once you start a
+sequence, the action fires about a third of a second after the last key. A key that matches
+nothing just fizzles, cyan goes out, nothing is typed.
+
+The sequences live in one obvious table in `keymap.c` (`leader_end_user`) - adding one is a single
+line.
+
+### Shift+Backspace = Delete
+
+Hold Shift and press Backspace to delete forward. Plain Backspace is unchanged.
+
+### Recorded macros
+
+Record any key sequence on the fly and replay it - two slots, held in memory until unplugged.
+
+| Key (on the Git layer, `Tab` + `✕`) | Does |
+|---|---|
+| `H` / `K` | start recording macro 1 / 2 |
+| `N` | stop recording |
+| `J` / `L` | play macro 1 / 2 |
+
+Record repetitive edits once, replay them all day. The slots are RAM only - a reboot clears them.
+
+### Key lock - hold a key without holding it
+
+`Fn` + `V`, then press any key: it stays held down until you press it again. For scrolling long
+pages, walking in games, or anything that wants a key pinned while your hands do something else.
 
 ### One-shot modifiers
 
@@ -189,6 +244,7 @@ Sends the chords omarchy already binds, so there's nothing to configure.
 | `I` `O` `P` | `git checkout ` · `git branch` · `git stash` |
 | `A` `S` | `claude` · `claude --continue` |
 | `D` `F` `G` | `lazygit` · `cd ..` · `ls -la` |
+| `H` `J` `K` `L` `N` | macro: record 1 · play 1 · record 2 · play 2 · stop |
 
 **These are guesses at your workflow.** They live in one table at the top of
 `qmk/keyboards/epomaker/th40/keymaps/tapdance/keymap.c` - changing a command is a one-line edit.
@@ -214,6 +270,10 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `F` | Repeat |
 | `G`…`L` | prev / play / next / vol− / vol+ |
 | `/` `Z` `X` `C` | one-shot Shift / Ctrl / Alt / Gui |
+| `V` | key lock - pin the next key down |
+
+The play key (`H`) is earbud-style: tap for play/pause, double-tap for next track, triple-tap for
+previous.
 
 Settings reset to defaults after a firmware update - that's the same mechanism that reloads your
 keymap, so it's expected.
@@ -253,7 +313,8 @@ instant - the board is split into thirds and each third follows the lamp above i
 ## Using the lamps for your own things
 
 The lamps are a four-slot priority bus. Slot 0 is Claude; slots 1-3 are yours. The highest-priority
-live slot wins.
+live slot wins. (The prefix key borrows slot 3 for its cyan lamp while armed - anything you put
+there is shadowed only for that moment.)
 
 ```bash
 th40 bus 1 blink red --ttl 60 --priority 95     # urgent, clears itself after 60s
@@ -312,3 +373,8 @@ Claude Code. `th40 status working` should still work by hand regardless.
 it again to go back.
 
 **Wrong letters after using one-handed mode.** It's still on. `Fn` + `S`.
+
+**Stuck on a layer.** You locked it - tap the `'` key, or just wait a minute and it releases
+itself.
+
+**A key seems held down forever.** Key lock is pinning it - press that key once to release it.

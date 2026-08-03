@@ -35,11 +35,15 @@
 // persist across unplugging and reboots, not across firmware updates.
 // ===========================================================================
 
+// The keyboard's config.h caps the datablock at 4 bytes, hence the bitfields.
 typedef struct __attribute__((packed)) {
-    uint8_t lock_on_boot;   // require the unlock pattern after every power-up
-    uint8_t claude_leds;    // drive the three indicator LEDs from Claude Code
-    uint8_t led_brightness; // ceiling for the Claude animations, 0-255
-    uint8_t saved_rgb_mode; // mode to restore when un-blanking the backlight
+    uint8_t lock_on_boot   : 1; // require the unlock pattern after every power-up
+    uint8_t claude_leds    : 1; // drive the three indicator LEDs from Claude Code
+    uint8_t autoshift_on   : 1; // Auto Shift trades hold-latency for shifts - opt-in
+    // (Autocorrect is NOT here: its state lives in keymap_config, which QMK
+    // persists itself - defaulting to on via eeconfig.c.)
+    uint8_t led_brightness;     // ceiling for the Claude animations, 0-255
+    uint8_t saved_rgb_mode;     // mode to restore when un-blanking the backlight
 } user_config_t;
 
 static user_config_t user_config;
@@ -51,6 +55,7 @@ void eeconfig_init_user(void) {
     user_config.claude_leds    = 1;
     user_config.led_brightness = 255;
     user_config.saved_rgb_mode = RGB_MATRIX_SOLID_COLOR;
+    user_config.autoshift_on   = 0;
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
 }
 
@@ -72,7 +77,21 @@ static void user_config_flush_if_due(void) {
     }
 }
 
+// AS_TOGG is consumed inside QMK, so the new state is only visible after the
+// fact. Poll-and-compare here; the deferred write above coalesces it.
+// (Autocorrect needs none of this - AC_TOGG persists via keymap_config.)
+static void feature_state_sync(void) {
+#ifdef AUTO_SHIFT_ENABLE
+    uint8_t as = get_autoshift_state() ? 1 : 0;
+    if (as != user_config.autoshift_on) {
+        user_config.autoshift_on = as;
+        user_config_save();
+    }
+#endif
+}
+
 void housekeeping_task_kb(void) {
+    feature_state_sync();
     user_config_flush_if_due();
     housekeeping_task_user();
 }
@@ -85,10 +104,10 @@ enum layers {
     _BASE = 0,
     _NAV,   // 1  F-keys, arrows, browser
     _NUM,   // 2  digits and the common symbols
-    _MEDIA, // 3  transport + volume
+    _MEDIA, // 3  transport + volume; also via NAV+NUM held together (tri layer)
     _CODE,  // 4  operators, digraphs, paired delimiters
     _WM,    // 5  Hyprland workspaces and windows
-    _GIT,   // 6  git / shell macros
+    _GIT,   // 6  git / shell macros + dynamic macro record/play
     _HRM,   // 7  same base, but with home row mods - opt-in via UC_HRM
 };
 
@@ -179,9 +198,11 @@ static bool send_macro(uint16_t keycode) {
 
 enum tap_dance_index {
     TD_SFT_CAPS,
+    TD_MEDIA_TRANSPORT,
 };
 
-#define TD_SFT TD(TD_SFT_CAPS)
+#define TD_SFT  TD(TD_SFT_CAPS)
+#define TD_MPLY TD(TD_MEDIA_TRANSPORT)
 
 // Register shift on the keydown itself, so shifted typing gains no latency.
 static void td_shift_each_tap(tap_dance_state_t *state, void *user_data) {
@@ -206,8 +227,20 @@ static void td_shift_reset(tap_dance_state_t *state, void *user_data) {
     unregister_code(KC_LSFT);
 }
 
+// Earbud-style transport on one key: tap = play/pause, double = next, triple =
+// previous. A media key has no typing rhythm to disturb, so unlike a letter key
+// the decision delay costs nothing.
+static void td_media_finished(tap_dance_state_t *state, void *user_data) {
+    switch (state->count) {
+        case 1:  tap_code(KC_MPLY); break;
+        case 2:  tap_code(KC_MNXT); break;
+        default: tap_code(KC_MPRV); break;
+    }
+}
+
 tap_dance_action_t tap_dance_actions[] = {
-    [TD_SFT_CAPS] = ACTION_TAP_DANCE_FN_ADVANCED_WITH_RELEASE(td_shift_each_tap, td_shift_each_release, td_shift_finished, td_shift_reset),
+    [TD_SFT_CAPS]        = ACTION_TAP_DANCE_FN_ADVANCED_WITH_RELEASE(td_shift_each_tap, td_shift_each_release, td_shift_finished, td_shift_reset),
+    [TD_MEDIA_TRANSPORT] = ACTION_TAP_DANCE_FN(td_media_finished),
 };
 
 // The global 130ms is what the LT() keys were tuned to; only the keys that
@@ -599,16 +632,91 @@ const uint16_t PROGMEM combo_del[]   = {KC_N, KC_M, COMBO_END};
 const uint16_t PROGMEM combo_mins[]  = {KC_M, KC_COMM, COMBO_END};
 const uint16_t PROGMEM combo_unds[]  = {KC_COMM, KC_DOT, COMBO_END};
 const uint16_t PROGMEM combo_lock[]  = {KC_Q, KC_P, COMBO_END}; // opposite corners, two hands
+// jk is the vim escape; the digraph is absent from English. Defined on the
+// plain keycodes only, so on _HRM (HM_J/HM_K) it simply doesn't exist and the
+// "no combos on home-row-mod keys" rule holds.
+const uint16_t PROGMEM combo_vimesc[] = {KC_J, KC_K, COMBO_END};
+// Colon otherwise needs layer 2 plus shift; ".'" never occurs in prose.
+const uint16_t PROGMEM combo_coln[]   = {KC_DOT, KC_QUOT, COMBO_END};
+// Both index-finger home keys together arm the leader prefix. Plain keycodes
+// only, like jk - the combo doesn't exist on _HRM. (A double-tap letter was
+// considered and rejected: a tap dance can't emit the letter until the term
+// expires, so every single 'a' would lag - see the shift dance notes above.)
+const uint16_t PROGMEM combo_lead[]   = {KC_F, KC_J, COMBO_END};
 
 combo_t key_combos[] = {
-    COMBO(combo_esc,  KC_ESC),
-    COMBO(combo_undo, LCTL(KC_Z)),
-    COMBO(combo_caps, CW_TOGG),
-    COMBO(combo_del,  KC_DEL),
-    COMBO(combo_mins, KC_MINS),
-    COMBO(combo_unds, KC_UNDS),
-    COMBO(combo_lock, QK_SECURE_LOCK),
+    COMBO(combo_esc,    KC_ESC),
+    COMBO(combo_undo,   LCTL(KC_Z)),
+    COMBO(combo_caps,   CW_TOGG),
+    COMBO(combo_del,    KC_DEL),
+    COMBO(combo_mins,   KC_MINS),
+    COMBO(combo_unds,   KC_UNDS),
+    COMBO(combo_lock,   QK_SECURE_LOCK),
+    COMBO(combo_vimesc, KC_ESC),
+    COMBO(combo_coln,   KC_COLN),
+    COMBO(combo_lead,   QK_LEAD),
 };
+
+// ===========================================================================
+// Leader - a tmux-style prefix
+//
+// F+J arms it; the lamps hold cyan while it waits (slot 3, so a host script
+// using that slot is shadowed only for the moment the prefix is armed). Then
+// one short sequence runs an action. EDIT ME: each entry is one line, and an
+// unmatched sequence just fizzles out.
+// ===========================================================================
+
+#ifdef LEADER_ENABLE
+#define BUS_SLOT_LEADER 3
+
+void leader_start_user(void) {
+    // Cyan: not a colour any Claude state uses. Priority 60 sits above
+    // idle/working but below permission/done/error - a red blink still wins.
+    bus_set(BUS_SLOT_LEADER, PAT_SOLID, 0, 220, 255, 60, 0);
+}
+
+void leader_end_user(void) {
+    bus_set(BUS_SLOT_LEADER, PAT_OFF, 0, 0, 0, 0, 0);
+
+    if (leader_sequence_one_key(KC_S)) {
+        tap_code(KC_SLEP); // system sleep
+    } else if (leader_sequence_one_key(KC_P)) {
+        tap_code(KC_MPLY); // music: pause/play
+    } else if (leader_sequence_one_key(KC_N)) {
+        tap_code(KC_MNXT); // music: next
+    } else if (leader_sequence_one_key(KC_B)) {
+        tap_code(KC_MPRV); // music: back
+    } else if (leader_sequence_one_key(KC_M)) {
+        tap_code(KC_MUTE);
+    } else if (leader_sequence_one_key(KC_L)) {
+        secure_lock(); // same as the Q+P combo
+    } else if (leader_sequence_one_key(KC_E)) {
+        SEND_STRING("nischal.dahal@aitc.ai"); // EDIT ME: your email
+    } else if (leader_sequence_two_keys(KC_W, KC_Q)) {
+        SEND_STRING(SS_TAP(X_ESC) ":wq\n"); // vim: save and quit
+    }
+}
+#endif // LEADER_ENABLE
+
+// ===========================================================================
+// Key overrides, tri layer
+// ===========================================================================
+
+// Shift+Backspace = Delete, mods suppressed. Overrides match the literal
+// keymap keycode, so the LT() space bars can't carry one - which is why there
+// is no shift+space=underscore here (the ,+. combo covers _ instead).
+#ifdef KEY_OVERRIDE_ENABLE
+const key_override_t shift_bspc_del = ko_make_basic(MOD_MASK_SHIFT, KC_BSPC, KC_DEL);
+
+const key_override_t *key_overrides[] = {&shift_bspc_del};
+#endif
+
+// Hold both outer space bars (Nav + Num) together to get _MEDIA, so the system
+// layer is reachable without moving a thumb to the middle Fn key.
+layer_state_t layer_state_set_kb(layer_state_t state) {
+    state = update_tri_layer_state(state, _NAV, _NUM, _MEDIA);
+    return layer_state_set_user(state);
+}
 
 // One-handed mode: mirror each row across its own centre. The rows have
 // different key spans on this board, so a single "11 - col" would map several
@@ -634,6 +742,13 @@ const keypos_t PROGMEM hand_swap_config[MATRIX_ROWS][MATRIX_COLS] = {
 
 void keyboard_post_init_kb(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config));
+    // Auto Shift boots enabled in QMK; apply the persisted opt-in before the
+    // first keystroke. autoshift_disable() is RAM-only - NOTHING in this
+    // function may write EEPROM. autocorrect_enable()/disable() both do
+    // (eeconfig_update_keymap); keep such calls out of init.
+#ifdef AUTO_SHIFT_ENABLE
+    if (!user_config.autoshift_on) autoshift_disable();
+#endif
     rgb_matrix_enable_noeeprom(); // indicators only render while the matrix runs
     if (rgb_matrix_get_mode() == RGB_MATRIX_NONE) {
         // rgb_matrix.c skips the indicator callback whenever the effect index is
@@ -734,14 +849,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_NAV] = LAYOUT_tkl_ansi(
         QK_GESC     , KC_F1       , KC_F2       , KC_F3       , KC_F4       , KC_F5       , KC_F6       , KC_F7       , KC_F8       , KC_F9       , KC_F10      , KC_DEL,
         _______     , KC_HOME     , KC_PGDN     , KC_PGUP     , KC_END      , KC_INS      , KC_LEFT     , KC_DOWN     , KC_UP       , KC_RIGHT    , KC_ENT,
-        TD_SFT      , _______     , KC_PSCR     , CG_TOGG     , KC_WBAK     , KC_WFWD     , QK_REP      , QK_AREP     , XXXXXXX     , KC_F11      , KC_F12      , MO(0),
+        TD_SFT      , _______     , KC_PSCR     , CG_TOGG     , KC_WBAK     , KC_WFWD     , QK_REP      , QK_AREP     , XXXXXXX     , KC_F11      , KC_F12      , QK_LLCK,
         _______     , _______     , _______     , _______     , _______     , LT(2,KC_SPC), MO(_CODE)   , MO(_WM)     , MO(_GIT)
     ),
     // Digits and everyday symbols.
     [_NUM] = LAYOUT_tkl_ansi(
         QK_GESC   , KC_1      , KC_2      , KC_3      , KC_4      , KC_5      , KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_BSPC,
         _______   , KC_MINS   , KC_EQL    , KC_SCLN   , KC_QUOT   , KC_GRV    , KC_LBRC   , KC_RBRC   , KC_SLSH   , S(KC_SLSH), KC_ENT,
-        TD_SFT    , _______   , _______   , _______   , _______   , _______   , _______   , _______   , KC_NUBS   , KC_COMM   , KC_DOT    , MO(0),
+        TD_SFT    , _______   , _______   , _______   , _______   , _______   , _______   , _______   , KC_NUBS   , KC_COMM   , KC_DOT    , QK_LLCK,
         _______   , _______   , _______   , _______   , _______   , KC_SPC    , _______   , _______   , _______
     ),
     // Media + system. Settings on the top row persist to EEPROM; the home row
@@ -749,8 +864,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // bottom row is one-shot mods.
     [_MEDIA] = LAYOUT_tkl_ansi(
         _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , UC_HRM , UC_AURA, UC_RAIN, RM_TOGG, XXXXXXX, XXXXXXX, _______,
-        _______, SE_LOCK      , SH_TOGG      , CW_TOGG      , QK_REP       , KC_MPRV, KC_MPLY, KC_MNXT, KC_VOLD, KC_VOLU, _______,
-        _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, MO(0),
+        _______, SE_LOCK      , SH_TOGG      , CW_TOGG      , QK_REP       , KC_MPRV, TD_MPLY, KC_MNXT, KC_VOLD, KC_VOLU, _______,
+        _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), QK_LOCK, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, QK_LLCK,
         _______, _______      , _______      , _______      , _______      , _______, _______, _______, _______
     ),
     // Code: operators on the number row, digraphs on the home row, delimiters below.
@@ -770,8 +885,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // git and shell one-shots.
     [_GIT] = LAYOUT_tkl_ansi(
         _______, G_STATUS , G_ADD    , G_COMMIT , G_PUSH  , G_PULL, G_LOG  , G_DIFF , G_CO   , G_BRANCH, G_STASH, _______,
-        _______, S_CLAUDE , S_CLAUDEC, S_LAZYGIT, S_CDUP  , S_LS  , XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX , _______,
-        _______, XXXXXXX  , XXXXXXX  , XXXXXXX  , XXXXXXX , XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, MO(0),
+        _______, S_CLAUDE , S_CLAUDEC, S_LAZYGIT, S_CDUP  , S_LS  , DM_REC1, DM_PLY1, DM_REC2, DM_PLY2 , _______,
+        _______, XXXXXXX  , XXXXXXX  , XXXXXXX  , XXXXXXX , XXXXXXX, XXXXXXX, DM_RSTP, XXXXXXX, XXXXXXX, XXXXXXX, QK_LLCK,
         _______, _______  , _______  , _______ , _______, _______, _______, _______, _______
     ),
     // Identical to _BASE but with home row mods on ASDF / JKL. UC_HRM swaps the

@@ -2,6 +2,7 @@
 """th40 - drive the Epomaker TH40's three indicator lamps from the host.
 
   th40 status <state>              Claude Code state (slot 0)
+  th40 notify                      hook entry point; reads the payload on stdin
   th40 bus <slot> <pattern> <colour> [--ttl S] [--priority N]
   th40 clear <slot>
   th40 config                      show persistent settings + lock state
@@ -82,7 +83,47 @@ def parse_colour(text):
     return None
 
 
+HOOK = {}
+
+
+def _read_hook():
+    """Hook JSON arrives on stdin. Read it once; stdin can only be consumed."""
+    global HOOK
+    import json as _j
+    try:
+        if not sys.stdin.isatty():
+            raw = sys.stdin.read(4000)
+            if raw.strip():
+                HOOK = _j.loads(raw)
+    except Exception:
+        pass
+
+
+def _log(argv):
+    """Record what actually fired. Hooks are invisible otherwise, and guessing
+    at which one turns the lamps red is how you fix the wrong thing twice."""
+    import os, json as _j, time
+    if os.environ.get("TH40_LOG", "1") != "1":
+        return
+    ev = HOOK.get("hook_event_name", "")
+    msg = str(HOOK.get("message", ""))[:80]
+    try:
+        path = os.path.expanduser("~/.cache/th40-hooks.log")
+        # keep it small - this is a diagnostic tail, not an audit trail
+        lines = []
+        if os.path.exists(path):
+            with open(path) as f:
+                lines = f.readlines()[-400:]
+        lines.append(f"{time.strftime('%H:%M:%S')}  {' '.join(argv):24} {ev:20} {msg}\n")
+        with open(path, "w") as f:
+            f.writelines(lines)
+    except Exception:
+        pass
+
+
 def main(argv):
+    _read_hook()
+    _log(argv)
     if not argv or argv[0] in ("-h", "--help", "help"):
         print(__doc__)
         return 0
@@ -155,6 +196,17 @@ def main(argv):
         elif cmd == "clear":
             slot = int(positional[0]) if positional else 1
             _send(h, [CMD, SUB_BUS_CLEAR, slot])
+
+        elif cmd == "notify":
+            # Notification fires for two very different things: "Claude needs
+            # your permission to use X" and "Claude is waiting for your input".
+            # The second one lands at the end of every turn, so mapping all of
+            # them to red made the lamps go red on completion. Only the first
+            # deserves red; for the rest, leave whatever Stop set alone.
+            msg = str(HOOK.get("message", "")).lower()
+            if any(w in msg for w in ("permission", "approve", "allow", "confirm")):
+                _send(h, [CMD, STATES["permission"]])
+            # else: deliberately no state change
 
         elif cmd == "config":
             r = _send(h, [CMD, SUB_CFG_GET])

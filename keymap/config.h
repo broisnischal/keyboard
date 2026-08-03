@@ -84,6 +84,58 @@
 #define CAPS_WORD_IDLE_TIMEOUT 5000
 
 // ---------------------------------------------------------------------------
+// Auto Shift - hold a key slightly longer for its shifted value
+//
+// Compiled in but DISABLED at boot unless the persisted flag says otherwise
+// (user_config_t in keymap.c): when on, every key must wait out this timeout
+// before it can decide, which is exactly the release-latency this board was
+// tuned to avoid. Toggle with AS_TOGG (layer 3); the choice persists.
+// ---------------------------------------------------------------------------
+#define AUTO_SHIFT_TIMEOUT 170
+
+// ---------------------------------------------------------------------------
+// Autocorrect - fixes common typos as you type. Zero latency (it edits after
+// the fact) and on by default (QMK's own eeconfig default). AC_TOGG (layer 3)
+// toggles it and QMK persists that natively in keymap_config - do NOT add
+// keymap-side persistence: autocorrect_enable()/disable() write EEPROM, and
+// an EEPROM write inside keyboard_post_init_kb hangs boot on this board.
+// Custom dictionary: generate autocorrect_data.h into this directory with
+// `qmk generate-autocorrect-data`.
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Dynamic macros
+//
+// 32 shared entries instead of the default 128. RAM is 16 KB and this port's
+// heap is simply "whatever the linker has left" (data+bss always reads
+// ~16,380 - that is padding, not overflow), so a smaller buffer buys back
+// ~1 KB of heap headroom. 32 keypresses covers the "record a repetitive
+// edit" use case.
+// ---------------------------------------------------------------------------
+#define DYNAMIC_MACRO_SIZE 32
+
+// ---------------------------------------------------------------------------
+// Leader key - a tmux-style prefix. F+J pressed together arms it (combo in
+// keymap.c); the lamps go cyan while it waits; sequences live in
+// leader_end_user().
+//
+// NO_TIMEOUT: like tmux, an armed prefix waits for you - the lamp shows it.
+// PER_KEY_TIMING + 300: once a sequence starts, each key buys another 300ms,
+// and the action fires 300ms after the last key (core leader has no early
+// match, so that lag is inherent - 300 is the comfortable floor).
+// ---------------------------------------------------------------------------
+#define LEADER_NO_TIMEOUT
+#define LEADER_PER_KEY_TIMING
+#define LEADER_TIMEOUT 300
+
+// ---------------------------------------------------------------------------
+// Layer Lock - QK_LLCK on each momentary layer makes it stick. The timeout is
+// the safety net: a locked layer someone forgot about looks exactly like a
+// broken keyboard, so it releases itself after a minute of no typing.
+// ---------------------------------------------------------------------------
+#define LAYER_LOCK_IDLE_TIMEOUT 60000
+
+// ---------------------------------------------------------------------------
 // Secure: pattern-to-unlock
 //
 // SAFETY: QMK's Secure boots SECURE_LOCKED and, by default, re-locks after 60s
@@ -103,6 +155,9 @@
 
 // ---------------------------------------------------------------------------
 // Persistent user settings (see user_config_t in keymap.c)
+//
+// The keyboard's own config.h pins this at 4 and redefining it differently is
+// an error, so the struct packs its booleans as bitfields to stay inside.
 // ---------------------------------------------------------------------------
 #define EECONFIG_USER_DATA_SIZE 4
 

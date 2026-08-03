@@ -80,7 +80,7 @@ matter if you ever redo that conversion:
 | 0 `_BASE` | - | alphas, home-row mods, three Claude keys |
 | 1 `_NAV` | hold Tab, or `LT(1,SPC)` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/fwd, `QK_REP`/`QK_AREP` |
 | 2 `_NUM` | `OSL(2)`, or `LT(2,SPC)` | digits, everyday symbols |
-| 3 `_MEDIA` | `LT(3,SPC)` | transport, volume, **and the system/settings keys** |
+| 3 `_MEDIA` | `LT(3,SPC)`, or both outer spaces together (tri layer) | transport, volume, **and the system/settings keys** |
 | 4 `_CODE` | **layer 1 + bottom-right key 1** | operators, digraphs, paired delimiters |
 | 5 `_WM` | **layer 1 + bottom-right key 2** | Hyprland workspaces and windows |
 | 6 `_GIT` | **layer 1 + bottom-right key 3** | git / shell macros |
@@ -109,8 +109,8 @@ The old media layer had three empty rows, so the settings keys live there:
 | Row | Keys |
 |---|---|
 | top | `UC_LOCKB` (toggle lock-on-boot) · `UC_CLEDS` (toggle Claude LEDs) · `UC_BRTD` / `UC_BRTU` (LED brightness) |
-| home | `SE_LOCK` · `SH_TOGG` (one-handed) · `CW_TOGG` (Caps Word) · `QK_REP` · then prev/play/next/vol− /vol+ |
-| bottom | one-shot `Shift` · `Ctrl` · `Alt` · `GUI` |
+| home | `SE_LOCK` · `SH_TOGG` (one-handed) · `CW_TOGG` (Caps Word) · `QK_REP` · then prev/play/next/vol− /vol+ (play is a tap dance: 1=play 2=next 3=prev) |
+| bottom | one-shot `Shift` · `Ctrl` · `Alt` · `GUI` · `QK_LOCK` (key lock) · `QK_LLCK` on the quote key |
 
 ### Persistent settings (EEPROM)
 
@@ -267,11 +267,62 @@ in English, so fast typing can't fire them:
 | `N`+`M` | `Delete` | "nm" rare |
 | `M`+`,` | `-` | not a letter pair |
 | `,`+`.` | `_` | not a letter pair |
+| `J`+`K` | `Esc` | vim escape; "jk" ~never occurs |
+| `.`+`'` | `:` | not a letter pair; `:` otherwise needs layer 2 + shift |
+| `F`+`J` | `QK_LEAD` (arm leader) | both index home keys - deliberate, and "fj" never occurs |
 | `Q`+`P` | lock keyboard | opposite corners, needs both hands |
 
-None touch the home-row-mod keys, so combos and mods can't interfere.
+None touch the home-row-mod keys, so combos and mods can't interfere. `J`+`K` keeps that true by
+being defined on the plain keycodes only - on `_HRM` those keys are `HM_J`/`HM_K`, so the combo
+simply doesn't exist there.
 
 One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` - tap twice to lock a mod on.
+
+### Tri layer, layer lock, key overrides, dynamic macros, key lock
+
+- **Tri layer** is `update_tri_layer_state(state, _NAV, _NUM, _MEDIA)` in `layer_state_set_kb()` -
+  no `TRI_LAYER_ENABLE` needed, and unlike the `TL_LOWR`/`TL_UPPR` keycodes it works with the
+  existing `LT()` space bars. Holding both outer spaces opens `_MEDIA`.
+- **Layer lock** (`QK_LLCK`) sits on the quote-key position of `_NAV`, `_NUM`, `_MEDIA` and `_GIT`,
+  replacing the `MO(0)` placeholders that did nothing. `LAYER_LOCK_IDLE_TIMEOUT 60000` releases a
+  forgotten lock - a stuck layer is indistinguishable from a broken board.
+- **Key overrides**: only `Shift+Backspace → Delete`. The trigger has to be the *literal* keymap
+  keycode (`process_key_override.c` compares `override->trigger == keycode`), so the `LT(n,KC_SPC)`
+  space bars cannot carry the classic shift+space→underscore - the `,`+`.` combo covers `_`.
+- **Dynamic macros** (`DM_REC1/PLY1/REC2/PLY2` on `_GIT` home row, `DM_RSTP` below) - RAM only,
+  cleared on reboot.
+- **Key lock** (`QK_LOCK`, layer 3) pins the next basic keycode down until pressed again.
+
+### Leader - the tmux prefix
+
+`F`+`J` (combo) arms it; sequences are the if-chain in `leader_end_user()`. Design notes:
+
+- The requested trigger was double-tap `A`. Rejected: a tap dance on a letter cannot emit the
+  letter until the tapping term expires (the shift dance gets away with keydown-register because
+  shift is retractable; a printed `a` is not), so every single `a` would lag. The combo is instant
+  and "fj" doesn't occur in English.
+- `LEADER_NO_TIMEOUT` + `LEADER_PER_KEY_TIMING 300`: armed waits forever (tmux behaviour), then
+  each sequence key buys 300ms. Core leader has no early-match - the action always fires one
+  timeout after the last key. Don't chase that lag; it's structural.
+- `leader_start_user()` parks solid cyan on **bus slot 3** at priority 60 (above idle/working,
+  below permission/done/error) and `leader_end_user()` clears it - so an armed prefix is always
+  visible, and an accidental `F`+`J` explains itself instead of silently eating keys.
+
+### Auto Shift and Autocorrect - removed by choice
+
+Both were built, worked, and were then removed at the owner's request (`= no` in `rules.mk`).
+The code paths remain behind `#ifdef` guards, so re-enabling is a one-line `rules.mk` edit - the
+~83 KB ceiling is no obstacle with LTO on. Two findings from that work stay relevant:
+
+- **Never write EEPROM in `keyboard_post_init_kb`.** `autocorrect_enable()/disable()` call
+  `eeconfig_update_keymap()`. Autocorrect state persists natively in `keymap_config` anyway -
+  QMK's own eeconfig default is even "enabled" - so keymap-side persistence for it is redundant
+  *and* dangerous. Auto Shift has no native persistence; its opt-in flag lives in the user
+  datablock, synced by `feature_state_sync()` via the deferred-write path, and applied at boot
+  with the RAM-only `autoshift_disable()`.
+- **`EECONFIG_USER_DATA_SIZE` is pinned at 4 by the keyboard's `config.h`** and redefining it
+  differently is a `-Werror` (an *identical* redefinition is legal, which is why 4 worked
+  before). New flags fit by packing the booleans in `user_config_t` as bitfields.
 
 `hand_swap_config` mirrors **each row across its own centre**, not a blanket `11 - col`: the rows
 have different key spans on this board (row 1 is cols 1-11, row 2 is cols 0-10, row 4 is sparse), so
@@ -316,7 +367,8 @@ starve. Read it with:
 th40-claude-status scan-rate      # -> "N matrix scans/sec"
 ```
 
-**Measured 2026-08-03: 3083 scans/sec** (0.32 ms per scan) with RGB running. Full input latency
+**Measured 2026-08-03: 3083 scans/sec** (0.32 ms per scan) with RGB running; **5314 scans/sec**
+later the same day once `LTO_ENABLE = yes` landed. Full input latency
 is therefore ~0.16 ms scan + 0 ms debounce + ~0.5 ms USB = **~0.7 ms average, ~1.3 ms worst case**,
 which is the floor for USB HID. There is no latency here left to reclaim - don't go looking.
 
@@ -350,13 +402,9 @@ Tapping term is **130 ms globally** (the board default - your `LT(1,KC_TAB)`, `O
 the double tap is comfortable without loosening the layer taps. That's `TAPPING_TERM_PER_KEY` in
 `keymaps/tapdance/config.h` plus `get_tapping_term()` in `keymap.c`.
 
-`keymaps/tapdance/rules.mk` is the whole feature switch:
-
-```make
-VIA_ENABLE = yes
-DYNAMIC_KEYMAP_ENABLE = yes
-TAP_DANCE_ENABLE = yes
-```
+`keymaps/tapdance/rules.mk` is the whole feature switch - VIA/dynamic keymap, tap dance, repeat,
+Caps Word, combos, Secure, swap hands, custom RGB, key overrides, layer lock, key lock, dynamic
+macros, Auto Shift and Autocorrect. One line per feature; delete a line to drop the feature.
 
 ### Known quirk in the current layout
 
@@ -376,8 +424,26 @@ make -j$(nproc) epomaker/th40:tapdance
 
 Output: `/home/nees/key/qmk/.build/epomaker_th40_tapdance.bin` (also copied to the repo root).
 
-Watch the size line - **128 KB is the hard ceiling**. Current build is ~71 KB, so there's plenty of
-room for Combos, Caps Word, etc.
+Watch the size line - but the limit that matters is **not** the 128 KB of flash. Measured
+2026-08-03, the hard way:
+
+| Image (real code bytes) | Boots? |
+|---|---|
+| 70,144 (factory) · 81,098 · ~82.8 K | yes |
+| 84,912 · 85,572 · 87,706 · 88,352 | **no - board enumerates as nothing at all** |
+| 81,098 padded to 88,438 with `0xFF` | yes - **which proves nothing**: the bootloader skips blank data, so padding cannot probe the ceiling |
+
+So treat **~83 KB of real code as the boot ceiling**. `LTO_ENABLE = yes` in the keymap's
+`rules.mk` keeps the full feature set at ~75 KB (and, as a bonus, raised the scan rate from
+~3,100 to ~5,300 scans/sec). A too-big image is not a brick: the physical bootloader sequence
+still works, flash anything smaller.
+
+Four theories were tested and disproven before the size ceiling was found, in this order: a
+corrupted write (reflash - same failure), RAM overflow (data+bss always reads ~16,380/16,384 on
+this port because the heap absorbs the remainder - it's padding, not pressure), app image
+overlapping the EEPROM emulation pages at 0x1C000 (an 88 K image ends ~20 KB short of them), and
+a per-file bootloader write cap (killed by the padded-image test, which then turned out to be
+confounded anyway). Recorded so nobody walks that path again.
 
 ---
 

@@ -30,7 +30,10 @@ cd qmk && make -j$(nproc) epomaker/th40:tapdance
 `*_kb` variants and calls through. The fork is unmodified and must stay that way - `git -C qmk
 status` should show only the untracked symlink.
 
-**128 KB is the hard flash ceiling.** Currently ~81 KB. Watch the size line on every build.
+**The real ceiling is ~83 KB of code, not 128 KB of flash.** Every image over ~83 KB failed to
+boot (measured 2026-08-03: 81-83 KB boots, 84.9 KB+ dead - board enumerates as nothing, bootloader
+only via the physical combo). `LTO_ENABLE = yes` is now mandatory; current build ~75 KB. Do not
+test the ceiling by padding with `0xFF` - the bootloader skips blank data and the test lies.
 
 Every layer must have exactly 44 entries:
 
@@ -65,6 +68,18 @@ EOF
   reloads automatically (good) and user settings return to defaults (expected).
 - **Only one flasher at a time.** Two waiting instances both wake on the same bootloader and both
   write `FIRMWARE.BIN`, corrupting the image. `flash-th40.sh` now holds a `flock`.
+- **`EECONFIG_USER_DATA_SIZE` is pinned at 4 by the keyboard's `config.h`.** Redefining it
+  differently in the keymap is a `-Werror`; an identical redefinition is legal. New persistent
+  flags go into `user_config_t` as bitfields, not extra bytes.
+- **No EEPROM writes in init paths.** `autocorrect_enable()/disable()` call
+  `eeconfig_update_keymap()`; anything like that belongs in the main loop, never in
+  `keyboard_post_init_kb`. Autocorrect/one-shot/etc. state persists natively in `keymap_config` -
+  don't duplicate it in the user datablock.
+- **A dead board after a flash is almost always the ~83 KB boot ceiling.** Diagnose in this order:
+  `lsusb -d 36b0:304e` (app), `lsusb -d 03eb:2045` (bootloader), size of the last image. Recovery
+  is always the physical Esc-and-plug sequence plus a smaller image.
+- **Key overrides match the literal keymap keycode.** An `LT(n,KC_SPC)` space bar can never
+  trigger a `KC_SPC` override - don't re-attempt shift+space→underscore.
 
 ## Verifying, rather than assuming
 
