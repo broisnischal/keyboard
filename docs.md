@@ -34,15 +34,30 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 | **1 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
 | **2 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ?` |
 | **3 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
-| **4 · Code** | `Tab` **+** `◆` | operators and digraphs |
-| **5 · Windows** | `Tab` **+** `✓` | Hyprland workspaces and windows |
-| **6 · Git** | `Tab` **+** `✕` | git and shell one-liners |
+| **4 · Code** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | operators and digraphs |
+| **5 · Windows** | `Tab` **+** `✓`, or **travel:** `Fn` **+** `✓` | Hyprland workspaces and windows |
+| **6 · Git** | `Tab` **+** `✕`, or **travel:** `Fn` **+** `✕` | git and shell one-liners |
 
 The `/` key next to left Shift is a **one-shot** for layer 2: tap it, then press one key, and you get
 that key's layer-2 meaning without holding anything. Tap it again to cancel.
 
-Layers 4-6 are reached by holding `Tab` first, then holding one of the bottom-right keys - the same
-three keys that are the Claude keys on the base layer.
+### Travelling to layers 4-6
+
+Layers 4-6 have two routes, and they are not equivalent:
+
+- **Hold `Tab` + `◆`/`✓`/`✕`** - momentary. Two fingers are now busy, so you can only reach the keys
+  your free hand still covers. Fine for a bracket or a workspace switch.
+- **`Fn` + `◆`/`✓`/`✕`** - **latches.** Let go of everything and you are *on* that layer with both
+  hands free, which is the only way to use the right-hand half of Git (`git log`, `git diff`,
+  `git checkout`, `git branch`, `git stash`).
+
+The same press comes back: `Fn` + `◆` again turns Code off. `Fn` reaches the System layer from any
+of the three, because their bottom rows are pass-through.
+
+**If the board ever seems to be typing nonsense - `Fn` + `Gui`.** That is the panic key: it drops
+every latched layer at once. A latched Windows layer turns the whole alphabet into Super-chords and
+looks exactly like a broken keyboard, so this key always gets you back to plain typing. Unplugging
+and replugging also clears it; latched layers are never remembered.
 
 ### Locking a layer
 
@@ -271,6 +286,8 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `G`…`L` | prev / play / next / vol− / vol+ |
 | `/` `Z` `X` `C` | one-shot Shift / Ctrl / Alt / Gui |
 | `V` | key lock - pin the next key down |
+| `◆` `✓` `✕` | travel to Code / Windows / Git and stay there |
+| `Gui` | panic - drop every latched layer |
 
 The play key (`H`) is earbud-style: tap for play/pause, double-tap for next track, triple-tap for
 previous.

@@ -548,19 +548,19 @@ text.combo { font-size: 10px; }
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key"/>
 <a href="#Code">
 <text x="0" y="0" class="key tap layer-activator">Code</text>
-</a><text x="0" y="26" class="key hold">layer</text>
+</a><text x="0" y="26" class="key hold">while held</text>
 </g>
 <g transform="translate(720, 224)" class="key keypos-42">
 <rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key"/>
 <a href="#Windows">
 <text x="0" y="0" class="key tap layer-activator">Windows</text>
-</a><text x="0" y="26" class="key hold">layer</text>
+</a><text x="0" y="26" class="key hold">while held</text>
 </g>
 <g transform="translate(792, 224)" class="key keypos-43">
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key"/>
 <a href="#Git">
 <text x="0" y="0" class="key tap layer-activator">Git</text>
-</a><text x="0" y="26" class="key hold">layer</text>
+</a><text x="0" y="26" class="key hold">while held</text>
 </g>
 </g>
 </g>
@@ -915,9 +915,11 @@ text.combo { font-size: 10px; }
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key trans"/>
 <text x="0" y="0" class="key trans tap">▽</text>
 </g>
-<g transform="translate(112, 224)" class="key trans keypos-36">
-<rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key trans"/>
-<text x="0" y="0" class="key trans tap">▽</text>
+<g transform="translate(112, 224)" class="key keypos-36">
+<rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key"/>
+<a href="#Base">
+<text x="0" y="0" class="key tap layer-activator">Base</text>
+</a><text x="0" y="26" class="key hold">drop all</text>
 </g>
 <g transform="translate(184, 224)" class="key trans keypos-37">
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key trans"/>
@@ -935,17 +937,23 @@ text.combo { font-size: 10px; }
 <rect rx="6" ry="6" x="-85" y="-29" width="170" height="58" class="key trans"/>
 <text x="0" y="0" class="key trans tap">▽</text>
 </g>
-<g transform="translate(648, 224)" class="key trans keypos-41">
-<rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key trans"/>
-<text x="0" y="0" class="key trans tap">▽</text>
+<g transform="translate(648, 224)" class="key keypos-41">
+<rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key"/>
+<a href="#Code">
+<text x="0" y="0" class="key tap layer-activator">Code</text>
+</a><text x="0" y="26" class="key hold">stay</text>
 </g>
-<g transform="translate(720, 224)" class="key trans keypos-42">
-<rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key trans"/>
-<text x="0" y="0" class="key trans tap">▽</text>
+<g transform="translate(720, 224)" class="key keypos-42">
+<rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key"/>
+<a href="#Windows">
+<text x="0" y="0" class="key tap layer-activator">Windows</text>
+</a><text x="0" y="26" class="key hold">stay</text>
 </g>
-<g transform="translate(792, 224)" class="key trans keypos-43">
-<rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key trans"/>
-<text x="0" y="0" class="key trans tap">▽</text>
+<g transform="translate(792, 224)" class="key keypos-43">
+<rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key"/>
+<a href="#Git">
+<text x="0" y="0" class="key tap layer-activator">Git</text>
+</a><text x="0" y="26" class="key hold">stay</text>
 </g>
 </g>
 </g>

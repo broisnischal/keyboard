@@ -38,10 +38,36 @@ LEADER_KEYS = {
     1:  {"t": ":wq", "h": "after W"},               # Q
 }
 
+# qmk c2json keeps the enum name, so TG(_CODE) parses to the legend "TG( CODE)".
+# Draw them as what they do instead. Position -> legend, on the System layer only.
+SYSTEM_TRAVEL = {
+    36: {"t": "Base", "h": "drop all"},
+    41: {"t": "Code", "h": "stay"},
+    # "Windows", not "WM": keymap-drawer turns a legend that matches a layer name
+    # into a link to that layer's own diagram, and the abbreviation missed it.
+    42: {"t": "Windows", "h": "stay"},
+    43: {"t": "Git", "h": "stay"},
+}
+
+# The same three keys on Nav are MO(), and c2json's own legend ("layer") does not
+# say the difference that matters: Nav's route dies when you let go, System's does
+# not. Spell it out, so the drawing teaches the distinction on its own.
+NAV_TRAVEL = {
+    41: {"t": "Code", "h": "while held"},
+    42: {"t": "Windows", "h": "while held"},
+    43: {"t": "Git", "h": "while held"},
+}
+
 doc = yaml.safe_load(sys.stdin)
 doc["combos"] = COMBOS
 
 for name, keys in doc["layers"].items():
+    if name.startswith("System"):
+        for pos, legend in SYSTEM_TRAVEL.items():
+            keys[pos] = legend
+    if name.startswith("Nav"):
+        for pos, legend in NAV_TRAVEL.items():
+            keys[pos] = legend
     # label the pink "you are holding this" cells instead of leaving them blank
     for i, k in enumerate(keys):
         if isinstance(k, dict) and k.get("type") == "held" and not k.get("t"):

@@ -19,7 +19,9 @@ git clone https://github.com/broisnischal/keyboard.git && cd keyboard
 
 All eight layers, drawn from the real `keymap.c` by
 [keymap-drawer](https://github.com/caksoylar/keymap-drawer). Combo chips on the base layer show
-the two-key chords; pink cells mark the key you're holding to be on that layer.
+the two-key chords; pink cells mark the key you're holding to be on that layer. On the layer-reach
+keys, **`while held`** means it dies when you let go and **`stay`** means it latches until you press
+it again.
 
 ![The TH40 keymap: eight layers with combos](drawings/keymap.svg)
 
@@ -30,7 +32,8 @@ What you're looking at (the full tour is [`FEATURES.md`](FEATURES.md)):
   Leader layer above is the cheat sheet
 - **Claude Code integration** - the three lamps mirror Claude's state live; `◆ ✓ ✕` focus,
   approve and interrupt it from anywhere
-- **Tri layer** - both space bars together open System, no Fn reach
+- **Layer travel** - hold `Fn` for System, or both space bars together (tri layer); `Fn`+`◆ ✓ ✕`
+  latches Code / Windows / Git so both hands come free, and `Fn`+`Gui` drops every latched layer
 - **Layer lock** - the `'` key on any hold layer makes it stick; auto-releases after a minute
 - **Combos** - `Q+W`/`J+K`→Esc, `Z+X`→undo, `C+V`→Caps Word, `N+M`→Del, `,+.`→`_`, `.+'`→`:`,
   `Q+P`→lock the keyboard

@@ -737,8 +737,31 @@ const key_override_t *key_overrides[] = {&shift_bspc_del};
 
 // Hold both outer space bars (Nav + Num) together to get _MEDIA, so the system
 // layer is reachable without moving a thumb to the middle Fn key.
+//
+// Deliberately NOT update_tri_layer_state(). That helper CLEARS layer3 on every
+// layer change where layer1+layer2 are not both held:
+//     return (state & mask12) == mask12 ? (state | mask3) : (state & ~mask3);
+// which silently killed the Fn key. LT(3,KC_SPC) set bit 3, this callback ran
+// and stripped it again, so holding Fn reached nothing and every documented
+// "Fn + X" was unreachable - the tri-layer chord was the only way in.
+//
+// So: only ever ADD _MEDIA here, and only take it back off if the tri-layer is
+// what put it there. `tri_owns_media` is that ownership bit.
+static bool tri_owns_media = false;
+
 layer_state_t layer_state_set_kb(layer_state_t state) {
-    state = update_tri_layer_state(state, _NAV, _NUM, _MEDIA);
+    const layer_state_t tri   = ((layer_state_t)1 << _NAV) | ((layer_state_t)1 << _NUM);
+    const layer_state_t media = (layer_state_t)1 << _MEDIA;
+
+    if ((state & tri) == tri) {
+        if (!(state & media)) {
+            tri_owns_media = true; // Fn was not already holding it
+        }
+        state |= media;
+    } else if (tri_owns_media) {
+        tri_owns_media = false;
+        state &= ~media;
+    }
     return layer_state_set_user(state);
 }
 
@@ -886,11 +909,24 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Media + system. Settings on the top row persist to EEPROM; the home row
     // holds lock / one-handed / Caps Word next to the transport keys, and the
     // bottom row is one-shot mods.
+    //
+    // The three Claude keys are the layer-travel keys here: TG() latches, so you
+    // let go of Fn and stay on Code / WM / Git with both hands free. The Nav
+    // route (hold Space R + the same key) is momentary and can only reach the
+    // half of those layers your free hand can still get to - which is why the
+    // latching route exists. Fn + the same key again comes back: the bottom row
+    // of _CODE/_WM/_GIT is transparent, so Fn always reaches this layer.
+    //
+    // Fn + Gui is the panic key - TO(_BASE) drops every latched layer at once.
+    // It sits on the bottom row for the same reason: that row is the only region
+    // transparent on all three travel layers, so this escape works from any of
+    // them. A latched _WM masks the whole alphabet with Super chords and reads as
+    // a dead keyboard, so there has to be one key that always gets you home.
     [_MEDIA] = LAYOUT_tkl_ansi(
-        _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , UC_HRM , UC_AURA, UC_RAIN, RM_TOGG, XXXXXXX, XXXXXXX, _______,
-        _______, SE_LOCK      , SH_TOGG      , CW_TOGG      , QK_REP       , KC_MPRV, TD_MPLY, KC_MNXT, KC_VOLD, KC_VOLU, _______,
-        _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), QK_LOCK, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, QK_LLCK,
-        _______, _______      , _______      , _______      , _______      , _______, _______, _______, _______
+        _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , UC_HRM , UC_AURA, UC_RAIN, RM_TOGG  , XXXXXXX, XXXXXXX , _______,
+        _______, SE_LOCK      , SH_TOGG      , CW_TOGG      , QK_REP       , KC_MPRV, TD_MPLY, KC_MNXT, KC_VOLD  , KC_VOLU, _______,
+        _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), QK_LOCK, XXXXXXX, XXXXXXX, XXXXXXX  , XXXXXXX, XXXXXXX , QK_LLCK,
+        _______, TO(_BASE)    , _______      , _______      , _______      , _______, TG(_CODE), TG(_WM), TG(_GIT)
     ),
     // Code: operators on the number row, digraphs on the home row, delimiters below.
     [_CODE] = LAYOUT_tkl_ansi(

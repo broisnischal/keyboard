@@ -113,11 +113,11 @@ layers:
   - t: SPC
     h: Numbers
   - t: Code
-    h: layer
+    h: while held
   - t: Windows
-    h: layer
+    h: while held
   - t: Git
-    h: layer
+    h: while held
   Numbers:
   - t: Esc
     s: '~'
@@ -244,8 +244,8 @@ layers:
     h: lock
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
+  - t: Base
+    h: drop all
   - t: ▽
     type: trans
   - t: ▽
@@ -254,12 +254,12 @@ layers:
     type: held
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
+  - t: Code
+    h: stay
+  - t: Windows
+    h: stay
+  - t: Git
+    h: stay
   Code:
   - t: ▽
     type: trans

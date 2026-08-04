@@ -50,9 +50,9 @@ Adding a command is one line of C.
 | Nav | `Tab` or `Space R` | F1–F12, arrows, Home/End/PgUp/PgDn |
 | Numbers | `Space L` | digits and everyday symbols |
 | System | `Fn`, **or both spaces together** (tri layer) | media, volume, every setting |
-| Code | `Tab`+`◆` | `-> => != == && \|\|`, `()` `[]` `{}` with the cursor placed inside |
-| Windows | `Tab`+`✓` | Hyprland workspaces and window management |
-| Git | `Tab`+`✕` | `git status/add/commit/push…` as single keys, plus recorded macros |
+| Code | `Tab`+`◆`, or `Fn`+`◆` to stay | `-> => != == && \|\|`, `()` `[]` `{}` with the cursor placed inside |
+| Windows | `Tab`+`✓`, or `Fn`+`✓` to stay | Hyprland workspaces and window management |
+| Git | `Tab`+`✕`, or `Fn`+`✕` to stay | `git status/add/commit/push…` as single keys, plus recorded macros |
 | Home-row mods | opt-in, persisted | GACS mods on ASDF/JKL for those who want them |
 
 **Layer lock:** tap `'` while holding any layer and it sticks — one-handed arrows, a run of

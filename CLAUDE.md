@@ -78,6 +78,12 @@ EOF
 - **A dead board after a flash is almost always the ~83 KB boot ceiling.** Diagnose in this order:
   `lsusb -d 36b0:304e` (app), `lsusb -d 03eb:2045` (bootloader), size of the last image. Recovery
   is always the physical Esc-and-plug sequence plus a smaller image.
+- **`update_tri_layer_state()` silently steals the third layer.** It ends with `(state & ~mask3)`,
+  so it *clears* the adjust layer on every layer change where the two trigger layers are not both
+  held. That killed `LT(3,KC_SPC)` on the Fn key outright - the system layer was reachable only by
+  the tri-layer chord, and every "Fn + X" in `docs.md` was dead for a month. `layer_state_set_kb()`
+  now only ever ORs the bit in, with a `tri_owns_media` flag deciding when it may come off.
+  `TRI_LAYER_ENABLE` calls the same helper and has the same bug.
 - **Key overrides match the literal keymap keycode.** An `LT(n,KC_SPC)` space bar can never
   trigger a `KC_SPC` override - don't re-attempt shift+space→underscore.
 
