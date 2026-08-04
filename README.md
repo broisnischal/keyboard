@@ -47,7 +47,7 @@ Regenerate after a keymap change (config and combo positions live in [`drawings/
 ```bash
 qmk c2json --no-cpp -kb epomaker/th40 -km tapdance -o /tmp/th40.json
 keymap -c drawings/config.yaml parse -q /tmp/th40.json \
-  -l Base Nav Numbers System Code Windows Git "Home-Row Mods" \
+  -l Base "Home-Row Mods" Nav Numbers System Code Windows Git \
   --virtual-layers "Leader (×2 Ctrl)" \
   | python3 drawings/postprocess.py > drawings/keymap.yaml
 keymap -c drawings/config.yaml draw drawings/keymap.yaml \

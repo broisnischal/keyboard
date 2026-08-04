@@ -100,15 +100,22 @@ void housekeeping_task_kb(void) {
 // so overriding _kb keeps the keyboard file completely unmodified - nothing to
 // reapply after a git pull. Every _kb override below calls through to _user.
 
+// ORDER IS LOAD-BEARING. layer_switch_get_layer() ORs default_layer_state into
+// the active layers and scans from the HIGHEST index down, so a default layer
+// above an overlay makes that overlay unreachable. _HRM is a default layer
+// (UC_HRM persists it), and it has no transparent keys - parked at 7 it answered
+// every lookup first and killed layers 1-6 outright, with no way back from the
+// keyboard because Fn+T resolved to plain T. It must stay below every overlay.
+// Measured 2026-08-04. Never reference these as bare numbers.
 enum layers {
     _BASE = 0,
-    _NAV,   // 1  F-keys, arrows, browser
-    _NUM,   // 2  digits and the common symbols
-    _MEDIA, // 3  transport + volume; also via NAV+NUM held together (tri layer)
-    _CODE,  // 4  operators, digraphs, paired delimiters
-    _WM,    // 5  Hyprland workspaces and windows
-    _GIT,   // 6  git / shell macros + dynamic macro record/play
-    _HRM,   // 7  same base, but with home row mods - opt-in via UC_HRM
+    _HRM,   // 1  same base, but with home row mods - opt-in via UC_HRM
+    _NAV,   // 2  F-keys, arrows, browser
+    _NUM,   // 3  digits and the common symbols
+    _MEDIA, // 4  transport + volume; also via NAV+NUM held together (tri layer)
+    _CODE,  // 5  operators, digraphs, paired delimiters
+    _WM,    // 6  Hyprland workspaces and windows
+    _GIT,   // 7  git / shell macros + dynamic macro record/play
 };
 
 // ===========================================================================
@@ -306,7 +313,7 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_an
 //   - as the key being pressed, a layer-tap must never be flow-tapped, or the
 //     space-layers die whenever you reach for one right after a letter;
 //   - as the PREVIOUS key, a layer-tap absolutely must count as typing -
-//     LT(2,KC_SPC) is the space bar, so excluding it broke the flow chain after
+//     LT(_NUM,KC_SPC) is the space bar, so excluding it broke the flow chain after
 //     every single space, and the first letter of every word went back to
 //     resolving on release.
 //
@@ -314,7 +321,7 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_an
 // only hook needed.
 
 // Does this key mean "the user is mid-flow"? Judged on the tap keycode, so the
-// space bar counts even though it is really LT(2,KC_SPC).
+// space bar counts even though it is really LT(_NUM,KC_SPC).
 static bool flow_prev_is_typing(uint16_t keycode) {
     if (IS_QK_LAYER_TAP(keycode)) {
         keycode = QK_LAYER_TAP_GET_TAP_KEYCODE(keycode);
@@ -741,7 +748,7 @@ const key_override_t *key_overrides[] = {&shift_bspc_del};
 // Deliberately NOT update_tri_layer_state(). That helper CLEARS layer3 on every
 // layer change where layer1+layer2 are not both held:
 //     return (state & mask12) == mask12 ? (state | mask3) : (state & ~mask3);
-// which silently killed the Fn key. LT(3,KC_SPC) set bit 3, this callback ran
+// which silently killed the Fn key. LT(_MEDIA,KC_SPC) set bit 3, this callback ran
 // and stripped it again, so holding Fn reached nothing and every documented
 // "Fn + X" was unreachable - the tri-layer chord was the only way in.
 //
@@ -885,19 +892,30 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    // Base. Plain letters - home row mods live on _HRM (layer 7) instead.
+    // Base. Plain letters - home row mods live on _HRM (layer 1) instead.
     [_BASE] = LAYOUT_tkl_ansi(
         QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
-        LT(1,KC_TAB), KC_A        , KC_S        , KC_D        , KC_F        , KC_G        , KC_H        , KC_J        , KC_K        , KC_L        , KC_ENT,
-        TD_SFT      , OSL(2)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        TD_CTL      , KC_LGUI     , KC_LALT     , LT(2,KC_SPC), LT(3,KC_SPC), LT(1,KC_SPC), KC_F21      , KC_F22      , KC_F23
+        LT(_NAV,KC_TAB), KC_A        , KC_S        , KC_D        , KC_F        , KC_G        , KC_H        , KC_J        , KC_K        , KC_L        , KC_ENT,
+        TD_SFT      , OSL(_NUM)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
+        TD_CTL      , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
+    ),
+    // Identical to _BASE but with home row mods on ASDF / JKL. UC_HRM swaps the
+    // default layer here and persists it, so they are opt-in without reflashing.
+    // Kept SECOND in this array on purpose: qmk c2json --no-cpp indexes layers by
+    // their position in the source, not by the [_NAME] designator, so the drawing
+    // mislabels every layer if source order and enum order disagree.
+    [_HRM] = LAYOUT_tkl_ansi(
+        QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
+        LT(_NAV,KC_TAB), HM_A        , HM_S        , HM_D        , HM_F        , KC_G        , KC_H        , HM_J        , HM_K        , HM_L        , KC_ENT,
+        TD_SFT      , OSL(_NUM)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
+        TD_CTL      , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
     ),
     // Nav / F-keys. Bottom-right cluster reaches the three new layers.
     [_NAV] = LAYOUT_tkl_ansi(
         QK_GESC     , KC_F1       , KC_F2       , KC_F3       , KC_F4       , KC_F5       , KC_F6       , KC_F7       , KC_F8       , KC_F9       , KC_F10      , KC_DEL,
         _______     , KC_HOME     , KC_PGDN     , KC_PGUP     , KC_END      , KC_INS      , KC_LEFT     , KC_DOWN     , KC_UP       , KC_RIGHT    , KC_ENT,
         TD_SFT      , _______     , KC_PSCR     , CG_TOGG     , KC_WBAK     , KC_WFWD     , QK_REP      , QK_AREP     , XXXXXXX     , KC_F11      , KC_F12      , QK_LLCK,
-        _______     , _______     , _______     , _______     , _______     , LT(2,KC_SPC), MO(_CODE)   , MO(_WM)     , MO(_GIT)
+        _______     , _______     , _______     , _______     , _______     , LT(_NUM,KC_SPC), MO(_CODE)   , MO(_WM)     , MO(_GIT)
     ),
     // Digits and everyday symbols.
     [_NUM] = LAYOUT_tkl_ansi(
@@ -948,14 +966,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, S_CLAUDE , S_CLAUDEC, S_LAZYGIT, S_CDUP  , S_LS  , DM_REC1, DM_PLY1, DM_REC2, DM_PLY2 , _______,
         _______, XXXXXXX  , XXXXXXX  , XXXXXXX  , XXXXXXX , XXXXXXX, XXXXXXX, DM_RSTP, XXXXXXX, XXXXXXX, XXXXXXX, QK_LLCK,
         _______, _______  , _______  , _______ , _______, _______, _______, _______, _______
-    ),
-    // Identical to _BASE but with home row mods on ASDF / JKL. UC_HRM swaps the
-    // default layer here and persists it, so they are opt-in without reflashing.
-    [_HRM] = LAYOUT_tkl_ansi(
-        QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
-        LT(1,KC_TAB), HM_A        , HM_S        , HM_D        , HM_F        , KC_G        , KC_H        , HM_J        , HM_K        , HM_L        , KC_ENT,
-        TD_SFT      , OSL(2)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        TD_CTL      , KC_LGUI     , KC_LALT     , LT(2,KC_SPC), LT(3,KC_SPC), LT(1,KC_SPC), KC_F21      , KC_F22      , KC_F23
     )
+
 };
 // clang-format on

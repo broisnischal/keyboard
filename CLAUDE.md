@@ -84,6 +84,17 @@ EOF
   the tri-layer chord, and every "Fn + X" in `docs.md` was dead for a month. `layer_state_set_kb()`
   now only ever ORs the bit in, with a `tri_owns_media` flag deciding when it may come off.
   `TRI_LAYER_ENABLE` calls the same helper and has the same bug.
+- **A default layer above an overlay makes that overlay unreachable.** `layer_switch_get_layer()`
+  scans `layer_state | default_layer_state` from the highest index down, so `_HRM` parked at 7 - a
+  persisted default layer with no transparent keys - answered every lookup first and killed layers
+  1-6 outright. Worse, the way back (`Fn`+`T` = `UC_HRM`) resolved to plain `T`, so the keyboard
+  could not undo it; recovery was writing `UC_HRM` into the dynamic keymap over raw HID. `_HRM` is
+  index 1 now and every layer reference in `keymap.c` is symbolic. Never write `LT(2,...)`.
+- **Echo-check every VIA read.** Rapid back-to-back raw HID calls on one handle can return the
+  *previous* request's reply, which reads as a scrambled keymap and sends you diagnosing a
+  non-existent bug. `id_dynamic_keymap_get_keycode` echoes layer/row/col at bytes 1-3 - assert them.
+- **`th40 lock-on-boot on|off` hangs.** `_send()` blocks on a reply the firmware never sends for
+  `SUB_CFG_SET`. `config`, `scan-rate` and `unlock` are fine. Not yet fixed.
 - **Key overrides match the literal keymap keycode.** An `LT(n,KC_SPC)` space bar can never
   trigger a `KC_SPC` override - don't re-attempt shift+space→underscore.
 

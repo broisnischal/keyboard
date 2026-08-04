@@ -77,23 +77,32 @@ matter if you ever redo that conversion:
 
 | Layer | Reached by | Contents |
 |---|---|---|
-| 0 `_BASE` | - | alphas, home-row mods, three Claude keys |
-| 1 `_NAV` | hold Tab, or `LT(1,SPC)` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/fwd, `QK_REP`/`QK_AREP` |
-| 2 `_NUM` | `OSL(2)`, or `LT(2,SPC)` | digits, everyday symbols |
-| 3 `_MEDIA` | `LT(3,SPC)`, or both outer spaces together (tri layer) | transport, volume, **and the system/settings keys** |
-| 4 `_CODE` | `MO()` on **layer 1 + bottom-right key 1**, or `TG()` on **layer 3 + the same key** | operators, digraphs, paired delimiters |
-| 5 `_WM` | `MO()` on **layer 1 + bottom-right key 2**, or `TG()` on **layer 3 + the same key** | Hyprland workspaces and windows |
-| 6 `_GIT` | `MO()` on **layer 1 + bottom-right key 3**, or `TG()` on **layer 3 + the same key** | git / shell macros |
+| 0 `_BASE` | - | alphas, three Claude keys |
+| 1 `_HRM` | `UC_HRM` swaps the default layer here, persisted | same base plus home row mods on ASDF/JKL |
+| 2 `_NAV` | hold Tab, or `LT(_NAV,SPC)` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/fwd, `QK_REP`/`QK_AREP` |
+| 3 `_NUM` | `OSL(_NUM)`, or `LT(_NUM,SPC)` | digits, everyday symbols |
+| 4 `_MEDIA` | `LT(_MEDIA,SPC)`, or both outer spaces together (tri layer) | transport, volume, **and the system/settings keys** |
+| 5 `_CODE` | `MO()` on **`_NAV` + bottom-right key 1**, or `TG()` on **`_MEDIA` + the same key** | operators, digraphs, paired delimiters |
+| 6 `_WM` | `MO()` on **`_NAV` + bottom-right key 2**, or `TG()` on **`_MEDIA` + the same key** | Hyprland workspaces and windows |
+| 7 `_GIT` | `MO()` on **`_NAV` + bottom-right key 3**, or `TG()` on **`_MEDIA` + the same key** | git / shell macros |
+
+**`_HRM` is at index 1 and that is not cosmetic.** It is a *default* layer, and
+`layer_switch_get_layer()` ORs `default_layer_state` in with the active layers and scans from the
+highest index down. Parked at 7 - above every overlay, with no transparent keys - it answered every
+lookup first and made layers 1-6 completely unreachable, with no way back from the keyboard because
+`Fn`+`T` resolved to plain `T`. Recovered over raw HID by writing `UC_HRM` into the dynamic keymap.
+Measured 2026-08-04. Every layer reference in `keymap.c` is symbolic now, so nothing drifts if the
+order changes again.
 
 The bottom-right cluster is the Claude keys on layer 0 and the layer-reach keys on
 layer 1, so everything "extra" lives under one thumb-adjacent group. Eight dynamic-keymap
 layers exist (`lib/rdmctmzt_common/fs026_eeprom.h`), so there is one spare.
 
-The `TG()` route on layer 3 exists because the `MO()` route is only half usable: it costs two
+The `TG()` route on `_MEDIA` exists because the `MO()` route is only half usable: it costs two
 held fingers, and `_GIT`'s right-hand half (`git log`, `git diff`, `git checkout`, `git branch`,
-`git stash`) is then unreachable. Latching frees both hands. It is placed on layer 3's bottom row
+`git stash`) is then unreachable. Latching frees both hands. It is placed on `_MEDIA`'s bottom row
 because **the bottom row is the only region transparent on all three of `_CODE`/`_WM`/`_GIT`** -
-so `LT(3,SPC)` still reaches layer 3 from a latched layer, and the same `Fn` + key press turns it
+so `LT(_MEDIA,SPC)` still reaches it from a latched layer, and the same `Fn` + key press turns it
 back off. `TO(_BASE)` sits next to it on the Gui position as the panic key: a latched `_WM` masks
 the whole alphabet with `LGUI()` chords and is indistinguishable from a dead board, so one key has
 to drop every latched layer at once. Nothing about this persists - `layer_state` is RAM.
@@ -111,7 +120,7 @@ work correctly.
 they live in one `send_macro()` table at the top of `keymap.c`; changing a command is a
 one-line edit.
 
-### Layer 3 - media + system
+### `_MEDIA` - media + system
 
 The old media layer had three empty rows, so the settings keys live there:
 
@@ -243,8 +252,8 @@ session start, so they take effect after a restart.
 | Effect | Key | Behaviour |
 |---|---|---|
 | `CLAUDE_BLACKOUT` | `RM_TOGG` | keys dark, lamps alive - the "backlight off" state |
-| `CLAUDE_AURA` | layer 3, top row | whole board takes the Claude state colour: breathing while thinking, a band sweeping left-to-right while a tool runs, a hard full-board strobe when permission is needed |
-| `CLAUDE_RAIN` | layer 3, top row | Matrix rain in the Claude state colour, and **every keypress drops a fresh bright head on that column** |
+| `CLAUDE_AURA` | `_MEDIA`, top row | whole board takes the Claude state colour: breathing while thinking, a band sweeping left-to-right while a tool runs, a hard full-board strobe when permission is needed |
+| `CLAUDE_RAIN` | `_MEDIA`, top row | Matrix rain in the Claude state colour, and **every keypress drops a fresh bright head on that column** |
 
 The rain seeds itself from `claude_rain_kick[]`, written by `process_record_kb` with the exact
 matrix column you hit - more precise than going through the hit tracker's pixel coordinates, and it
@@ -278,7 +287,7 @@ in English, so fast typing can't fire them:
 | `M`+`,` | `-` | not a letter pair |
 | `,`+`.` | `_` | not a letter pair |
 | `J`+`K` | `Esc` | vim escape; "jk" ~never occurs |
-| `.`+`'` | `:` | not a letter pair; `:` otherwise needs layer 2 + shift |
+| `.`+`'` | `:` | not a letter pair; `:` otherwise needs `_NUM` + shift |
 | `Q`+`P` | lock keyboard | opposite corners, needs both hands |
 
 None touch the home-row-mod keys, so combos and mods can't interfere. `J`+`K` keeps that true by
@@ -311,7 +320,7 @@ One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` - tap twice 
   space bars cannot carry the classic shift+space→underscore - the `,`+`.` combo covers `_`.
 - **Dynamic macros** (`DM_REC1/PLY1/REC2/PLY2` on `_GIT` home row, `DM_RSTP` below) - RAM only,
   cleared on reboot.
-- **Key lock** (`QK_LOCK`, layer 3) pins the next basic keycode down until pressed again.
+- **Key lock** (`QK_LOCK`, `_MEDIA`) pins the next basic keycode down until pressed again.
 
 ### Leader - the tmux prefix
 
@@ -432,8 +441,8 @@ macros, Auto Shift and Autocorrect. One line per feature; delete a line to drop 
 
 The **bottom-right three keys** (the Alt / Menu / Ctrl positions right of the third space -
 matrix `4,8` `4,9` `4,10`) arrived as `KC_NO` on layer 0 from the VIA export, i.e. dead. They now
-carry `KC_F21`/`F22`/`F23` (the Claude keys) on layer 0, `MO()` for layers 4-6 on layer 1, and
-`TG()` for the same three on layer 3. Nothing on this board is dead any more.
+carry `KC_F21`/`F22`/`F23` (the Claude keys) on layer 0, `MO()` for `_CODE`/`_WM`/`_GIT` on `_NAV`, and
+`TG()` for the same three on `_MEDIA`. Nothing on this board is dead any more.
 
 ---
 

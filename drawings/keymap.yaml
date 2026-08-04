@@ -17,8 +17,7 @@ layers:
   - P
   - t: BSPC
     s: ⇧ Del
-  - t: TAB
-    h: Nav
+  - LT( NAV,TAB)
   - A
   - S
   - D
@@ -31,8 +30,7 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - t: Numbers
-    h: sticky
+  - OSL( NUM)
   - Z
   - X
   - C
@@ -47,12 +45,67 @@ layers:
     h: ×2 Leader
   - LGUI
   - LALT
-  - t: SPC
-    h: Numbers
-  - t: SPC
-    h: System
-  - t: SPC
-    h: Nav
+  - LT( NUM,SPC)
+  - LT( MEDIA,SPC)
+  - LT( NAV,SPC)
+  - t: ◆
+    h: Claude
+  - t: ✓
+    h: approve
+  - t: ✕
+    h: interrupt
+  Home-Row Mods:
+  - t: Esc
+    s: '~'
+  - Q
+  - W
+  - E
+  - R
+  - T
+  - Y
+  - U
+  - I
+  - O
+  - P
+  - BSPC
+  - LT( NAV,TAB)
+  - t: A
+    h: Gui
+  - t: S
+    h: Alt
+  - t: D
+    h: Ctrl
+  - t: F
+    h: Shift
+  - G
+  - H
+  - t: J
+    h: Shift
+  - t: K
+    h: Ctrl
+  - t: L
+    h: Alt
+  - ENT
+  - t: ⇧
+    h: tap ×2 Caps
+  - OSL( NUM)
+  - Z
+  - X
+  - C
+  - V
+  - B
+  - N
+  - M
+  - ','
+  - .
+  - ''''
+  - t: Ctrl
+    h: ×2 Leader
+  - LGUI
+  - LALT
+  - LT( NUM,SPC)
+  - LT( MEDIA,SPC)
+  - LT( NAV,SPC)
   - t: ◆
     h: Claude
   - t: ✓
@@ -73,8 +126,8 @@ layers:
   - F9
   - F10
   - DEL
-  - t: held
-    type: held
+  - t: ▽
+    type: trans
   - HOME
   - PGDN
   - PGUP
@@ -110,8 +163,7 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: SPC
-    h: Numbers
+  - LT( NUM,SPC)
   - t: Code
     h: while held
   - t: Windows
@@ -146,8 +198,8 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - t: held
-    type: held
+  - t: ▽
+    type: trans
   - t: ▽
     type: trans
   - t: ▽
@@ -250,8 +302,8 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: held
-    type: held
+  - t: ▽
+    type: trans
   - t: ▽
     type: trans
   - t: Code
@@ -485,69 +537,6 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  Home-Row Mods:
-  - t: Esc
-    s: '~'
-  - Q
-  - W
-  - E
-  - R
-  - T
-  - Y
-  - U
-  - I
-  - O
-  - P
-  - BSPC
-  - t: TAB
-    h: Nav
-  - t: A
-    h: Gui
-  - t: S
-    h: Alt
-  - t: D
-    h: Ctrl
-  - t: F
-    h: Shift
-  - G
-  - H
-  - t: J
-    h: Shift
-  - t: K
-    h: Ctrl
-  - t: L
-    h: Alt
-  - ENT
-  - t: ⇧
-    h: tap ×2 Caps
-  - t: Numbers
-    h: sticky
-  - Z
-  - X
-  - C
-  - V
-  - B
-  - N
-  - M
-  - ','
-  - .
-  - ''''
-  - t: Ctrl
-    h: ×2 Leader
-  - LGUI
-  - LALT
-  - t: SPC
-    h: Numbers
-  - t: SPC
-    h: System
-  - t: SPC
-    h: Nav
-  - t: ◆
-    h: Claude
-  - t: ✓
-    h: approve
-  - t: ✕
-    h: interrupt
   Leader (×2 Ctrl):
   - ''
   - t: :wq

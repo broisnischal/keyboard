@@ -31,19 +31,22 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 
 | Layer | Hold | Contains |
 |---|---|---|
-| **1 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
-| **2 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ?` |
-| **3 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
-| **4 · Code** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | operators and digraphs |
-| **5 · Windows** | `Tab` **+** `✓`, or **travel:** `Fn` **+** `✓` | Hyprland workspaces and windows |
-| **6 · Git** | `Tab` **+** `✕`, or **travel:** `Fn` **+** `✕` | git and shell one-liners |
+| **2 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
+| **3 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ?` |
+| **4 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
+| **5 · Code** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | operators and digraphs |
+| **6 · Windows** | `Tab` **+** `✓`, or **travel:** `Fn` **+** `✓` | Hyprland workspaces and windows |
+| **7 · Git** | `Tab` **+** `✕`, or **travel:** `Fn` **+** `✕` | git and shell one-liners |
 
-The `/` key next to left Shift is a **one-shot** for layer 2: tap it, then press one key, and you get
-that key's layer-2 meaning without holding anything. Tap it again to cancel.
+Layer 0 is plain letters and layer 1 is the opt-in home-row-mod version of it (see *Home row
+mods* below) - neither is something you hold.
 
-### Travelling to layers 4-6
+The `/` key next to left Shift is a **one-shot** for the Numbers layer: tap it, then press one key,
+and you get that key's Numbers meaning without holding anything. Tap it again to cancel.
 
-Layers 4-6 have two routes, and they are not equivalent:
+### Travelling to Code / Windows / Git
+
+Those three layers have two routes, and they are not equivalent:
 
 - **Hold `Tab` + `◆`/`✓`/`✕`** - momentary. Two fingers are now busy, so you can only reach the keys
   your free hand still covers. Fine for a bracket or a workspace switch.
@@ -224,7 +227,7 @@ anyone who can unplug the board can reflash it. It stops someone walking past yo
 
 ---
 
-## Layer 4 · Code
+## Layer 5 · Code
 
 Number row gives `! @ # $ % ^ & * - +`.
 
@@ -238,7 +241,7 @@ Home row is the things you type constantly:
 
 Bottom row: `~` `` ` `` `\` `|` `<` `>`, then `<=` `>=` `::` and `""`.
 
-## Layer 5 · Windows
+## Layer 6 · Windows
 
 Sends the chords omarchy already binds, so there's nothing to configure.
 
@@ -249,7 +252,7 @@ Sends the chords omarchy already binds, so there's nothing to configure.
 | `Z` `X` | close window, fullscreen |
 | `C` `V` `B` `N` | focus left / down / up / right |
 
-## Layer 6 · Git and shell
+## Layer 7 · Git and shell
 
 | Key | Runs |
 |---|---|
@@ -266,7 +269,7 @@ Sends the chords omarchy already binds, so there's nothing to configure.
 
 ---
 
-## Layer 3 · System and settings
+## Layer 4 · System and settings
 
 Everything here persists to the keyboard's own memory and survives unplugging.
 
@@ -382,7 +385,7 @@ anything at all.
 **Lamps don't follow Claude Code.** The hooks live in a plugin that loads at session start - restart
 Claude Code. `th40 status working` should still work by hand regardless.
 
-**A layer key does nothing.** Layers 4-6 need `Tab` held *first*, then the bottom-right key.
+**A layer key does nothing.** Code / Windows / Git need `Tab` held *first*, then the bottom-right key.
 
 **Keyboard completely dead.** You may have locked it - press the top-left key, then type `N E E S`.
 

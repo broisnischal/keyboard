@@ -89,13 +89,13 @@
 // Compiled in but DISABLED at boot unless the persisted flag says otherwise
 // (user_config_t in keymap.c): when on, every key must wait out this timeout
 // before it can decide, which is exactly the release-latency this board was
-// tuned to avoid. Toggle with AS_TOGG (layer 3); the choice persists.
+// tuned to avoid. Toggle with AS_TOGG (the System layer); the choice persists.
 // ---------------------------------------------------------------------------
 #define AUTO_SHIFT_TIMEOUT 170
 
 // ---------------------------------------------------------------------------
 // Autocorrect - fixes common typos as you type. Zero latency (it edits after
-// the fact) and on by default (QMK's own eeconfig default). AC_TOGG (layer 3)
+// the fact) and on by default (QMK's own eeconfig default). AC_TOGG (the System layer)
 // toggles it and QMK persists that natively in keymap_config - do NOT add
 // keymap-side persistence: autocorrect_enable()/disable() write EEPROM, and
 // an EEPROM write inside keyboard_post_init_kb hangs boot on this board.
