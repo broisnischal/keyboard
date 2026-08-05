@@ -112,39 +112,48 @@ enum layers {
     _HRM,   // 1  same base, but with home row mods - opt-in via UC_HRM
     _NAV,   // 2  F-keys, arrows, browser
     _NUM,   // 3  digits and the common symbols
-    _MEDIA, // 4  transport + volume; also via NAV+NUM held together (tri layer)
-    _CODE,  // 5  operators, digraphs, paired delimiters
-    _WM,    // 6  Hyprland workspaces and windows
-    _GIT,   // 7  git / shell macros + dynamic macro record/play
+    _MEDIA, // 4  transport, volume, settings; also NAV+NUM held together
+    _WM,    // 5  tmux and window management, merged onto one layer
+    _SPR1,  // 6  spare - empty, transparent, reachable via Nav/Fn + F22
+    _SPR2,  // 7  spare - empty, transparent, reachable via Nav/Fn + F23
 };
+
+// DYNAMIC_KEYMAP_LAYER_COUNT is 8 (fs026_eeprom.h), and keymap_introspection.c
+// static-asserts that keymaps[] has no more layers than that. Eight is the
+// ceiling, not a target - the two spares exist so a new idea has somewhere to
+// go without renumbering anything.
 
 // ===========================================================================
 // Macro strings
 //
-// EDIT ME: these are a first guess at the commands worth a single key. Change
-// the strings, the names stay valid.
+// tmux only. The prefix is one #define: change TMUX_PFX if yours is not C-b
+// and every sequence below follows.
+//
+// SS_DELAY after the prefix is deliberate. tmux is reading a pty; back-to-back
+// reports can arrive inside one read and the command byte gets eaten, which
+// looks exactly like "the key did nothing".
 // ===========================================================================
 
+#define TMUX_PFX SS_LCTL("b") SS_DELAY(20)
+
 enum custom_keycodes {
-    // Operators and digraphs
-    M_ARROW = SAFE_RANGE, // ->
-    M_FATAR,              // =>
-    M_NEQ,                // !=
-    M_EQEQ,               // ==
-    M_AND,                // &&
-    M_OR,                 // ||
-    M_LTE,                // <=
-    M_GTE,                // >=
-    M_SCOPE,              // ::
-    // Paired delimiters, cursor left between them
-    M_PAREN,              // ()
-    M_BRACK,              // []
-    M_BRACE,              // {}
-    M_QUOT2,              // ""
-    // git
-    G_STATUS, G_ADD, G_COMMIT, G_PUSH, G_PULL, G_LOG, G_DIFF, G_CO, G_BRANCH, G_STASH,
-    // shell
-    S_CLAUDE, S_CLAUDEC, S_LAZYGIT, S_CDUP, S_LS,
+    // tmux: panes
+    T_SPLTV = SAFE_RANGE, // prefix %  split side by side
+    T_SPLTH,              // prefix "  split stacked
+    T_ZOOM,               // prefix z  zoom / unzoom the pane
+    T_KILLP,              // prefix x  kill the pane
+    T_PANEL,              // prefix <Left>
+    T_PANED,              // prefix <Down>
+    T_PANEU,              // prefix <Up>
+    T_PANER,              // prefix <Right>
+    // tmux: windows and sessions
+    T_NEWW,               // prefix c  new window
+    T_PREVW,              // prefix p
+    T_NEXTW,              // prefix n
+    T_LASTW,              // prefix l  back to the previous window
+    T_LISTW,              // prefix w  choose a window
+    T_SESS,               // prefix s  choose a session
+    T_DETACH,             // prefix d
     // persistent settings
     UC_LOCKB, // toggle "require the unlock pattern at power-up"
     UC_CLEDS, // toggle the Claude indicator LEDs
@@ -157,36 +166,22 @@ enum custom_keycodes {
 
 static bool send_macro(uint16_t keycode) {
     switch (keycode) {
-        case M_ARROW:   SEND_STRING("->");                      return true;
-        case M_FATAR:   SEND_STRING("=>");                      return true;
-        case M_NEQ:     SEND_STRING("!=");                      return true;
-        case M_EQEQ:    SEND_STRING("==");                      return true;
-        case M_AND:     SEND_STRING("&&");                      return true;
-        case M_OR:      SEND_STRING("||");                      return true;
-        case M_LTE:     SEND_STRING("<=");                      return true;
-        case M_GTE:     SEND_STRING(">=");                      return true;
-        case M_SCOPE:   SEND_STRING("::");                      return true;
-        case M_PAREN:   SEND_STRING("()" SS_TAP(X_LEFT));       return true;
-        case M_BRACK:   SEND_STRING("[]" SS_TAP(X_LEFT));       return true;
-        case M_BRACE:   SEND_STRING("{}" SS_TAP(X_LEFT));       return true;
-        case M_QUOT2:   SEND_STRING("\"\"" SS_TAP(X_LEFT));     return true;
+        case T_SPLTV:  SEND_STRING(TMUX_PFX "%");               return true;
+        case T_SPLTH:  SEND_STRING(TMUX_PFX "\"");              return true;
+        case T_ZOOM:   SEND_STRING(TMUX_PFX "z");               return true;
+        case T_KILLP:  SEND_STRING(TMUX_PFX "x");               return true;
+        case T_PANEL:  SEND_STRING(TMUX_PFX SS_TAP(X_LEFT));    return true;
+        case T_PANED:  SEND_STRING(TMUX_PFX SS_TAP(X_DOWN));    return true;
+        case T_PANEU:  SEND_STRING(TMUX_PFX SS_TAP(X_UP));      return true;
+        case T_PANER:  SEND_STRING(TMUX_PFX SS_TAP(X_RIGHT));   return true;
 
-        case G_STATUS:  SEND_STRING("git status\n");            return true;
-        case G_ADD:     SEND_STRING("git add -A\n");            return true;
-        case G_COMMIT:  SEND_STRING("git commit -m \"");        return true;
-        case G_PUSH:    SEND_STRING("git push\n");              return true;
-        case G_PULL:    SEND_STRING("git pull\n");              return true;
-        case G_LOG:     SEND_STRING("git log --oneline -15\n"); return true;
-        case G_DIFF:    SEND_STRING("git diff\n");              return true;
-        case G_CO:      SEND_STRING("git checkout ");           return true;
-        case G_BRANCH:  SEND_STRING("git branch\n");            return true;
-        case G_STASH:   SEND_STRING("git stash\n");             return true;
-
-        case S_CLAUDE:  SEND_STRING("claude\n");                return true;
-        case S_CLAUDEC: SEND_STRING("claude --continue\n");     return true;
-        case S_LAZYGIT: SEND_STRING("lazygit\n");               return true;
-        case S_CDUP:    SEND_STRING("cd ..\n");                 return true;
-        case S_LS:      SEND_STRING("ls -la\n");                return true;
+        case T_NEWW:   SEND_STRING(TMUX_PFX "c");               return true;
+        case T_PREVW:  SEND_STRING(TMUX_PFX "p");               return true;
+        case T_NEXTW:  SEND_STRING(TMUX_PFX "n");               return true;
+        case T_LASTW:  SEND_STRING(TMUX_PFX "l");               return true;
+        case T_LISTW:  SEND_STRING(TMUX_PFX "w");               return true;
+        case T_SESS:   SEND_STRING(TMUX_PFX "s");               return true;
+        case T_DETACH: SEND_STRING(TMUX_PFX "d");               return true;
     }
     return false;
 }
@@ -206,12 +201,10 @@ static bool send_macro(uint16_t keycode) {
 enum tap_dance_index {
     TD_SFT_CAPS,
     TD_MEDIA_TRANSPORT,
-    TD_CTL_LEADER,
 };
 
 #define TD_SFT  TD(TD_SFT_CAPS)
 #define TD_MPLY TD(TD_MEDIA_TRANSPORT)
-#define TD_CTL  TD(TD_CTL_LEADER)
 
 // Register shift on the keydown itself, so shifted typing gains no latency.
 static void td_shift_each_tap(tap_dance_state_t *state, void *user_data) {
@@ -247,35 +240,14 @@ static void td_media_finished(tap_dance_state_t *state, void *user_data) {
     }
 }
 
-// Double-tap Left Ctrl arms the leader. Same construction as the shift dance,
-// so Ctrl registers on the keydown and holds/chords cost nothing. A double-tap
-// LETTER was requested and rejected twice (a, then f): a tap dance on a letter
-// either delays every press or has to backspace what it typed, and "ff" is in
-// off/coffee/different - it would arm the prefix constantly.
-static void td_ctl_each_tap(tap_dance_state_t *state, void *user_data) {
-    register_code(KC_LCTL);
-}
-
-static void td_ctl_each_release(tap_dance_state_t *state, void *user_data) {
-    unregister_code(KC_LCTL);
-}
-
-static void td_ctl_finished(tap_dance_state_t *state, void *user_data) {
-    if (state->count == 2 && !state->pressed) {
-#ifdef LEADER_ENABLE
-        leader_start();
-#endif
-    }
-}
-
-static void td_ctl_reset(tap_dance_state_t *state, void *user_data) {
-    unregister_code(KC_LCTL);
-}
-
+// Left Ctrl used to be a tap dance too, because double-tapping it armed the
+// leader. Even with the mod registered on the keydown, that put Ctrl inside the
+// tap dance state machine with a 200ms term, and Ctrl+A and friends felt late.
+// The leader is gone and Ctrl is a plain KC_LCTL - nothing to resolve, nothing
+// to wait for.
 tap_dance_action_t tap_dance_actions[] = {
     [TD_SFT_CAPS]        = ACTION_TAP_DANCE_FN_ADVANCED_WITH_RELEASE(td_shift_each_tap, td_shift_each_release, td_shift_finished, td_shift_reset),
     [TD_MEDIA_TRANSPORT] = ACTION_TAP_DANCE_FN(td_media_finished),
-    [TD_CTL_LEADER]      = ACTION_TAP_DANCE_FN_ADVANCED_WITH_RELEASE(td_ctl_each_tap, td_ctl_each_release, td_ctl_finished, td_ctl_reset),
 };
 
 // The global 130ms is what the LT() keys were tuned to; only the keys that
@@ -283,7 +255,6 @@ tap_dance_action_t tap_dance_actions[] = {
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case TD_SFT:
-        case TD_CTL:
             return 200;
         case HM_A: case HM_S: case HM_D: case HM_F:
         case HM_J: case HM_K: case HM_L:
@@ -291,6 +262,16 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
         default:
             return TAPPING_TERM;
     }
+}
+
+// Permissive hold is right for the home row MODS and wrong for the LT() space
+// bars. Rolling space into the next letter - space down, letter down, letter up,
+// space up - matches permissive hold's rule exactly, so it resolved as a hold
+// and the roll produced a digit instead of "space letter". Restricting it to
+// mod-taps means a layer tap is decided by the tapping term alone: a deliberate
+// reach for a layer always exceeds 130ms, a roll never does.
+bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
+    return IS_QK_MOD_TAP(keycode);
 }
 
 // Which hand each key belongs to, for CHORDAL_HOLD. Same-hand chords settle as
@@ -661,6 +642,13 @@ bool caps_word_press_user(uint16_t keycode) {
 
 // Pairs chosen to be digraphs that essentially never occur in English, so a
 // fast roll types the letters instead of firing the combo.
+//
+// Cost, stated once so it is not rediscovered: a key that belongs to ANY combo
+// has its keydown withheld by process_combo() until the combo is ruled out - by
+// the next keydown, by the release, or by COMBO_TERM. These nine cover
+// Q W Z X C V N M , . ' J K P. Picking rare digraphs prevents false triggers, it
+// does not remove the delay; that is inherent to combos. Kept because they are
+// wanted. Lower COMBO_TERM to trade recognition slack for less of it.
 const uint16_t PROGMEM combo_esc[]   = {KC_Q, KC_W, COMBO_END};
 const uint16_t PROGMEM combo_undo[]  = {KC_Z, KC_X, COMBO_END};
 const uint16_t PROGMEM combo_caps[]  = {KC_C, KC_V, COMBO_END};
@@ -686,48 +674,6 @@ combo_t key_combos[] = {
     COMBO(combo_vimesc, KC_ESC),
     COMBO(combo_coln,   KC_COLN),
 };
-
-// ===========================================================================
-// Leader - a tmux-style prefix
-//
-// Double-tap Left Ctrl arms it (the TD_CTL dance above); the lamps hold cyan
-// while it waits (slot 3, so a host script using that slot is shadowed only
-// for the moment the prefix is armed). Then one short sequence runs an
-// action. EDIT ME: each entry is one line, and an unmatched sequence just
-// fizzles out.
-// ===========================================================================
-
-#ifdef LEADER_ENABLE
-#define BUS_SLOT_LEADER 3
-
-void leader_start_user(void) {
-    // Cyan: not a colour any Claude state uses. Priority 60 sits above
-    // idle/working but below permission/done/error - a red blink still wins.
-    bus_set(BUS_SLOT_LEADER, PAT_SOLID, 0, 220, 255, 60, 0);
-}
-
-void leader_end_user(void) {
-    bus_set(BUS_SLOT_LEADER, PAT_OFF, 0, 0, 0, 0, 0);
-
-    if (leader_sequence_one_key(KC_S)) {
-        tap_code(KC_SLEP); // system sleep
-    } else if (leader_sequence_one_key(KC_P)) {
-        tap_code(KC_MPLY); // music: pause/play
-    } else if (leader_sequence_one_key(KC_N)) {
-        tap_code(KC_MNXT); // music: next
-    } else if (leader_sequence_one_key(KC_B)) {
-        tap_code(KC_MPRV); // music: back
-    } else if (leader_sequence_one_key(KC_M)) {
-        tap_code(KC_MUTE);
-    } else if (leader_sequence_one_key(KC_L)) {
-        secure_lock(); // same as the Q+P combo
-    } else if (leader_sequence_one_key(KC_E)) {
-        SEND_STRING("nischal.dahal@aitc.ai"); // EDIT ME: your email
-    } else if (leader_sequence_two_keys(KC_W, KC_Q)) {
-        SEND_STRING(SS_TAP(X_ESC) ":wq\n"); // vim: save and quit
-    }
-}
-#endif // LEADER_ENABLE
 
 // ===========================================================================
 // Key overrides, tri layer
@@ -820,6 +766,47 @@ void keyboard_post_init_kb(void) {
     keyboard_post_init_user();
 }
 
+// Tab is LT(_NAV,KC_TAB) again, and this hook is the only reason that is safe.
+//
+// A tap-hold key emits its tap on RELEASE, so plain LT() on Tab meant Alt+Tab
+// fired nothing until the finger came up - and holding Tab past the tapping term
+// gave the Nav layer and no Tab at all. That is not fixable from
+// process_record_kb: for a tap-hold key, action_tapping.c buffers the keydown and
+// only calls process_record() once it has DECIDED, so anything there runs too
+// late by construction.
+//
+// pre_process_record_kb runs in action_exec() at action.c:133, before
+// action_tapping_process(). Returning false here skips the tap-hold machinery for
+// this event entirely. So: if any modifier is already down, the user is typing
+// Alt+Tab / Ctrl+Tab / Shift+Tab, never reaching for a layer - send a real Tab on
+// the keydown and hold it, exactly as a plain Tab key would (so holding it
+// repeats and walks the window list).
+//
+// The trade-off is deliberate: Nav cannot be reached by Tab while a modifier is
+// held. Space R is the other Nav key and is unaffected.
+static bool tab_mod_bypass = false;
+
+bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (keycode == LT(_NAV, KC_TAB) && !secure_is_locked()) {
+        uint8_t mods = get_mods();
+#ifndef NO_ACTION_ONESHOT
+        mods |= get_oneshot_mods();
+#endif
+        if (record->event.pressed) {
+            if (mods) {
+                tab_mod_bypass = true;
+                register_code(KC_TAB);
+                return false;
+            }
+        } else if (tab_mod_bypass) {
+            tab_mod_bypass = false;
+            unregister_code(KC_TAB);
+            return false;
+        }
+    }
+    return pre_process_record_user(keycode, record);
+}
+
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     // While locked, swallow everything. The top-left key is the only way in -
     // matched on its matrix position so it works regardless of the active
@@ -893,11 +880,16 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base. Plain letters - home row mods live on _HRM (layer 1) instead.
+    //
+    // Ctrl is a plain KC_LCTL (it was a tap dance, which is what made Ctrl+A feel
+    // late). Tab keeps its Nav hold, but only because pre_process_record_kb above
+    // sends a real Tab the instant any modifier is down - without that hook,
+    // Alt+Tab does not work on an LT() Tab key.
     [_BASE] = LAYOUT_tkl_ansi(
         QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
-        LT(_NAV,KC_TAB), KC_A        , KC_S        , KC_D        , KC_F        , KC_G        , KC_H        , KC_J        , KC_K        , KC_L        , KC_ENT,
+        LT(_NAV,KC_TAB), KC_A     , KC_S        , KC_D        , KC_F        , KC_G        , KC_H        , KC_J        , KC_K        , KC_L        , KC_ENT,
         TD_SFT      , OSL(_NUM)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        TD_CTL      , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
+        KC_LCTL     , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
     ),
     // Identical to _BASE but with home row mods on ASDF / JKL. UC_HRM swaps the
     // default layer here and persists it, so they are opt-in without reflashing.
@@ -906,16 +898,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // mislabels every layer if source order and enum order disagree.
     [_HRM] = LAYOUT_tkl_ansi(
         QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
-        LT(_NAV,KC_TAB), HM_A        , HM_S        , HM_D        , HM_F        , KC_G        , KC_H        , HM_J        , HM_K        , HM_L        , KC_ENT,
+        LT(_NAV,KC_TAB), HM_A     , HM_S        , HM_D        , HM_F        , KC_G        , KC_H        , HM_J        , HM_K        , HM_L        , KC_ENT,
         TD_SFT      , OSL(_NUM)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        TD_CTL      , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
+        KC_LCTL     , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
     ),
-    // Nav / F-keys. Bottom-right cluster reaches the three new layers.
+    // Nav / F-keys. Bottom-right cluster reaches _WM and the two spares
+    // momentarily; the same three keys on _MEDIA latch them instead.
     [_NAV] = LAYOUT_tkl_ansi(
         QK_GESC     , KC_F1       , KC_F2       , KC_F3       , KC_F4       , KC_F5       , KC_F6       , KC_F7       , KC_F8       , KC_F9       , KC_F10      , KC_DEL,
         _______     , KC_HOME     , KC_PGDN     , KC_PGUP     , KC_END      , KC_INS      , KC_LEFT     , KC_DOWN     , KC_UP       , KC_RIGHT    , KC_ENT,
         TD_SFT      , _______     , KC_PSCR     , CG_TOGG     , KC_WBAK     , KC_WFWD     , QK_REP      , QK_AREP     , XXXXXXX     , KC_F11      , KC_F12      , QK_LLCK,
-        _______     , _______     , _______     , _______     , _______     , LT(_NUM,KC_SPC), MO(_CODE)   , MO(_WM)     , MO(_GIT)
+        _______     , _______     , _______     , _______     , _______     , LT(_NUM,KC_SPC), MO(_WM)     , MO(_SPR1)   , MO(_SPR2)
     ),
     // Digits and everyday symbols.
     [_NUM] = LAYOUT_tkl_ansi(
@@ -929,11 +922,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // bottom row is one-shot mods.
     //
     // The three Claude keys are the layer-travel keys here: TG() latches, so you
-    // let go of Fn and stay on Code / WM / Git with both hands free. The Nav
-    // route (hold Space R + the same key) is momentary and can only reach the
+    // let go of Fn and stay on WM / Spare 1 / Spare 2 with both hands free. The
+    // Nav route (hold Space R + the same key) is momentary and can only reach the
     // half of those layers your free hand can still get to - which is why the
     // latching route exists. Fn + the same key again comes back: the bottom row
-    // of _CODE/_WM/_GIT is transparent, so Fn always reaches this layer.
+    // of those layers is transparent, so Fn always reaches this layer.
     //
     // Fn + Gui is the panic key - TO(_BASE) drops every latched layer at once.
     // It sits on the bottom row for the same reason: that row is the only region
@@ -943,29 +936,45 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_MEDIA] = LAYOUT_tkl_ansi(
         _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , UC_HRM , UC_AURA, UC_RAIN, RM_TOGG  , XXXXXXX, XXXXXXX , _______,
         _______, SE_LOCK      , SH_TOGG      , CW_TOGG      , QK_REP       , KC_MPRV, TD_MPLY, KC_MNXT, KC_VOLD  , KC_VOLU, _______,
-        _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), QK_LOCK, XXXXXXX, XXXXXXX, XXXXXXX  , XXXXXXX, XXXXXXX , QK_LLCK,
-        _______, TO(_BASE)    , _______      , _______      , _______      , _______, TG(_CODE), TG(_WM), TG(_GIT)
+        _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), QK_LOCK, DM_REC1, DM_PLY1, DM_REC2  , DM_PLY2, DM_RSTP , QK_LLCK,
+        _______, TO(_BASE)    , _______      , _______      , _______      , _______, TG(_WM), TG(_SPR1), TG(_SPR2)
     ),
-    // Code: operators on the number row, digraphs on the home row, delimiters below.
-    [_CODE] = LAYOUT_tkl_ansi(
-        _______, KC_EXLM, KC_AT  , KC_HASH, KC_DLR , KC_PERC, KC_CIRC, KC_AMPR, KC_ASTR, KC_MINS, KC_PLUS, _______,
-        _______, M_ARROW, M_FATAR, M_NEQ  , M_EQEQ , M_AND  , M_OR   , M_PAREN, M_BRACK, M_BRACE, _______,
-        _______, KC_TILD, KC_GRV , KC_BSLS, KC_PIPE, KC_LABK, KC_RABK, M_LTE  , M_GTE  , M_SCOPE, M_QUOT2, _______,
+    // Tmux + windows, merged onto one layer. Left hand drives tmux, right hand
+    // drives the window manager, and the split is the same on both rows:
+    //
+    //   row 1  A S D F G  tmux panes          H J K L  tmux pane focus (arrows)
+    //   row 2  Z X C V B  tmux windows        N M , .  Hyprland window focus
+    //          + the key left of Z: last window     + ': close window
+    //   row 0  1 - 0                          Hyprland workspaces 1-10
+    //
+    // Workspaces earn a whole row here because on a 40% they are otherwise
+    // unreachable: Super+3 on the base layer means holding Gui AND the Num
+    // thumb AND E, which is not a chord anyone hits twice.
+    //
+    // Everything tmux is a macro sending the real prefix sequence, so tmux needs
+    // no config; everything WM is a plain Super chord, which is what omarchy
+    // binds out of the box.
+    [_WM] = LAYOUT_tkl_ansi(
+        _______, LGUI(KC_1), LGUI(KC_2), LGUI(KC_3), LGUI(KC_4), LGUI(KC_5), LGUI(KC_6)   , LGUI(KC_7)   , LGUI(KC_8) , LGUI(KC_9)    , LGUI(KC_0), _______,
+        _______, T_NEWW    , T_SPLTV   , T_SPLTH   , T_ZOOM    , T_KILLP   , T_PANEL      , T_PANED      , T_PANEU    , T_PANER       , _______,
+        _______, T_LASTW   , T_PREVW   , T_NEXTW   , T_LISTW   , T_SESS    , T_DETACH     , LGUI(KC_LEFT), LGUI(KC_DOWN), LGUI(KC_UP) , LGUI(KC_RIGHT), LGUI(KC_W),
+        _______, TO(_BASE) , _______   , _______   , _______   , _______   , _______      , _______      , _______
+    ),
+    // Two spares. Fully transparent, so reaching one changes nothing until you
+    // put something on it - in VIA (layers 6 and 7) or here. They exist so the
+    // eight layers the EEPROM allocates are all accounted for and nothing has to
+    // be renumbered later; layer indices are load-bearing on this board.
+    [_SPR1] = LAYOUT_tkl_ansi(
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______
     ),
-    // Hyprland. Sends the chords omarchy already binds, so no WM config needed.
-    [_WM] = LAYOUT_tkl_ansi(
-        _______, LGUI(KC_1)       , LGUI(KC_2)       , LGUI(KC_3)       , LGUI(KC_4)       , LGUI(KC_5)       , LGUI(KC_6)       , LGUI(KC_7)       , LGUI(KC_8)       , LGUI(KC_9)       , LGUI(KC_0), _______,
-        _______, LGUI(LSFT(KC_1)) , LGUI(LSFT(KC_2)) , LGUI(LSFT(KC_3)) , LGUI(LSFT(KC_4)) , LGUI(LSFT(KC_5)) , LGUI(LSFT(KC_6)) , LGUI(LSFT(KC_7)) , LGUI(LSFT(KC_8)) , LGUI(LSFT(KC_9)) , _______,
-        _______, LGUI(KC_W)       , LGUI(KC_F)       , LGUI(KC_LEFT)    , LGUI(KC_DOWN)    , LGUI(KC_UP)      , LGUI(KC_RIGHT)   , LGUI(KC_J)       , LGUI(KC_P)       , LGUI(KC_C)       , LGUI(KC_V), _______,
-        _______, _______          , _______          , _______          , _______          , _______          , _______          , _______          , _______
-    ),
-    // git and shell one-shots.
-    [_GIT] = LAYOUT_tkl_ansi(
-        _______, G_STATUS , G_ADD    , G_COMMIT , G_PUSH  , G_PULL, G_LOG  , G_DIFF , G_CO   , G_BRANCH, G_STASH, _______,
-        _______, S_CLAUDE , S_CLAUDEC, S_LAZYGIT, S_CDUP  , S_LS  , DM_REC1, DM_PLY1, DM_REC2, DM_PLY2 , _______,
-        _______, XXXXXXX  , XXXXXXX  , XXXXXXX  , XXXXXXX , XXXXXXX, XXXXXXX, DM_RSTP, XXXXXXX, XXXXXXX, XXXXXXX, QK_LLCK,
-        _______, _______  , _______  , _______ , _______, _______, _______, _______, _______
+    [_SPR2] = LAYOUT_tkl_ansi(
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______
     )
 
 };

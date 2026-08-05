@@ -17,7 +17,8 @@ layers:
   - P
   - t: BSPC
     s: ⇧ Del
-  - LT( NAV,TAB)
+  - t: Tab
+    h: hold Nav
   - A
   - S
   - D
@@ -30,7 +31,8 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - OSL( NUM)
+  - t: Num
+    h: one-shot
   - Z
   - X
   - C
@@ -41,13 +43,15 @@ layers:
   - ','
   - .
   - ''''
-  - t: Ctrl
-    h: ×2 Leader
+  - Ctrl
   - LGUI
   - LALT
-  - LT( NUM,SPC)
-  - LT( MEDIA,SPC)
-  - LT( NAV,SPC)
+  - t: Space
+    h: hold Num
+  - t: Fn
+    h: hold System
+  - t: Space
+    h: hold Nav
   - t: ◆
     h: Claude
   - t: ✓
@@ -68,7 +72,8 @@ layers:
   - O
   - P
   - BSPC
-  - LT( NAV,TAB)
+  - t: Tab
+    h: hold Nav
   - t: A
     h: Gui
   - t: S
@@ -88,7 +93,8 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - OSL( NUM)
+  - t: Num
+    h: one-shot
   - Z
   - X
   - C
@@ -99,13 +105,15 @@ layers:
   - ','
   - .
   - ''''
-  - t: Ctrl
-    h: ×2 Leader
+  - Ctrl
   - LGUI
   - LALT
-  - LT( NUM,SPC)
-  - LT( MEDIA,SPC)
-  - LT( NAV,SPC)
+  - t: Space
+    h: hold Num
+  - t: Fn
+    h: hold System
+  - t: Space
+    h: hold Nav
   - t: ◆
     h: Claude
   - t: ✓
@@ -163,12 +171,13 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - LT( NUM,SPC)
-  - t: Code
+  - t: Space
+    h: hold Num
+  - t: Tmux + Windows
     h: while held
-  - t: Windows
+  - t: Spare 6
     h: while held
-  - t: Git
+  - t: Spare 7
     h: while held
   Numbers:
   - t: Esc
@@ -287,11 +296,16 @@ layers:
     h: sticky
   - t: Key
     h: lock
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
+  - t: ⏺ 1
+    h: record
+  - t: ▶ 1
+    h: play
+  - t: ⏺ 2
+    h: record
+  - t: ▶ 2
+    h: play
+  - t: ⏹
+    h: stop rec
   - t: Layer
     h: lock
   - t: ▽
@@ -306,77 +320,13 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: Code
+  - t: Tmux + Windows
     h: stay
-  - t: Windows
+  - t: Spare 6
     h: stay
-  - t: Git
+  - t: Spare 7
     h: stay
-  Code:
-  - t: ▽
-    type: trans
-  - '!'
-  - '@'
-  - '#'
-  - $
-  - '%'
-  - ^
-  - '&'
-  - '*'
-  - '-'
-  - +
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - ->
-  - =>
-  - '!='
-  - ==
-  - '&&'
-  - '||'
-  - t: ( )
-    h: cursor in
-  - t: '[ ]'
-    h: cursor in
-  - t: '{ }'
-    h: cursor in
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - '~'
-  - '`'
-  - \
-  - '|'
-  - <
-  - '>'
-  - <=
-  - '>='
-  - '::'
-  - t: '" "'
-    h: cursor in
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  Windows:
+  Tmux + Windows:
   - t: ▽
     type: trans
   - t: '1'
@@ -403,32 +353,40 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: '1'
-    h: move to ws
-  - t: '2'
-    h: move to ws
-  - t: '3'
-    h: move to ws
-  - t: '4'
-    h: move to ws
-  - t: '5'
-    h: move to ws
-  - t: '6'
-    h: move to ws
-  - t: '7'
-    h: move to ws
-  - t: '8'
-    h: move to ws
-  - t: '9'
-    h: move to ws
+  - t: new win
+    h: ⌃b c
+  - t: split │
+    h: ⌃b %
+  - t: split ─
+    h: ⌃b "
+  - t: zoom
+    h: ⌃b z
+  - t: kill pane
+    h: ⌃b x
+  - t: pane ◀
+    h: ⌃b ←
+  - t: pane ▼
+    h: ⌃b ↓
+  - t: pane ▲
+    h: ⌃b ↑
+  - t: pane ▶
+    h: ⌃b →
   - t: ▽
     type: trans
   - t: ▽
     type: trans
-  - t: Close
-    h: window
-  - t: Full
-    h: screen
+  - t: last win
+    h: ⌃b l
+  - t: prev win
+    h: ⌃b p
+  - t: next win
+    h: ⌃b n
+  - t: choose win
+    h: ⌃b w
+  - t: session
+    h: ⌃b s
+  - t: detach
+    h: ⌃b d
   - t: ◀
     h: focus
   - t: ▼
@@ -437,10 +395,27 @@ layers:
     h: focus
   - t: ▶
     h: focus
-  - Gui+J
-  - Gui+P
-  - Gui+C
-  - Gui+V
+  - t: Close
+    h: window
+  - t: ▽
+    type: trans
+  - t: Base
+    h: drop all
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  Spare 6:
   - t: ▽
     type: trans
   - t: ▽
@@ -461,64 +436,6 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  Git:
-  - t: ▽
-    type: trans
-  - t: status
-    h: git
-  - t: add -A
-    h: git
-  - t: commit
-    h: git
-  - t: push
-    h: git
-  - t: pull
-    h: git
-  - t: log
-    h: git
-  - t: diff
-    h: git
-  - t: checkout
-    h: git
-  - t: branch
-    h: git
-  - t: stash
-    h: git
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - claude
-  - t: claude
-    h: continue
-  - lazygit
-  - cd ..
-  - ls -la
-  - t: ⏺ 1
-    h: record
-  - t: ▶ 1
-    h: play
-  - t: ⏺ 2
-    h: record
-  - t: ▶ 2
-    h: play
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - t: ⏹
-    h: stop rec
-  - ''
-  - ''
-  - ''
-  - t: Layer
-    h: lock
   - t: ▽
     type: trans
   - t: ▽
@@ -537,60 +454,145 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  Leader (×2 Ctrl):
-  - ''
-  - t: :wq
-    h: after W
-  - t: :wq
-    h: then Q
-  - t: Email
-    h: types it
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - t: Play
-    h: pause
-  - ''
-  - ''
-  - ''
-  - t: Sleep
-    h: system
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - t: Lock
-    h: keyboard
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - t: Prev
-    h: track
-  - t: Next
-    h: track
-  - t: Mute
-  - ''
-  - ''
-  - ''
-  - t: Ctrl ×2
-    type: held
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
-  - ''
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  Spare 7:
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
 combos:
 - p:
   - 1

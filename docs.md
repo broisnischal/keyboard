@@ -34,28 +34,37 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 | **2 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
 | **3 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ?` |
 | **4 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
-| **5 · Code** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | operators and digraphs |
-| **6 · Windows** | `Tab` **+** `✓`, or **travel:** `Fn` **+** `✓` | Hyprland workspaces and windows |
-| **7 · Git** | `Tab` **+** `✕`, or **travel:** `Fn` **+** `✕` | git and shell one-liners |
+| **5 · Tmux + Windows** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | tmux panes and windows, Hyprland workspaces |
+| **6, 7 · Spare** | `Tab` **+** `✓`/`✕`, or `Fn` **+** the same | empty - yours to fill |
 
 Layer 0 is plain letters and layer 1 is the opt-in home-row-mod version of it (see *Home row
 mods* below) - neither is something you hold.
 
+**Hold `Tab` for Nav still works, and `Alt`+`Tab` is now instant.** Those two used to be
+incompatible: a hold-or-tap key can't send its tap until you let go, so `Alt`+`Tab` fired nothing
+until your finger came up, and holding `Tab` a moment too long gave you the layer and no `Tab` at
+all. The firmware now checks for a held modifier *before* it starts deciding tap-or-hold - if `Ctrl`,
+`Alt`, `Shift` or `Gui` is already down, `Tab` is just `Tab`, sent on the keydown, and it repeats if
+you keep holding it. `Alt`+`Tab`+`Tab`+`Tab` walks the window list normally.
+
+The one consequence: **you can't reach Nav with `Tab` while holding a modifier** - the firmware has
+decided that's a `Tab`. Use `Space R` for that, which is the other Nav key and behaves as before.
+
 The `/` key next to left Shift is a **one-shot** for the Numbers layer: tap it, then press one key,
 and you get that key's Numbers meaning without holding anything. Tap it again to cancel.
 
-### Travelling to Code / Windows / Git
+### Travelling to Tmux + Windows
 
-Those three layers have two routes, and they are not equivalent:
+That layer has two routes, and they are not equivalent:
 
-- **Hold `Tab` + `◆`/`✓`/`✕`** - momentary. Two fingers are now busy, so you can only reach the keys
-  your free hand still covers. Fine for a bracket or a workspace switch.
-- **`Fn` + `◆`/`✓`/`✕`** - **latches.** Let go of everything and you are *on* that layer with both
-  hands free, which is the only way to use the right-hand half of Git (`git log`, `git diff`,
-  `git checkout`, `git branch`, `git stash`).
+- **Hold `Tab` + `◆`** (or `Space R` + `◆`) - momentary. Two fingers are now busy, so you can only reach the keys
+  your free hand still covers. Fine for a workspace switch or one pane jump.
+- **`Fn` + `◆`** - **latches.** Let go of everything and you are *on* the layer with both hands
+  free, which is the only way to use both halves at once - splitting a pane and then moving the
+  window.
 
-The same press comes back: `Fn` + `◆` again turns Code off. `Fn` reaches the System layer from any
-of the three, because their bottom rows are pass-through.
+The same press comes back: `Fn` + `◆` again turns it off. `Fn` reaches the System layer from it,
+because its bottom row is pass-through. `✓` and `✕` do the same for the two spare layers.
 
 **If the board ever seems to be typing nonsense - `Fn` + `Gui`.** That is the panic key: it drops
 every latched layer at once. A latched Windows layer turns the whole alphabet into Super-chords and
@@ -67,7 +76,7 @@ and replugging also clears it; latched layers are never remembered.
 While holding a layer, tap the `'` key (bottom-right corner) and the layer **stays** when you let
 go - useful for one-handed arrow work or a run of digits. Tap the same key again to release it.
 Safety net: a locked layer releases itself after a minute of no typing, so it can never leave the
-board feeling broken. Works on Nav, Numbers, System and Git.
+board feeling broken. Works on Nav, Numbers and System.
 
 ---
 
@@ -124,30 +133,21 @@ English, so fast typing can't trigger them by accident.
 | `.` + `'` | `:` (otherwise needs a layer plus shift) |
 | `Q` + `P` | **lock the keyboard** (see below) |
 
-### The prefix key - like tmux's Ctrl-b
+One thing worth knowing about how they work: a key that belongs to a combo can't be sent the instant
+you press it - the firmware has to wait a moment to see whether its partner is coming. That wait is
+`COMBO_TERM` (40 ms), and it applies to `Q W Z X C V N M , . ' J K P`. If typing ever feels a touch
+soft on those letters, that's why, and lowering `COMBO_TERM` in `keymap/config.h` trades combo
+recognition slack for a snappier keydown.
 
-**Double-tap left `Ctrl`** and the three lamps turn **cyan**: the keyboard is armed and waiting
-for a command, exactly like tmux after its prefix. Ctrl itself is unaffected - it registers the
-instant you press it, so holds and shortcuts feel exactly as before. Then one short
-sequence runs an action:
+### The prefix key - removed
 
-| Then press | Does |
-|---|---|
-| `S` | put the computer to sleep |
-| `P` | music: pause / play |
-| `N` | music: next track |
-| `B` | music: back a track |
-| `M` | mute |
-| `L` | lock the keyboard |
-| `E` | type your email address |
-| `W` `Q` | vim: Esc `:wq` Enter - save and quit |
+Double-tapping left `Ctrl` used to arm a tmux-style prefix. You asked for it gone, and removing it
+fixed something else at the same time: making a double-tap possible meant `Ctrl` had to be a
+*tap-dance* key with a 200 ms decision window, and that is what made `Ctrl`+`A` and every other
+`Ctrl` shortcut feel a beat late. `Ctrl` is now an ordinary `Ctrl`.
 
-There's no rush - the armed prefix waits for you (the cyan lamp shows it's live). Once you start a
-sequence, the action fires about a third of a second after the last key. A key that matches
-nothing just fizzles, cyan goes out, nothing is typed.
-
-The sequences live in one obvious table in `keymap.c` (`leader_end_user`) - adding one is a single
-line.
+The tmux commands it used to send are real keys now, on the Tmux + Windows layer below - and they
+send tmux's own `Ctrl-b` sequences, so there's no waiting for a timeout at all.
 
 ### Shift+Backspace = Delete
 
@@ -156,12 +156,13 @@ Hold Shift and press Backspace to delete forward. Plain Backspace is unchanged.
 ### Recorded macros
 
 Record any key sequence on the fly and replay it - two slots, held in memory until unplugged.
+They moved here from the old Git layer.
 
-| Key (on the Git layer, `Tab` + `✕`) | Does |
+| Key (hold `Fn`) | Does |
 |---|---|
-| `H` / `K` | start recording macro 1 / 2 |
-| `N` | stop recording |
-| `J` / `L` | play macro 1 / 2 |
+| `B` / `M` | start recording macro 1 / 2 |
+| `.` | stop recording |
+| `N` / `,` | play macro 1 / 2 |
 
 Record repetitive edits once, replay them all day. The slots are RAM only - a reboot clears them.
 
@@ -227,45 +228,43 @@ anyone who can unplug the board can reflash it. It stops someone walking past yo
 
 ---
 
-## Layer 5 · Code
+## Layer 5 · Tmux + Windows
 
-Number row gives `! @ # $ % ^ & * - +`.
+One layer, split down the middle: **left hand talks to tmux, right hand moves windows.** The old
+Code and Git layers are gone; this replaced both.
 
-Home row is the things you type constantly:
+The tmux half sends tmux's real `Ctrl-b` sequences, so tmux needs no configuration. The window half
+sends the `Super` chords omarchy already binds, so Hyprland needs none either.
 
-| Key | Types |
+| Key | Does |
 |---|---|
-| `A` `S` `D` `F` | `->` `=>` `!=` `==` |
-| `G` `H` | `&&` `\|\|` |
-| `J` `K` `L` | `()` `[]` `{}` - **both halves, cursor placed between them** |
+| `Q`…`P` | **workspace 1-10** |
+| `A` | tmux: new window |
+| `S` `D` | tmux: split side-by-side · split stacked |
+| `F` `G` | tmux: zoom the pane · kill the pane |
+| `H` `J` `K` `L` | tmux: **focus pane** left / down / up / right |
+| `/` | tmux: back to the last window |
+| `Z` `X` | tmux: previous · next window |
+| `C` `V` | tmux: choose a window · choose a session |
+| `B` | tmux: detach |
+| `N` `M` `,` `.` | **focus window** left / down / up / right |
+| `'` | close the window |
+| `Gui` | panic - drop every latched layer |
 
-Bottom row: `~` `` ` `` `\` `|` `<` `>`, then `<=` `>=` `::` and `""`.
+The two nav rows line up on purpose: `H J K L` moves you between tmux **panes**, and `N M , .`
+directly below moves you between **windows on the desktop**. Same shape, one level out.
 
-## Layer 6 · Windows
+Workspaces get the whole top row because on a 40% they're otherwise unreachable - `Super`+`3` on the
+base layer would mean holding `Gui` *and* the Numbers thumb *and* `E`.
 
-Sends the chords omarchy already binds, so there's nothing to configure.
+**If your tmux prefix isn't `Ctrl-b`,** it's one line: `TMUX_PFX` at the top of the macro table in
+`keymap/keymap.c`. Every sequence follows from it.
 
-| Row | Does |
-|---|---|
-| `Q`…`P` | switch to workspace 1-10 |
-| `A`…`L` | move the current window to workspace 1-9 |
-| `Z` `X` | close window, fullscreen |
-| `C` `V` `B` `N` | focus left / down / up / right |
+## Layers 6 and 7 · Spare
 
-## Layer 7 · Git and shell
-
-| Key | Runs |
-|---|---|
-| `Q` `W` `E` | `git status` · `git add -A` · `git commit -m "` |
-| `R` `T` | `git push` · `git pull` |
-| `Y` `U` | `git log --oneline -15` · `git diff` |
-| `I` `O` `P` | `git checkout ` · `git branch` · `git stash` |
-| `A` `S` | `claude` · `claude --continue` |
-| `D` `F` `G` | `lazygit` · `cd ..` · `ls -la` |
-| `H` `J` `K` `L` `N` | macro: record 1 · play 1 · record 2 · play 2 · stop |
-
-**These are guesses at your workflow.** They live in one table at the top of
-`qmk/keyboards/epomaker/th40/keymaps/tapdance/keymap.c` - changing a command is a one-line edit.
+Empty and pass-through - reaching one changes nothing. They exist so there's somewhere to put the
+next idea without renumbering anything (layer numbers are load-bearing on this board). Fill them in
+VIA as layers 6 and 7, or in `keymap.c`.
 
 ---
 
@@ -289,7 +288,8 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `G`…`L` | prev / play / next / vol− / vol+ |
 | `/` `Z` `X` `C` | one-shot Shift / Ctrl / Alt / Gui |
 | `V` | key lock - pin the next key down |
-| `◆` `✓` `✕` | travel to Code / Windows / Git and stay there |
+| `B` `N` `M` `,` `.` | macro: record 1 · play 1 · record 2 · play 2 · stop |
+| `◆` `✓` `✕` | travel to Tmux+Windows / Spare 6 / Spare 7 and stay there |
 | `Gui` | panic - drop every latched layer |
 
 The play key (`H`) is earbud-style: tap for play/pause, double-tap for next track, triple-tap for
@@ -333,8 +333,7 @@ instant - the board is split into thirds and each third follows the lamp above i
 ## Using the lamps for your own things
 
 The lamps are a four-slot priority bus. Slot 0 is Claude; slots 1-3 are yours. The highest-priority
-live slot wins. (The prefix key borrows slot 3 for its cyan lamp while armed - anything you put
-there is shadowed only for that moment.)
+live slot wins. (Slot 3 is fully yours now - the prefix key used to borrow it for its cyan lamp.)
 
 ```bash
 th40 bus 1 blink red --ttl 60 --priority 95     # urgent, clears itself after 60s
@@ -385,12 +384,19 @@ anything at all.
 **Lamps don't follow Claude Code.** The hooks live in a plugin that loads at session start - restart
 Claude Code. `th40 status working` should still work by hand regardless.
 
-**A layer key does nothing.** Code / Windows / Git need `Tab` held *first*, then the bottom-right key.
+**A layer key does nothing.** Tmux+Windows needs `Tab` (or `Space R`) held *first*, then `◆`. If
+you're also holding a modifier, `Tab` won't reach Nav at all - that's deliberate, so `Alt`+`Tab`
+works; use `Space R` instead.
 
 **Keyboard completely dead.** You may have locked it - press the top-left key, then type `N E E S`.
 
 **Typing feels laggy.** Check you haven't switched to the home-row-mod layer with `Fn` + `T`. Press
-it again to go back.
+it again to go back. The other place a keypress waits is the combo keys (`Q W Z X C V N M , . ' J K P`)
+- see *Combos* above for the knob. `Tab` keeps its Nav hold without any wait, because a held modifier
+bypasses the tap-hold decision entirely.
+
+**A tmux key does nothing.** Your prefix isn't `Ctrl-b`. Change `TMUX_PFX` in `keymap/keymap.c` and
+reflash.
 
 **Wrong letters after using one-handed mode.** It's still on. `Fn` + `S`.
 

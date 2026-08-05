@@ -18,37 +18,38 @@ git clone https://github.com/broisnischal/keyboard.git && cd keyboard
 ## The keymap at a glance
 
 All eight layers, drawn from the real `keymap.c` by
-[keymap-drawer](https://github.com/caksoylar/keymap-drawer). Combo chips on the base layer show
-the two-key chords; pink cells mark the key you're holding to be on that layer. On the layer-reach
-keys, **`while held`** means it dies when you let go and **`stay`** means it latches until you press
-it again.
+[keymap-drawer](https://github.com/caksoylar/keymap-drawer). Pink cells mark the key you're holding
+to be on that layer. On the layer-reach keys, **`while held`** means it dies when you let go and
+**`stay`** means it latches until you press it again.
 
-![The TH40 keymap: eight layers with combos](drawings/keymap.svg)
+![The TH40 keymap: eight layers](drawings/keymap.svg)
 
 What you're looking at (the full tour is [`FEATURES.md`](FEATURES.md)):
 
-- **Leader key** - double-tap left `Ctrl` to arm a tmux-style prefix (lamps go cyan), then one
-  key runs an action: sleep, music transport, mute, lock, type my email, vim `:wq` - the drawn
-  Leader layer above is the cheat sheet
 - **Claude Code integration** - the three lamps mirror Claude's state live; `◆ ✓ ✕` focus,
   approve and interrupt it from anywhere
-- **Layer travel** - hold `Fn` for System, or both space bars together (tri layer); `Fn`+`◆ ✓ ✕`
-  latches Code / Windows / Git so both hands come free, and `Fn`+`Gui` drops every latched layer
+- **Tmux + Windows on one layer** - left hand sends tmux's own `⌃b` sequences (splits, panes,
+  windows, sessions), right hand sends the `Super` chords omarchy binds; `H J K L` walks tmux panes
+  and `N M , .` directly below walks desktop windows
+- **Layer travel** - hold `Fn` for System, or both space bars together (tri layer); `Fn`+`◆`
+  latches Tmux+Windows so both hands come free, and `Fn`+`Gui` drops every latched layer
 - **Layer lock** - the `'` key on any hold layer makes it stick; auto-releases after a minute
 - **Combos** - `Q+W`/`J+K`→Esc, `Z+X`→undo, `C+V`→Caps Word, `N+M`→Del, `,+.`→`_`, `.+'`→`:`,
   `Q+P`→lock the keyboard
-- **Dynamic macros** - record any key sequence on the Git layer (`⏺ ▶ ⏹`), replay all day
+- **`Tab` holds for Nav *and* `Alt`+`Tab` is instant** - a `pre_process_record_kb` hook short-circuits
+  the tap-hold decision whenever a modifier is already down, which is normally impossible on an
+  `LT()` key
+- **Dynamic macros** - record any key sequence on the System layer (`⏺ ▶ ⏹`), replay all day
 - **Caps Word, Repeat/AltRep, Shift+⌫→Del, key lock, one-shot mods, one-handed mirror,
   pattern lock** - and opt-in home-row mods on their own base layer
 - **5,300+ scans/sec** - eager debounce, 1000 Hz USB, LTO; ~0.7 ms average input latency
 
-Regenerate after a keymap change (config and combo positions live in [`drawings/`](drawings)):
+Regenerate after a keymap change (legends and the tri-layer chip live in [`drawings/`](drawings)):
 
 ```bash
 qmk c2json --no-cpp -kb epomaker/th40 -km tapdance -o /tmp/th40.json
 keymap -c drawings/config.yaml parse -q /tmp/th40.json \
-  -l Base "Home-Row Mods" Nav Numbers System Code Windows Git \
-  --virtual-layers "Leader (×2 Ctrl)" \
+  -l Base "Home-Row Mods" Nav Numbers System "Tmux + Windows" "Spare 6" "Spare 7" \
   | python3 drawings/postprocess.py > drawings/keymap.yaml
 keymap -c drawings/config.yaml draw drawings/keymap.yaml \
   -j qmk/keyboards/epomaker/th40/keyboard.json > drawings/keymap.svg
@@ -143,8 +144,7 @@ commit, push, open the PR against `master`. QMK's own guidance is in
 ### Useful references
 
 - [QMK docs](https://docs.qmk.fm) - [keycodes](https://docs.qmk.fm/keycodes),
-  [tap-hold](https://docs.qmk.fm/tap_hold), [combos](https://docs.qmk.fm/features/combo),
-  [RGB matrix](https://docs.qmk.fm/features/rgb_matrix)
+  [tap-hold](https://docs.qmk.fm/tap_hold), [RGB matrix](https://docs.qmk.fm/features/rgb_matrix)
 - [carlosedp/qmk_firmware releases](https://github.com/carlosedp/qmk_firmware/releases/tag/0.31.2) -
   factory firmware for these boards, if you need to go back to stock
 - [VIA](https://usevia.app) - remapping without reflashing, though **anything you set in VIA is
@@ -156,7 +156,7 @@ commit, push, open the PR against `master`. QMK's own guidance is in
 
 | Path | |
 |---|---|
-| `keymap/` | the firmware: layers, effects, status bus, tap dance, combos |
+| `keymap/` | the firmware: layers, effects, status bus, tap dance, tmux macros |
 | `plugins/th40/` | Claude Code plugin - `th40` CLI, `/th40` command, a skill |
 | `setup.sh` | recreate the build environment from a clean clone |
 | `flash-th40.sh` | wait for the bootloader, write, verify |
@@ -168,14 +168,14 @@ commit, push, open the PR against `master`. QMK's own guidance is in
 
 Full detail in [`docs.md`](docs.md).
 
-**Typing** - a tmux-style leader key (`F`+`J`, lamps go cyan while armed), double-tap Shift for
-Caps Lock (zero added latency), Caps Word, Repeat and Alt-Repeat, 10 combos, Shift+Backspace →
-Delete, dynamic macros, key lock, one-shot modifiers, one-handed mirror mode, pattern lock, opt-in
-home-row mods with Chordal Hold and Flow Tap.
+**Typing** - double-tap Shift for Caps Lock (zero added latency), Caps Word, Repeat and Alt-Repeat,
+9 combos, Shift+Backspace → Delete, dynamic macros, key lock, one-shot modifiers, one-handed mirror
+mode, pattern lock, opt-in home-row mods with Chordal Hold and Flow Tap. The leader key was removed
+by request.
 
-**Layers** - nav/F-keys, numbers, media+system, code operators and digraphs, Hyprland window
-control, git and shell macros, plus a plain-letters base. Tri layer (both spaces → system), and
-layer lock on every hold layer with a one-minute safety release.
+**Layers** - nav/F-keys, numbers, media+system, tmux + window control on one merged layer, two
+spares, plus a plain-letters base. Tri layer (both spaces → system), and layer lock on every hold
+layer with a one-minute safety release.
 
 **Lamps** - a four-slot priority bus. Slot 0 tracks Claude Code; 1-3 are yours.
 
@@ -197,7 +197,7 @@ th40 scan-rate                                 # ~5300 matrix scans/sec
 | MCU | es32fs026, Cortex-M0, 128 KB flash, 16 KB RAM |
 | Bootloader | LUFA mass-storage (`03eb:2045`) - **not** DFU, `dfu-util` will never see it |
 | Flashing | copy `FIRMWARE.BIN` onto the volume that appears; there is no software entry |
-| Build size | ~75 KB with LTO - **images over ~83 KB of real code do not boot** (see `keyboard.md`) |
+| Build size | ~74 KB with LTO - **images over ~83 KB of real code do not boot** (see `keyboard.md`) |
 
 Epomaker also shipped VIA-only TH40s. If `lsusb` shows a different ID, none of this applies to your
 unit.

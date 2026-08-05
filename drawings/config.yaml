@@ -1,36 +1,36 @@
 # keymap-drawer config for the TH40. Regeneration recipe is in the README.
 parse_config:
   raw_binding_map:
-    # --- code macros (send_macro table in keymap.c) ---
-    "M_ARROW": "->"
-    "M_FATAR": "=>"
-    "M_NEQ": "!="
-    "M_EQEQ": "=="
-    "M_AND": "&&"
-    "M_OR": "||"
-    "M_LTE": "<="
-    "M_GTE": ">="
-    "M_SCOPE": "::"
-    "M_PAREN": {t: "( )", h: "cursor in"}
-    "M_BRACK": {t: "[ ]", h: "cursor in"}
-    "M_BRACE": {t: "{ }", h: "cursor in"}
-    "M_QUOT2": {t: "\" \"", h: "cursor in"}
-    # --- git / shell macros ---
-    "G_STATUS": {t: "status", h: "git"}
-    "G_ADD": {t: "add -A", h: "git"}
-    "G_COMMIT": {t: "commit", h: "git"}
-    "G_PUSH": {t: "push", h: "git"}
-    "G_PULL": {t: "pull", h: "git"}
-    "G_LOG": {t: "log", h: "git"}
-    "G_DIFF": {t: "diff", h: "git"}
-    "G_CO": {t: "checkout", h: "git"}
-    "G_BRANCH": {t: "branch", h: "git"}
-    "G_STASH": {t: "stash", h: "git"}
-    "S_CLAUDE": "claude"
-    "S_CLAUDEC": {t: "claude", h: "continue"}
-    "S_LAZYGIT": "lazygit"
-    "S_CDUP": "cd .."
-    "S_LS": "ls -la"
+    # --- tmux macros (send_macro table in keymap.c); ⌃b is TMUX_PFX ---
+    "T_NEWW": {t: "new win", h: "⌃b c"}
+    "T_SPLTV": {t: "split │", h: "⌃b %"}
+    "T_SPLTH": {t: "split ─", h: "⌃b \""}
+    "T_ZOOM": {t: "zoom", h: "⌃b z"}
+    "T_KILLP": {t: "kill pane", h: "⌃b x"}
+    "T_PANEL": {t: "pane ◀", h: "⌃b ←"}
+    "T_PANED": {t: "pane ▼", h: "⌃b ↓"}
+    "T_PANEU": {t: "pane ▲", h: "⌃b ↑"}
+    "T_PANER": {t: "pane ▶", h: "⌃b →"}
+    "T_LASTW": {t: "last win", h: "⌃b l"}
+    "T_PREVW": {t: "prev win", h: "⌃b p"}
+    "T_NEXTW": {t: "next win", h: "⌃b n"}
+    "T_LISTW": {t: "choose win", h: "⌃b w"}
+    "T_SESS": {t: "session", h: "⌃b s"}
+    "T_DETACH": {t: "detach", h: "⌃b d"}
+    # --- plain keys and layer taps, spelled out rather than left as raw QMK ---
+    "KC_LCTL": "Ctrl"
+    "LT(_NAV,KC_TAB)": {t: "Tab", h: "hold Nav"}
+    "OSL(_NUM)": {t: "Num", h: "one-shot"}
+    "LT(_NUM,KC_SPC)": {t: "Space", h: "hold Num"}
+    "LT(_NAV,KC_SPC)": {t: "Space", h: "hold Nav"}
+    "LT(_MEDIA,KC_SPC)": {t: "Fn", h: "hold System"}
+    "TO(_BASE)": {t: "Base", h: "drop all"}
+    "MO(_WM)": {t: "Tmux + Windows", h: "while held"}
+    "MO(_SPR1)": {t: "Spare 6", h: "while held"}
+    "MO(_SPR2)": {t: "Spare 7", h: "while held"}
+    "TG(_WM)": {t: "Tmux + Windows", h: "stay"}
+    "TG(_SPR1)": {t: "Spare 6", h: "stay"}
+    "TG(_SPR2)": {t: "Spare 7", h: "stay"}
     # --- persistent settings keys ---
     "UC_LOCKB": {t: "Lock", h: "at boot"}
     "UC_CLEDS": {t: "Lamps", h: "on/off"}
@@ -42,7 +42,6 @@ parse_config:
     "RM_TOGG": {t: "Backlight", h: "on/off"}
     # --- tap dances and specials ---
     "TD_SFT": {t: "⇧", h: "tap ×2 Caps"}
-    "TD_CTL": {t: "Ctrl", h: "×2 Leader"}
     "TD_MPLY": {t: "Play", h: "×2 next ×3 prev"}
     "QK_GESC": {t: "Esc", s: "~"}
     "QK_LLCK": {t: "Layer", h: "lock"}
@@ -67,13 +66,6 @@ parse_config:
     "HM_J": {t: "J", h: "Shift"}
     "HM_K": {t: "K", h: "Ctrl"}
     "HM_L": {t: "L", h: "Alt"}
-    # --- layer reach keys on Nav ---
-    "MO(_CODE)": {t: "Code", h: "layer"}
-    "MO(_WM)": {t: "Windows", h: "layer"}
-    "MO(_GIT)": {t: "Git", h: "layer"}
-    "MO(4)": {t: "Code", h: "layer"}
-    "MO(5)": {t: "Windows", h: "layer"}
-    "MO(6)": {t: "Git", h: "layer"}
     # --- media ---
     "KC_MPRV": "Prev"
     "KC_MNXT": "Next"
@@ -96,25 +88,12 @@ parse_config:
     "LGUI(KC_8)": {t: "8", h: "go to ws"}
     "LGUI(KC_9)": {t: "9", h: "go to ws"}
     "LGUI(KC_0)": {t: "10", h: "go to ws"}
-    "LGUI(LSFT(KC_1))": {t: "1", h: "move to ws"}
-    "LGUI(LSFT(KC_2))": {t: "2", h: "move to ws"}
-    "LGUI(LSFT(KC_3))": {t: "3", h: "move to ws"}
-    "LGUI(LSFT(KC_4))": {t: "4", h: "move to ws"}
-    "LGUI(LSFT(KC_5))": {t: "5", h: "move to ws"}
-    "LGUI(LSFT(KC_6))": {t: "6", h: "move to ws"}
-    "LGUI(LSFT(KC_7))": {t: "7", h: "move to ws"}
-    "LGUI(LSFT(KC_8))": {t: "8", h: "move to ws"}
-    "LGUI(LSFT(KC_9))": {t: "9", h: "move to ws"}
     "LGUI(KC_W)": {t: "Close", h: "window"}
     "LGUI(KC_F)": {t: "Full", h: "screen"}
     "LGUI(KC_LEFT)": {t: "◀", h: "focus"}
     "LGUI(KC_DOWN)": {t: "▼", h: "focus"}
     "LGUI(KC_UP)": {t: "▲", h: "focus"}
     "LGUI(KC_RIGHT)": {t: "▶", h: "focus"}
-    "LGUI(KC_J)": "Gui+J"
-    "LGUI(KC_P)": "Gui+P"
-    "LGUI(KC_C)": "Gui+C"
-    "LGUI(KC_V)": "Gui+V"
 draw_config:
   dark_mode: auto
   n_columns: 2

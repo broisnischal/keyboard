@@ -32,27 +32,28 @@ bus any script can drive (`th40 bus 1 blink red --ttl 60`): low disk, failed bui
 Whole-board effects can mirror the lamps (**Aura**) or rain in the state colour, seeded by your
 own keystrokes (**Rain**).
 
-## A leader key, like tmux's Ctrl-b
+## tmux and your window manager on one layer
 
-Double-tap left `Ctrl` — the lamps turn cyan, the keyboard is armed and waits. Ctrl still
-registers instantly on every press, so nothing about normal typing or shortcuts changes. Then one short
-sequence runs an action:
+Left hand drives tmux, right hand drives Hyprland, and the two nav rows line up: `H J K L` walks
+tmux **panes**, `N M , .` directly below walks desktop **windows**. Same shape, one level out.
 
-`S` sleep the PC · `P`/`N`/`B`/`M` music transport and mute · `L` lock the keyboard ·
-`E` type my email · `W` `Q` vim save-and-quit
+`A` new window · `S`/`D` split side-by-side / stacked · `F` zoom · `G` kill pane ·
+`Z`/`X` prev / next window · `C` choose window · `V` choose session · `B` detach ·
+top row `Q`…`P` jump to workspace 1–10
 
-Adding a command is one line of C.
+The tmux half sends tmux's own `Ctrl-b` sequences, so tmux needs no config; the window half sends
+the `Super` chords omarchy already binds, so Hyprland needs none either. One `#define` changes the
+prefix if yours isn't `Ctrl-b`.
 
-## Seven layers, all a thumb away
+## Eight layers, all a thumb away
 
 | Layer | Hold | What's on it |
 |---|---|---|
 | Nav | `Tab` or `Space R` | F1–F12, arrows, Home/End/PgUp/PgDn |
 | Numbers | `Space L` | digits and everyday symbols |
-| System | `Fn`, **or both spaces together** (tri layer) | media, volume, every setting |
-| Code | `Tab`+`◆`, or `Fn`+`◆` to stay | `-> => != == && \|\|`, `()` `[]` `{}` with the cursor placed inside |
-| Windows | `Tab`+`✓`, or `Fn`+`✓` to stay | Hyprland workspaces and window management |
-| Git | `Tab`+`✕`, or `Fn`+`✕` to stay | `git status/add/commit/push…` as single keys, plus recorded macros |
+| System | `Fn`, **or both spaces together** (tri layer) | media, volume, macros, every setting |
+| Tmux + Windows | `Tab`+`◆`, or `Fn`+`◆` to stay | the layer above |
+| Spare ×2 | `Tab`+`✓`/`✕`, or `Fn`+ the same | empty and transparent, waiting for an idea |
 | Home-row mods | opt-in, persisted | GACS mods on ASDF/JKL for those who want them |
 
 **Layer lock:** tap `'` while holding any layer and it sticks — one-handed arrows, a run of
@@ -62,6 +63,10 @@ digits — and it releases itself after a minute so the board can never feel bro
 
 - **Combos** — key pairs that never occur in English: `Q+W`→Esc, `J+K`→Esc (vim), `Z+X`→undo,
   `N+M`→Delete, `,+.`→`_`, `.+'`→`:`, `C+V`→Caps Word, `Q+P`→lock the keyboard
+- **Hold `Tab` for Nav *and* instant `Alt`+`Tab`.** Normally you can't have both, because a tap-hold
+  key emits its tap on release. A `pre_process_record_kb` hook runs before the tap-hold machinery and
+  short-circuits it whenever a modifier is already held, so `Alt`+`Tab` fires on the keydown and
+  repeats, while a bare `Tab` still reaches the Nav layer.
 - **Caps Word** — caps lock that turns itself off at the end of the word; survives `_` and `-`,
   so `MAX_RETRY_COUNT` comes out whole
 - **Double-tap Shift → Caps Lock** — with zero added latency on normal shifting
@@ -77,7 +82,7 @@ digits — and it releases itself after a minute so the board can never feel bro
 
 - **5,300+ matrix scans/sec**, ~0.7 ms average input latency — the USB HID floor
 - Eager debounce (zero added press latency), 1000 Hz USB, LTO-optimised firmware
-- All of the above in **75 KB** on a 128 KB / 16 KB RAM Cortex-M0
+- All of the above in **74 KB** on a 128 KB / 16 KB RAM Cortex-M0
 - Settings persist in the keyboard's own EEPROM — no software needed on any machine
 
 And one scar worth showing off: this board silently refuses to boot any firmware image over

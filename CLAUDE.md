@@ -32,7 +32,7 @@ status` should show only the untracked symlink.
 
 **The real ceiling is ~83 KB of code, not 128 KB of flash.** Every image over ~83 KB failed to
 boot (measured 2026-08-03: 81-83 KB boots, 84.9 KB+ dead - board enumerates as nothing, bootloader
-only via the physical combo). `LTO_ENABLE = yes` is now mandatory; current build ~75 KB. Do not
+only via the physical combo). `LTO_ENABLE = yes` is now mandatory; current build ~74 KB. Do not
 test the ceiling by padding with `0xFF` - the bootloader skips blank data and the test lies.
 
 Every layer must have exactly 44 entries:
@@ -97,6 +97,41 @@ EOF
   `SUB_CFG_SET`. `config`, `scan-rate` and `unlock` are fine. Not yet fixed.
 - **Key overrides match the literal keymap keycode.** An `LT(n,KC_SPC)` space bar can never
   trigger a `KC_SPC` override - don't re-attempt shift+space→underscore.
+- **Three features were removed for latency, not taste. Don't helpfully add them back.** All three
+  were reported as "typing feels like there's a little lag" and all three were confirmed in the QMK
+  source, 2026-08-05:
+  - **Combos cost latency but are KEPT - do not remove them again.** `process_combo()` buffers the
+    keydown of every key belonging to any combo until the combo is ruled out (next keydown, release,
+    or `COMBO_TERM`), and the nine here cover `Q W Z X C V N M , . ' J K P`. Picking rare digraphs
+    prevents false triggers, not the delay. They were removed once as a latency fix that was never
+    asked for, and had to be restored. `COMBO_TERM` is the only legitimate knob.
+  - **Leader** (`LEADER_ENABLE = no`). Arming on a double-tap forces the trigger to be a tap dance;
+    it was on left Ctrl, so every Ctrl chord sat inside a 200 ms state machine. Registering the mod
+    in `on_each_tap` makes it *functionally* instant and it still felt late. A leader needs a
+    dedicated key or nothing.
+  - **`LT(_NAV,KC_TAB)`** broke `Alt`+`Tab`: a tap-hold emits its tap on **release**, so nothing
+    fired until the finger came up, and holding Tab past 130 ms gave the layer and no Tab at all.
+    Tab was made plain, then the hold was restored on request - see the `pre_process_record_kb` note
+    below, which is what makes both work at once.
+- **`PERMISSIVE_HOLD` must not apply to the `LT(n,KC_SPC)` thumbs.** Its rule - held tap-hold key,
+  another key pressed *and released*, resolve as hold - is exactly the shape of rolling through the
+  space bar, so a fast roll produced a digit instead of "space letter". `CHORDAL_HOLD` cannot catch
+  it: the thumbs are `'*'` in `chordal_hold_layout` by design. `get_permissive_hold()` returns
+  `IS_QK_MOD_TAP(keycode)` and nothing else. `PERMISSIVE_HOLD_PER_KEY` wins over the bare
+  `PERMISSIVE_HOLD` in `action_tapping.c`, so only the per-key define is present.
+- **A tap-hold key cannot be fixed from `process_record_kb` - it runs too late.** For a tap-hold
+  key, `action_tapping.c` buffers the keydown and calls `process_record()` only once it has *decided*,
+  so `record->tap.count` checks there happen after any latency is already spent. The hook that runs
+  early is **`pre_process_record_kb()`**, called from `action_exec()` at `action.c:133` before
+  `action_tapping_process()`; returning false from it skips tap-hold entirely for that event. That is
+  how `LT(_NAV,KC_TAB)` keeps its Nav hold while `Alt`+`Tab` still fires on the keydown - a held
+  modifier short-circuits to `register_code(KC_TAB)`. Guard any such hook with `secure_is_locked()`:
+  `pre_process` runs *before* the lock swallow in `process_record_kb`, so without it a locked board
+  still emits keys.
+- **`DYNAMIC_KEYMAP_LAYER_COUNT` is 8** (`lib/rdmctmzt_common/fs026_eeprom.h`), and
+  `keymap_introspection.c` static-asserts `keymaps[]` against it. Eight layers is a hard ceiling, not
+  a target. `_SPR1`/`_SPR2` are declared and fully transparent so the count is accounted for and no
+  index below them ever has to move.
 
 ## Verifying, rather than assuming
 

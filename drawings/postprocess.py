@@ -4,8 +4,9 @@
 - combos (they live in C, not the keymap array)
 - the tri-layer chord (both spaces -> System)
 - the Shift+Backspace -> Delete key override, as a shifted legend
-- the Leader layer: sequences from leader_end_user(), drawn on their keys
 - labels on the blank "held" cells
+
+There is no Leader layer any more - that feature was removed by request.
 """
 import sys, yaml
 
@@ -24,38 +25,25 @@ COMBOS = [
     {"p": [38, 40], "k": "System",    "l": ["Base"], "draw_separate": True},  # tri layer
 ]
 
-# leader_end_user() in keymap.c, one entry per sequence
-LEADER_KEYS = {
-    35: {"t": "Ctrl ×2", "type": "held"},           # the trigger itself
-    14: {"t": "Sleep", "h": "system"},              # S
-    10: {"t": "Play", "h": "pause"},                # P
-    30: {"t": "Next", "h": "track"},                # N
-    29: {"t": "Prev", "h": "track"},                # B
-    31: {"t": "Mute"},                              # M
-    21: {"t": "Lock", "h": "keyboard"},             # L
-    3:  {"t": "Email", "h": "types it"},            # E
-    2:  {"t": ":wq", "h": "then Q"},                # W
-    1:  {"t": ":wq", "h": "after W"},               # Q
-}
-
-# qmk c2json keeps the enum name, so TG(_CODE) parses to the legend "TG( CODE)".
+# qmk c2json keeps the enum name, so TG(_WM) parses to the legend "TG( WM)".
 # Draw them as what they do instead. Position -> legend, on the System layer only.
 SYSTEM_TRAVEL = {
     36: {"t": "Base", "h": "drop all"},
-    41: {"t": "Code", "h": "stay"},
-    # "Windows", not "WM": keymap-drawer turns a legend that matches a layer name
-    # into a link to that layer's own diagram, and the abbreviation missed it.
-    42: {"t": "Windows", "h": "stay"},
-    43: {"t": "Git", "h": "stay"},
+    # "Tmux + Windows", not "WM": keymap-drawer turns a legend that matches a
+    # layer name into a link to that layer's own diagram, and the abbreviation
+    # missed it.
+    41: {"t": "Tmux + Windows", "h": "stay"},
+    42: {"t": "Spare 6", "h": "stay"},
+    43: {"t": "Spare 7", "h": "stay"},
 }
 
 # The same three keys on Nav are MO(), and c2json's own legend ("layer") does not
 # say the difference that matters: Nav's route dies when you let go, System's does
 # not. Spell it out, so the drawing teaches the distinction on its own.
 NAV_TRAVEL = {
-    41: {"t": "Code", "h": "while held"},
-    42: {"t": "Windows", "h": "while held"},
-    43: {"t": "Git", "h": "while held"},
+    41: {"t": "Tmux + Windows", "h": "while held"},
+    42: {"t": "Spare 6", "h": "while held"},
+    43: {"t": "Spare 7", "h": "while held"},
 }
 
 doc = yaml.safe_load(sys.stdin)
@@ -74,8 +62,5 @@ for name, keys in doc["layers"].items():
             keys[i] = {"t": "held", "type": "held"}
     if name.startswith("Base"):
         keys[11] = {"t": "BSPC", "s": "⇧ Del"}       # key override, shifted legend
-    if name.startswith("Leader"):
-        for pos, legend in LEADER_KEYS.items():
-            keys[pos] = legend
 
 yaml.dump(doc, sys.stdout, sort_keys=False, allow_unicode=True, width=160)

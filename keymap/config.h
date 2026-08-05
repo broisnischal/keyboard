@@ -44,9 +44,16 @@
 #define CHORDAL_HOLD
 
 // A tap-hold key held while another key is pressed AND released resolves as
-// hold. With CHORDAL_HOLD guarding same-hand rolls, this is safe and makes
-// opposite-hand mods engage without waiting out the tapping term.
-#define PERMISSIVE_HOLD
+// hold. Correct for the home row MODS - an opposite-hand chord engages without
+// waiting out the tapping term.
+//
+// WRONG for the LT() space bars, which is why this is per-key now. Rolling
+// "e" + space + "a" fast means space goes down, 'a' goes down and up, space
+// comes up - permissive hold called that a HOLD, so the roll silently typed a
+// digit instead of "space a". get_permissive_hold() in keymap.c restricts it to
+// mod-taps; layer taps decide on the tapping term alone, which a deliberate
+// reach always exceeds and a roll never does.
+#define PERMISSIVE_HOLD_PER_KEY
 
 // No hold-to-repeat on the mod keys: holding A after tapping it gives GUI, not
 // "aaaa". Key repeat lives on QK_REP instead.
@@ -69,8 +76,15 @@
 // Short term so a fast roll of two letters types the letters rather than
 // firing the combo. The chosen pairs are also digraphs that barely occur in
 // English ("qw", "zx", "cv", "nm"), which matters more than the term does.
+//
+// This term is also the latency knob. A key belonging to any combo has its
+// keydown withheld until the combo is ruled out, and COMBO_TERM is the worst
+// case - so lowering it makes the member keys feel quicker at the cost of
+// needing the two presses closer together. 40 is the original tuning.
 // ---------------------------------------------------------------------------
 #define COMBO_TERM 40
+
+// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // One-shot keys
@@ -115,18 +129,13 @@
 #define DYNAMIC_MACRO_SIZE 32
 
 // ---------------------------------------------------------------------------
-// Leader key - a tmux-style prefix. F+J pressed together arms it (combo in
-// keymap.c); the lamps go cyan while it waits; sequences live in
-// leader_end_user().
+// Leader key: REMOVED (LEADER_ENABLE = no).
 //
-// NO_TIMEOUT: like tmux, an armed prefix waits for you - the lamp shows it.
-// PER_KEY_TIMING + 300: once a sequence starts, each key buys another 300ms,
-// and the action fires 300ms after the last key (core leader has no early
-// match, so that lag is inherent - 300 is the comfortable floor).
+// It was armed by double-tapping Left Ctrl, which meant Ctrl had to be a tap
+// dance with a 200ms term - and that is what made Ctrl+A and every other Ctrl
+// chord feel late. Ctrl is a plain KC_LCTL again. The tmux prefix sequences the
+// leader used to send now live on the Tmux/Window layer as real keys.
 // ---------------------------------------------------------------------------
-#define LEADER_NO_TIMEOUT
-#define LEADER_PER_KEY_TIMING
-#define LEADER_TIMEOUT 300
 
 // ---------------------------------------------------------------------------
 // Layer Lock - QK_LLCK on each momentary layer makes it stick. The timeout is
