@@ -32,7 +32,7 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 | Layer | Hold | Contains |
 |---|---|---|
 | **2 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
-| **3 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ?` |
+| **3 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ? \` - hold `Shift` too for `_ + : " ~ { } |` |
 | **4 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
 | **5 · Tmux + Windows** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | tmux panes and windows, Hyprland workspaces |
 | **6, 7 · Spare** | `Tab` **+** `✓`/`✕`, or `Fn` **+** the same | empty - yours to fill |

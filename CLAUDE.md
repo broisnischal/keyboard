@@ -97,6 +97,12 @@ EOF
   `SUB_CFG_SET`. `config`, `scan-rate` and `unlock` are fine. Not yet fixed.
 - **Key overrides match the literal keymap keycode.** An `LT(n,KC_SPC)` space bar can never
   trigger a `KC_SPC` override - don't re-attempt shift+space→underscore.
+- **The drawing is not evidence that a key works.** `KC_NUBS` sat on the Numbers layer for a month
+  as the backslash key; it is the *ISO* extra key, unmapped in the `us` xkb layout, so it typed
+  nothing - while keymap-drawer rendered it "\ |" and made the drawing look right. Worse, the two
+  keycodes are drawn *inversely*: keymap-drawer gives `KC_NUBS` a `|` shifted legend and `KC_BSLS`
+  none, so fixing the firmware silently deleted `|` from the picture. `postprocess.py` re-adds it.
+  Confirm a symbol against the host layout, not the SVG.
 - **Three features were removed for latency, not taste. Don't helpfully add them back.** All three
   were reported as "typing feels like there's a little lag" and all three were confirmed in the QMK
   source, 2026-08-05:

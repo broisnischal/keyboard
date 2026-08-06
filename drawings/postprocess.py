@@ -62,5 +62,9 @@ for name, keys in doc["layers"].items():
             keys[i] = {"t": "held", "type": "held"}
     if name.startswith("Base"):
         keys[11] = {"t": "BSPC", "s": "⇧ Del"}       # key override, shifted legend
+    if name.startswith("Numbers"):
+        # keymap-drawer gives KC_NUBS a "|" shifted legend but KC_BSLS none, which
+        # is backwards - KC_BSLS is the key that actually types the pipe. Put it back.
+        keys[31] = {"t": "\\", "s": "|"}
 
 yaml.dump(doc, sys.stdout, sort_keys=False, allow_unicode=True, width=160)

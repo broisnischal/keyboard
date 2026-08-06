@@ -910,11 +910,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         TD_SFT      , _______     , KC_PSCR     , CG_TOGG     , KC_WBAK     , KC_WFWD     , QK_REP      , QK_AREP     , XXXXXXX     , KC_F11      , KC_F12      , QK_LLCK,
         _______     , _______     , _______     , _______     , _______     , LT(_NUM,KC_SPC), MO(_WM)     , MO(_SPR1)   , MO(_SPR2)
     ),
-    // Digits and everyday symbols.
+    // Digits and everyday symbols. Shift (the key that is TD_SFT here) reaches the
+    // shifted half of every one of them, so this layer covers the whole ASCII set.
+    //
+    // The M position is KC_BSLS, not KC_NUBS. KC_NUBS is the *ISO* extra key; the
+    // `us` xkb layout leaves it unmapped, so it typed nothing at all - while
+    // keymap-drawer cheerfully rendered it as "\ |" and the drawing lied about it.
     [_NUM] = LAYOUT_tkl_ansi(
         QK_GESC   , KC_1      , KC_2      , KC_3      , KC_4      , KC_5      , KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_BSPC,
         _______   , KC_MINS   , KC_EQL    , KC_SCLN   , KC_QUOT   , KC_GRV    , KC_LBRC   , KC_RBRC   , KC_SLSH   , S(KC_SLSH), KC_ENT,
-        TD_SFT    , _______   , _______   , _______   , _______   , _______   , _______   , _______   , KC_NUBS   , KC_COMM   , KC_DOT    , QK_LLCK,
+        TD_SFT    , _______   , _______   , _______   , _______   , _______   , _______   , _______   , KC_BSLS   , KC_COMM   , KC_DOT    , QK_LLCK,
         _______   , _______   , _______   , _______   , _______   , KC_SPC    , _______   , _______   , _______
     ),
     // Media + system. Settings on the top row persist to EEPROM; the home row
