@@ -13,6 +13,7 @@ indicator lamps from Claude Code.
 | `docs.md` | End-user guide: what each feature is and how to use it. |
 | `plugins/th40/` | Claude Code plugin - the `th40` CLI, `/th40` command, a skill. |
 | `flash-th40.sh` | Waits for the bootloader, writes, verifies. |
+| `chatter-watch.py` | Prints what the board actually emitted and flags physically impossible repeats. Settles "is this switch chatter or my firmware?" |
 | `setup.sh` | Rebuilds the environment from a fresh clone. |
 | `TH40_factory_firmware.zip` | Stock firmware, for rolling back. |
 | `th40-via-keymap-backup.json` | The original VIA export the keymap was derived from. |
@@ -125,6 +126,22 @@ EOF
   it: the thumbs are `'*'` in `chordal_hold_layout` by design. `get_permissive_hold()` returns
   `IS_QK_MOD_TAP(keycode)` and nothing else. `PERMISSIVE_HOLD_PER_KEY` wins over the bare
   `PERMISSIVE_HOLD` in `action_tapping.c`, so only the per-key define is present.
+- **Never give a tap-hold key a term shorter than an ordinary press of its tap.** The three
+  `LT(n,KC_SPC)` thumbs sat at the global `TAPPING_TERM` of 130 ms for two weeks. A thumb rests on
+  the space bar - 130-250 ms is a normal space - so the term expired *on its own*, with nothing else
+  pressed, and the space resolved as a **hold**: the layer came on silently, the space vanished (a
+  hold has no tap, so words ran together), and the next letter was read off that layer. `O` became
+  `9` on `_NUM`, nothing at all on `_MEDIA`/`_NAV`, and `_NAV`+`B` / `_MEDIA`+`F` are `QK_REP`, the
+  only thing in this firmware that can duplicate a character. One mechanism, and it presented as
+  three separate faults: missing letters, doubled letters, and lag. Measured 2026-08-17. The fix is
+  `THUMB_TAPPING_TERM 230` + `RETRO_TAPPING_PER_KEY` + `FLOW_TAP_TERM_THUMB 110`; none of the three
+  costs latency, because **a tap-hold emits its tap on RELEASE** - a 90 ms space lands at 90 ms
+  whatever the term is. `keyboard.md §3` has the per-thumb damage table. Corollary: `OSL()` on a key
+  you can brush needs a short `ONESHOT_TIMEOUT` for the same reason (3000 → 1200).
+- **"Some keys double type" is a firmware claim until measured.** `./chatter-watch.py` reads the
+  board's own evdev node and flags any key re-pressed under 40 ms after its own release, which no
+  finger can do. No hits means switch chatter is ruled out and `DEBOUNCE` is the wrong knob - go
+  looking for `QK_REP`, `QK_LOCK` or `DM_PLY*` reachable by an accidental layer instead.
 - **A tap-hold key cannot be fixed from `process_record_kb` - it runs too late.** For a tap-hold
   key, `action_tapping.c` buffers the keydown and calls `process_record()` only once it has *decided*,
   so `record->tap.count` checks there happen after any latency is already spent. The hook that runs
@@ -146,8 +163,9 @@ The keyboard is the source of truth. Read it back:
 ```bash
 lsusb -d 36b0:304e -v 2>/dev/null | grep -E "bcdDevice|iManufacturer"  # EPOMAKER / 0.04
 th40 config          # persistent settings + lock state
-th40 scan-rate       # ~3100/sec is healthy
+th40 scan-rate       # 5000/sec with LTO; anything over ~1000 is healthy
 th40 selftest        # walk every lamp pattern
+./chatter-watch.py   # type a sentence + Enter; prints what the board really sent
 ```
 
 Reading a keycode straight out of the keyboard's EEPROM, which is how every claim about the keymap

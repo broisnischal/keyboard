@@ -405,8 +405,9 @@ rather than infuriating:
 | `PERMISSIVE_HOLD_PER_KEY` | Opposite-hand mods engage without waiting out the tapping term. Safe here because Chordal Hold already guards same-hand rolls. **Mod-taps only** - see below. |
 | `QUICK_TAP_TERM 0` | Holding `A` after tapping it gives GUI, not "aaaa". Key repeat moved to `QK_REP`. |
 
-Tapping term is **130 ms globally** (what the `LT()` keys were tuned to) with **180 ms** for the
-seven mod keys and **200 ms** for the shift dance, via `get_tapping_term()`.
+Tapping term is **130 ms** for plain keys, **180 ms** for the seven mod keys and for
+`LT(_NAV,KC_TAB)`, **200 ms** for the shift dance, and **230 ms** for the three `LT(n,KC_SPC)`
+thumbs, via `get_tapping_term()`. The thumb figure is not taste - see below.
 
 **Permissive hold is per-key because it is wrong for layer taps.** `get_permissive_hold()` returns
 `IS_QK_MOD_TAP(keycode)` - nothing else. The bare `PERMISSIVE_HOLD` applied to the three
@@ -414,17 +415,62 @@ seven mod keys and **200 ms** for the shift dance, via `get_tapping_term()`.
 as hold") is exactly the shape of rolling through the space bar: space down, next letter down and
 up, space up. That resolved as a hold, so a fast roll silently produced a digit instead of
 "space letter". Chordal Hold cannot catch it - the thumbs are `'*'` in `chordal_hold_layout`, so they
-are allowed to chord with either hand by design. With permissive hold restricted to mod-taps, a
-layer tap is decided by the tapping term alone: a deliberate reach for a layer always exceeds
-130 ms, a roll never does. `PERMISSIVE_HOLD_PER_KEY` takes precedence over `PERMISSIVE_HOLD` in
-`action_tapping.c`, so the bare define is gone rather than left as decoration.
-
-`is_flow_tap_key()` is overridden. The stock version inspects the *tap* keycode, so it treats
-`LT(2,KC_SPC)` as a typing key and would swallow the space-layers whenever you reached for one
-straight after a letter. The override exempts all layer-taps.
+are allowed to chord with either hand by design. `PERMISSIVE_HOLD_PER_KEY` takes precedence over
+`PERMISSIVE_HOLD` in `action_tapping.c`, so the bare define is gone rather than left as decoration.
 
 Want mods to engage even harder? Add `#define HOLD_ON_OTHER_KEY_PRESS` - safe alongside
-Chordal Hold, at the cost of more misfires on fast opposite-hand rolls.
+Chordal Hold, at the cost of more misfires on fast opposite-hand rolls. **Never put it on the
+thumbs**; it is the same bug as the section below, with no term left to hide behind.
+
+### The space bars: a 130 ms term on `LT(n,KC_SPC)` is a broken keyboard
+
+Measured 2026-08-17, after a fortnight of "some letters don't type, some double, and there's a
+lag". All three were one mechanism.
+
+Restricting permissive hold to mod-taps left layer taps "decided by the tapping term alone", and
+that is correct **only if the term is longer than an ordinary press of the key**. At 130 ms it was
+not. A thumb rests on the space bar; 130-250 ms is a completely normal space. So the term expired
+on its own, with nothing else pressed, and the space bar resolved as a **hold**:
+
+- the layer came on, silently, with no indication;
+- the space itself vanished, because a hold has no tap, so two words ran together;
+- the next letter was read off that layer instead of the alphabet.
+
+What the next letter became, per thumb:
+
+| Held space | `O` types | Also reachable by accident |
+|---|---|---|
+| left, `_NUM` | `9` | every letter → a digit or a symbol |
+| middle, `_MEDIA` | nothing (`XXXXXXX`) | `F` → `QK_REP` (**a doubled character**), `A` → `SE_LOCK` (board stops typing), `S` → `SH_TOGG` (every key mirrored), `T` → `UC_HRM` (home row mods on, **persisted to EEPROM**), `V` → `QK_LOCK` (next key stuck down), `B`/`N` → dynamic macro record/play |
+| right, `_NAV` | `F9`, i.e. nothing | `B` → `QK_REP` (**doubled character**), `A` → Home, `C` → browser Back, `X` → `CG_TOGG` |
+
+`QK_REP` is the only thing in this firmware that can duplicate a character, and it sits on `_NAV`'s
+`B` and `_MEDIA`'s `F`. That is where "some keys double type" came from - not switch chatter.
+
+Three changes, none of which cost typing latency:
+
+| Change | Effect |
+|---|---|
+| `THUMB_TAPPING_TERM 230` in `get_tapping_term()` | A still-held thumb waits 230 ms before becoming a layer. **Free**: the tap fires on RELEASE, so a 90 ms space still lands at 90 ms whatever the term is. The term only governs a key that is still down. |
+| `RETRO_TAPPING_PER_KEY` + `get_retro_tapping()` on the thumbs | Hold a thumb through a thinking pause, release it having pressed nothing, and the space is sent anyway. Pressing any key during the hold clears `retro_tap_primed` (`action.c:86`), so a real layer chord never emits a stray space. |
+| `FLOW_TAP_TERM_THUMB 110` in `get_flow_tap_term()` | Inside 110 ms of the previous typing key the thumb is settled as a tap on the **keydown**, so the space is instant and the layer cannot engage at all. |
+
+That last one replaced a blanket `if (IS_QK_LAYER_TAP(keycode)) return 0;` justified as "a layer
+hold must always be reachable". The blanket version is why every space in every sentence landed on
+the finger **lift** rather than the press: a tap-hold emits its tap on release, and nothing was
+settling the space early. 110 ms rather than the mods' 200 ms so that "type a word, then hold the
+thumb for digits" still reaches `_NUM` - that reach always has a beat of thought in front of it, a
+roll never does. `flow_tap_key_if_within_term()` (`action_tapping.c:1047`) applies to mod-taps and
+layer-taps alike; `get_flow_tap_term()` returning 0 is what opts a key out.
+
+`ONESHOT_TIMEOUT` came down 3000 → 1200 in the same pass, for a second, independent route to the
+same symptom: `OSL(_NUM)` sits between left Shift and `Z`, and a one-shot layer re-points the next
+keystroke off a **single tap** - no hold needed. At 3 s, brushing that key while reaching for Shift
+turned the next letter into a digit up to three seconds later. A deliberate `OSL`-then-key is
+~300 ms.
+
+**The general rule: never give a tap-hold key a term shorter than an ordinary press of its tap.**
+The drawing won't show it, the build won't warn, and the failure looks like dying switches.
 
 ### Typing latency: what was already optimal
 
@@ -432,7 +478,7 @@ Worth recording so it isn't "optimised" again pointlessly:
 
 | | State | Verdict |
 |---|---|---|
-| Debounce algorithm | `asym_eager_defer_pk` | **Already zero added press latency** - eager press fires on the first edge; only the release is deferred. This is also the correct anti-chatter design, so raising `DEBOUNCE` would add latency and fix nothing. |
+| Debounce algorithm | `asym_eager_defer_pk` | **Already zero added press latency** - eager press fires on the first edge; only the release is deferred. This is also the correct anti-chatter design, so raising `DEBOUNCE` adds release latency and fixes nothing *unless a switch is genuinely chattering*. Measure before touching it: `./chatter-watch.py` reads the board's own evdev node and flags any key re-pressed under 40 ms after its own release. No hits means a doubled character is coming from the firmware, and `DEBOUNCE` is the wrong knob. |
 | USB poll rate | `bInterval 1` = 1000 Hz | Already maxed (confirmed in the descriptors) |
 | MCU idle | `CORTEX_ENABLE_WFI_IDLE FALSE` | Already disabled, no wake latency |
 
@@ -473,10 +519,9 @@ it waits out the tapping term before shift fires, which wrecks fast typing. Inst
 Typing `Shift+H` can't false-trigger Caps: the letter's keypress interrupts the dance, which
 finishes it at `count == 1` and resets on release, so the next shift press starts a fresh dance.
 
-Tapping term is **130 ms globally** (the board default - your `LT(1,KC_TAB)`, `OSL(2)` and the three
-`LT(n,KC_SPC)` spaces are tuned to it) with a **200 ms** per-key override for the tap dance only, so
-the double tap is comfortable without loosening the layer taps. That's `TAPPING_TERM_PER_KEY` in
-`keymaps/tapdance/config.h` plus `get_tapping_term()` in `keymap.c`.
+The dance gets a **200 ms** per-key term so the double tap is comfortable without loosening
+anything else. Every term lives in `get_tapping_term()` in `keymap.c`, switched on by
+`TAPPING_TERM_PER_KEY` in `keymaps/tapdance/config.h`; the full table is under Home row mods above.
 
 `keymaps/tapdance/rules.mk` is the whole feature switch - VIA/dynamic keymap, tap dance, repeat,
 Caps Word, combos, Secure, swap hands, custom RGB, key overrides, layer lock, key lock, dynamic

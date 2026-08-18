@@ -33,11 +33,20 @@
 // ---------------------------------------------------------------------------
 // Tap-hold / home row mods
 //
-// 130ms globally keeps the LT() keys feeling exactly as before; the home row
-// mods and the shift tap dance get longer terms via get_tapping_term().
+// 130ms is the floor for plain keys. The home row mods, the shift tap dance and
+// - critically - the three LT(n,KC_SPC) thumbs get longer terms via
+// get_tapping_term(); see the table above it for what 130ms on a space bar did.
 // ---------------------------------------------------------------------------
 #define TAPPING_TERM 130
 #define TAPPING_TERM_PER_KEY
+
+// Held past the term, then released with no other key pressed in between? Send
+// the tap anyway. Without this a long "thinking pause" space produced NO space at
+// all - the key resolved as a hold, and a hold has no tap - so two words silently
+// ran together. Restricted to the space thumbs by get_retro_tapping(); Nav is
+// routinely entered on Tab and then abandoned, and a stray Tab is worse than a
+// missing one.
+#define RETRO_TAPPING_PER_KEY
 
 // Same-hand chords settle as taps, so rolling "df" types df instead of firing
 // Ctrl. Handedness comes from chordal_hold_layout in keymap.c.
@@ -51,8 +60,11 @@
 // "e" + space + "a" fast means space goes down, 'a' goes down and up, space
 // comes up - permissive hold called that a HOLD, so the roll silently typed a
 // digit instead of "space a". get_permissive_hold() in keymap.c restricts it to
-// mod-taps; layer taps decide on the tapping term alone, which a deliberate
-// reach always exceeds and a roll never does.
+// mod-taps; layer taps decide on the tapping term alone.
+//
+// Which only works if that term is longer than a plain press of the key, and at
+// the global 130ms it was not - an ordinary space bar press sailed past it and
+// turned its layer on by itself. THUMB_TAPPING_TERM below is the other half.
 #define PERMISSIVE_HOLD_PER_KEY
 
 // No hold-to-repeat on the mod keys: holding A after tapping it gives GUI, not
@@ -69,6 +81,26 @@
 // that you must pause 200ms before a home row mod engages, which is roughly
 // what deliberately reaching for a modifier takes anyway.
 #define FLOW_TAP_TERM 200
+
+// Flow Tap for the space thumbs, which the old get_flow_tap_term() refused
+// outright ("a layer hold must always be reachable"). That refusal is why every
+// space in every sentence landed on the finger LIFT instead of the press: a
+// tap-hold key emits its tap on release, and nothing was settling the space bar
+// early. Inside this window the space is settled as a tap on the KEYDOWN, so it
+// is instant and the layer cannot engage by accident.
+//
+// Much shorter than the 200ms the mods get, on purpose. 110ms covers a genuine
+// roll - space and the next letter overlapping - while still leaving the thumb
+// layers reachable mid-sentence, because deliberately reaching for one always has
+// a beat of thought in front of it. Raise it if a fast space still turns a layer
+// on; lower it if "word then digits" stops reaching _NUM.
+#define FLOW_TAP_TERM_THUMB 110
+
+// A space bar tap is 80-250ms. A thumb deliberately held down for a layer is held
+// far longer than that, and the tap still fires on release, so this costs zero
+// typing latency - it only lengthens how long a STILL-HELD thumb waits before it
+// becomes a layer. At the old global 130ms an ordinary space was already past it.
+#define THUMB_TAPPING_TERM 230
 
 // ---------------------------------------------------------------------------
 // Combos
@@ -89,7 +121,12 @@
 // ---------------------------------------------------------------------------
 // One-shot keys
 // ---------------------------------------------------------------------------
-#define ONESHOT_TIMEOUT 3000    // a pending one-shot mod gives up after 3s
+// 1200ms, not 3000. OSL(_NUM) sits between left Shift and Z, and a one-shot layer
+// re-points the NEXT keystroke with a single tap - no hold needed. At 3s a stray
+// brush of that key while reaching for Shift meant the next letter came off _NUM
+// up to three seconds later ("o" -> "9"), which is indistinguishable from the key
+// being broken. A deliberate OSL-then-key is ~300ms, so 1200 loses nothing.
+#define ONESHOT_TIMEOUT 1200    // a pending one-shot mod/layer gives up after 1.2s
 #define ONESHOT_TAP_TOGGLE 2    // tap a one-shot mod twice to lock it on
 
 // ---------------------------------------------------------------------------

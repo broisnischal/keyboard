@@ -250,26 +250,79 @@ tap_dance_action_t tap_dance_actions[] = {
     [TD_MEDIA_TRANSPORT] = ACTION_TAP_DANCE_FN(td_media_finished),
 };
 
-// The global 130ms is what the LT() keys were tuned to; only the keys that
-// carry a second job get a longer window.
+// The three space bars. Grouped because all four hooks below need the same test.
+static inline bool is_thumb_layer_tap(uint16_t keycode) {
+    switch (keycode) {
+        case LT(_NUM, KC_SPC):
+        case LT(_MEDIA, KC_SPC):
+        case LT(_NAV, KC_SPC):
+            return true;
+        default:
+            return false;
+    }
+}
+
+// THE SPACE BARS NEED A LONG TERM. This is not tuning, it is the fix for a board
+// that looked broken - measured 2026-08-17.
+//
+// A tap-hold key resolves as a HOLD the instant it is held past its term, even
+// with nothing else pressed. At the old global 130ms an ordinary space bar press
+// was already past it (thumbs rest on space; 130-250ms is completely normal), so
+// the layer came on silently, the space itself was swallowed - a hold has no tap -
+// and the next letter was read off that layer instead of the alphabet:
+//
+//   left space  (_NUM)    O -> 9      every letter -> a digit or symbol
+//   middle      (_MEDIA)  O -> nothing (XXXXXXX)   F -> QK_REP, a doubled
+//                         character   A -> SE_LOCK, the board stops typing
+//                         S -> SH_TOGG, every key mirrored
+//                         T -> UC_HRM, home row mods on, persisted to EEPROM
+//   right space (_NAV)    O -> F9, i.e. nothing    B -> QK_REP, doubled character
+//                         A -> Home   C -> browser Back   X -> CG_TOGG
+//
+// That single mechanism produces all three reported symptoms: letters that do not
+// appear, characters that double, and words that run together.
+//
+// 230ms costs no typing latency whatsoever. The tap fires on RELEASE, so a 90ms
+// space still lands at 90ms no matter what the term is; the term only decides how
+// long a still-held thumb waits before it becomes a layer.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
+    if (is_thumb_layer_tap(keycode)) {
+        return THUMB_TAPPING_TERM;
+    }
     switch (keycode) {
         case TD_SFT:
             return 200;
         case HM_A: case HM_S: case HM_D: case HM_F:
         case HM_J: case HM_K: case HM_L:
             return 180;
+        case LT(_NAV, KC_TAB):
+            // Same failure mode, smaller blast radius: Tab held a touch past 130ms
+            // put _NAV on and the next letter became an F-key or an arrow. Free for
+            // the same reason - the Tab tap fires on release either way, and
+            // pre_process_record_kb below owns the Alt+Tab case.
+            return 180;
         default:
             return TAPPING_TERM;
     }
+}
+
+// The other half of the space fix. Hold a thumb through a thinking pause, release
+// it without pressing anything, and you still get your space - instead of losing it
+// because the key had already resolved as a hold. Pressing any key during the hold
+// clears the priming, so a real layer chord never emits a stray space.
+bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
+    return is_thumb_layer_tap(keycode);
 }
 
 // Permissive hold is right for the home row MODS and wrong for the LT() space
 // bars. Rolling space into the next letter - space down, letter down, letter up,
 // space up - matches permissive hold's rule exactly, so it resolved as a hold
 // and the roll produced a digit instead of "space letter". Restricting it to
-// mod-taps means a layer tap is decided by the tapping term alone: a deliberate
-// reach for a layer always exceeds 130ms, a roll never does.
+// mod-taps means a layer tap is decided by the tapping term alone.
+//
+// That was only half the answer, and the missing half is what kept the bug alive:
+// "the tapping term alone" is fine as long as the term is longer than a plain
+// press of the key. At 130ms it was not - see get_tapping_term() above.
 bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
     return IS_QK_MOD_TAP(keycode);
 }
@@ -291,8 +344,10 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_an
 //
 // The two roles are NOT symmetric, and conflating them is what made typing drag:
 //
-//   - as the key being pressed, a layer-tap must never be flow-tapped, or the
-//     space-layers die whenever you reach for one right after a letter;
+//   - as the key being pressed, a layer-tap gets a SHORTER window than a mod-tap,
+//     not none at all. "None at all" was the original reading and it left the
+//     space bar landing on the finger lift for every word; the short window keeps
+//     the space instant without stranding the thumb layers;
 //   - as the PREVIOUS key, a layer-tap absolutely must count as typing -
 //     LT(_NUM,KC_SPC) is the space bar, so excluding it broke the flow chain after
 //     every single space, and the first letter of every word went back to
@@ -327,16 +382,29 @@ static bool flow_prev_is_typing(uint16_t keycode) {
 }
 
 uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t *record, uint16_t prev_keycode) {
-    if (IS_QK_LAYER_TAP(keycode)) {
-        return 0; // a layer hold must always be reachable
-    }
-    if (!IS_QK_MOD_TAP(keycode)) {
-        return 0; // only the home row mods need rescuing
+    if (!IS_QK_MOD_TAP(keycode) && !IS_QK_LAYER_TAP(keycode)) {
+        return 0;
     }
     if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
         return 0; // mid-hotkey, leave the hold alone
     }
-    return flow_prev_is_typing(prev_keycode) ? FLOW_TAP_TERM : 0;
+    if (!flow_prev_is_typing(prev_keycode)) {
+        return 0;
+    }
+    if (IS_QK_LAYER_TAP(keycode)) {
+        // This used to be a blanket `return 0` reasoned as "a layer hold must
+        // always be reachable", and that is what made every space in every
+        // sentence land on the finger LIFT rather than the press. Flow Tap settles
+        // a tap-hold key as a tap on the KEYDOWN, so inside this window the space
+        // is instant and cannot become a layer at all.
+        //
+        // 110ms rather than the mods' 200ms so that "type a word, then hold the
+        // thumb for digits" still reaches _NUM - that reach always has a pause in
+        // front of it, a roll never does. LT(_NAV,KC_TAB) stays out: Alt+Tab is
+        // already handled in pre_process_record_kb and Tab-as-Nav is deliberate.
+        return is_thumb_layer_tap(keycode) ? FLOW_TAP_TERM_THUMB : 0;
+    }
+    return FLOW_TAP_TERM;
 }
 
 // ===========================================================================

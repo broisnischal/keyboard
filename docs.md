@@ -50,8 +50,27 @@ you keep holding it. `Alt`+`Tab`+`Tab`+`Tab` walks the window list normally.
 The one consequence: **you can't reach Nav with `Tab` while holding a modifier** - the firmware has
 decided that's a `Tab`. Use `Space R` for that, which is the other Nav key and behaves as before.
 
+**The space bars need a deliberate hold now - about a quarter second.** They used to give up their
+layer after 130 ms, and that is shorter than an ordinary space bar press, so resting a thumb turned
+a layer on by itself. The space then disappeared (a key that decided it was a hold has no tap left
+to send) and the next letter came off that layer instead of the alphabet: `o` typed `9` on `Space L`
+and nothing at all on `Fn` or `Space R`, and `_NAV`+`b` repeated whatever you had just typed. That
+is where "some letters don't appear, some double" came from.
+
+Three things changed, and none of them made typing slower:
+
+- **230 ms before a space becomes a layer.** Costs nothing, because a space is sent when you *lift*
+  the key, not when the timer runs out. A 90 ms space still lands at 90 ms.
+- **A long space is still a space.** Hold a thumb through a pause, let go without pressing anything
+  else, and you get your space. Press something during the hold and you get the layer, as before.
+- **A space typed inside 110 ms of the previous letter is sent on the keydown**, so mid-sentence it
+  is instant and cannot turn a layer on at all. To reach the digits mid-word, pause for a beat first
+  and then hold - which is what reaching for a layer feels like anyway.
+
 The `/` key next to left Shift is a **one-shot** for the Numbers layer: tap it, then press one key,
-and you get that key's Numbers meaning without holding anything. Tap it again to cancel.
+and you get that key's Numbers meaning without holding anything. Tap it again to cancel. It now
+forgets itself after **1.2 s** rather than 3 s: it sits right where your hand goes for Shift, and a
+stray brush used to re-point a keystroke you made seconds later.
 
 ### Travelling to Tmux + Windows
 
@@ -238,7 +257,7 @@ sends the `Super` chords omarchy already binds, so Hyprland needs none either.
 
 | Key | Does |
 |---|---|
-| `Q`…`P` | **workspace 1-10** |
+| `Q` to `P` | **workspace 1-10** |
 | `A` | tmux: new window |
 | `S` `D` | tmux: split side-by-side · split stacked |
 | `F` `G` | tmux: zoom the pane · kill the pane |
@@ -285,7 +304,7 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `S` | one-handed mode |
 | `D` | Caps Word |
 | `F` | Repeat |
-| `G`…`L` | prev / play / next / vol− / vol+ |
+| `G` to `L` | prev / play / next / vol down / vol up |
 | `/` `Z` `X` `C` | one-shot Shift / Ctrl / Alt / Gui |
 | `V` | key lock - pin the next key down |
 | `B` `N` `M` `,` `.` | macro: record 1 · play 1 · record 2 · play 2 · stop |
@@ -394,6 +413,21 @@ works; use `Space R` instead.
 it again to go back. The other place a keypress waits is the combo keys (`Q W Z X C V N M , . ' J K P`)
 - see *Combos* above for the knob. `Tab` keeps its Nav hold without any wait, because a held modifier
 bypasses the tap-hold decision entirely.
+
+**A letter doesn't appear, or a character doubles.** Almost always an accidental layer: a space bar
+held long enough to become one, or the one-shot `/` key brushed. Both are much harder to trigger
+since the space bars went to a 230 ms hold, so if it is still happening, measure before assuming a
+firmware bug:
+
+```bash
+./chatter-watch.py     # type a sentence, then Enter
+```
+
+It reads the keyboard's own event stream, so it shows what the **keyboard** sent rather than what
+the window drew. Two things to look for. Anything in `<angle brackets>` is not a letter - `<F9>`
+where you typed `o` means a space layer was on. And any key listed as re-pressed under 40 ms after
+its own release is a chattering switch, which no firmware change fixes: reseat or swap it and raise
+`DEBOUNCE` in `keymap/config.h`. If the text looks right and nothing is listed, the board is fine.
 
 **A tmux key does nothing.** Your prefix isn't `Ctrl-b`. Change `TMUX_PFX` in `keymap/keymap.c` and
 reflash.
