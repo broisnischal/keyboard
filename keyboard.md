@@ -419,8 +419,9 @@ are allowed to chord with either hand by design. `PERMISSIVE_HOLD_PER_KEY` takes
 `PERMISSIVE_HOLD` in `action_tapping.c`, so the bare define is gone rather than left as decoration.
 
 Want mods to engage even harder? Add `#define HOLD_ON_OTHER_KEY_PRESS` - safe alongside
-Chordal Hold, at the cost of more misfires on fast opposite-hand rolls. **Never put it on the
-thumbs**; it is the same bug as the section below, with no term left to hide behind.
+Chordal Hold, at the cost of more misfires on fast opposite-hand rolls. On the **thumbs** the bare
+define is the digit-instead-of-space bug all over again; what is safe there is the armed version,
+below.
 
 ### The space bars: a 130 ms term on `LT(n,KC_SPC)` is a broken keyboard
 
@@ -471,6 +472,44 @@ turned the next letter into a digit up to three seconds later. A deliberate `OSL
 
 **The general rule: never give a tap-hold key a term shorter than an ordinary press of its tap.**
 The drawing won't show it, the build won't warn, and the failure looks like dying switches.
+
+### Arming the hold: how a thumb becomes a layer without a quarter-second wait
+
+Measured 2026-08-18, one day after the section above, and caused by it.
+
+Permissive hold is off for the `LT()` thumbs and hold-on-other-key-press was off for everything, so
+the 230 ms term was the *only* route into `_NUM`/`_MEDIA`/`_NAV`. Two consequences, reported as
+"going into a layer is difficult and takes time" and "it lags":
+
+- reaching a layer meant pressing a thumb and waiting out a quarter of a second before the chord
+  key counted at all;
+- worse, `action_tapping.c` parks every key pressed while a tap-hold is undecided in the waiting
+  buffer, so anything typed inside that window came out **late, in a burst**. Slow layers and
+  general lag were one bug wearing two hats.
+
+`get_hold_on_other_key_press()` fixes both: once a thumb has been down `THUMB_HOLD_ARM_TIME`
+(80 ms), the next keydown settles it as a hold immediately. `record` there is the tap-hold key's
+*own* record - see `TAP_GET_HOLD_ON_OTHER_KEY_PRESS` at `action_tapping.c:242` - so
+`record->event.time` is when the thumb went down and `timer_elapsed()` on it is how long it has been
+held. `LT(_NAV,KC_TAB)` gets the same treatment.
+
+**The arm window is the entire reason this is safe.** Applying the rule from 0 ms is bare
+`HOLD_ON_OTHER_KEY_PRESS`, which is a strictly more aggressive version of the permissive hold that
+produced digits instead of spaces. Two guards, covering the two cases:
+
+| Case | What stops the misfire |
+|---|---|
+| Roll mid-sentence: previous key within 110 ms | Flow Tap already settled the space as a tap on its keydown, so the thumb cannot be a hold at all and this rule never runs |
+| Roll starting after a pause, where Flow Tap is out | The 80 ms arm. A roll overlaps the thumb almost immediately; deliberately reaching for a layer does not |
+
+Order of evaluation in `action_tapping.c:455-472`: Chordal Hold is consulted first, and only if it
+allows the chord does `TAP_GET_HOLD_ON_OTHER_KEY_PRESS` get asked. The thumbs are `'*'` in
+`chordal_hold_layout`, so they always reach the second test.
+
+Raise `THUMB_HOLD_ARM_TIME` if a leading space after a thinking pause starts producing digits;
+lower it if layer entry still feels like it needs a deliberate wait. The 230 ms term stays as the
+standalone path - a thumb held with nothing else pressed - and Retro Tapping still returns the space
+on release.
 
 ### Typing latency: what was already optimal
 

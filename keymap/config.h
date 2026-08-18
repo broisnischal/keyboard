@@ -100,7 +100,37 @@
 // far longer than that, and the tap still fires on release, so this costs zero
 // typing latency - it only lengthens how long a STILL-HELD thumb waits before it
 // becomes a layer. At the old global 130ms an ordinary space was already past it.
+//
+// This term is now only the STANDALONE path: a thumb held with nothing else
+// pressed. A thumb held and then chorded with another key resolves on that key's
+// press, after THUMB_HOLD_ARM_TIME below.
 #define THUMB_TAPPING_TERM 230
+
+// Resolve a thumb (or Tab) as a HOLD the moment another key goes down - but only
+// once it has already been down this long.
+//
+// Without this the LT() thumbs had exactly one way to become a layer: outlast the
+// 230ms term. So reaching _NUM meant pressing the thumb, waiting out a quarter of
+// a second, and only then pressing the key - and every key pressed inside that
+// window sat in the waiting buffer until the thumb resolved, which is the drag
+// that reads as general lag. Both are the same missing rule.
+//
+// The arm time is what keeps it from re-breaking the roll. Bare
+// HOLD_ON_OTHER_KEY_PRESS turns "space then letter" into a layer chord, and that
+// is the digit-instead-of-space bug all over again. Two guards stop it:
+//
+//   - Flow Tap already settles the space as a tap on the keydown whenever the
+//     previous keystroke was within FLOW_TAP_TERM_THUMB, so mid-sentence the
+//     thumb cannot become a hold at all and this rule never runs;
+//   - after a pause, where Flow Tap is out, 80ms is the gate. A roll into the
+//     next letter overlaps the thumb almost immediately; deliberately holding a
+//     thumb for a layer does not. 80ms is well under the 230ms it replaces and
+//     still sits below the fastest realistic space-to-letter overlap.
+//
+// Raise it if a leading space after a thinking pause starts producing digits;
+// lower it if layer entry still feels like it needs a deliberate wait.
+#define HOLD_ON_OTHER_KEY_PRESS_PER_KEY
+#define THUMB_HOLD_ARM_TIME 80
 
 // ---------------------------------------------------------------------------
 // Combos

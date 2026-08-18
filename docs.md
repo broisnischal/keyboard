@@ -50,7 +50,7 @@ you keep holding it. `Alt`+`Tab`+`Tab`+`Tab` walks the window list normally.
 The one consequence: **you can't reach Nav with `Tab` while holding a modifier** - the firmware has
 decided that's a `Tab`. Use `Space R` for that, which is the other Nav key and behaves as before.
 
-**The space bars need a deliberate hold now - about a quarter second.** They used to give up their
+**The space bars need a short deliberate hold now - about 80 ms.** They used to give up their
 layer after 130 ms, and that is shorter than an ordinary space bar press, so resting a thumb turned
 a layer on by itself. The space then disappeared (a key that decided it was a hold has no tap left
 to send) and the next letter came off that layer instead of the alphabet: `o` typed `9` on `Space L`
@@ -66,6 +66,17 @@ Three things changed, and none of them made typing slower:
 - **A space typed inside 110 ms of the previous letter is sent on the keydown**, so mid-sentence it
   is instant and cannot turn a layer on at all. To reach the digits mid-word, pause for a beat first
   and then hold - which is what reaching for a layer feels like anyway.
+
+Then a fourth, because the first three made the layers themselves slow to reach: 230 ms was the
+only way in, so every layer chord began with a quarter-second wait, and anything typed during that
+wait came out late in a burst.
+
+- **Hold a thumb for 80 ms and the next key you press goes straight to its layer.** No waiting out
+  the full term. The 230 ms above now only applies to a thumb held with nothing else pressed, which
+  is the case Retro Tapping already covers by giving you the space back on release.
+
+The 80 ms is what keeps a fast space from becoming a layer chord. Roll straight from a letter into
+the space bar and the space wins; pause, then hold, and the layer wins.
 
 The `/` key next to left Shift is a **one-shot** for the Numbers layer: tap it, then press one key,
 and you get that key's Numbers meaning without holding anything. Tap it again to cancel. It now

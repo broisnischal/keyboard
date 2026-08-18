@@ -138,6 +138,18 @@ EOF
   costs latency, because **a tap-hold emits its tap on RELEASE** - a 90 ms space lands at 90 ms
   whatever the term is. `keyboard.md §3` has the per-thumb damage table. Corollary: `OSL()` on a key
   you can brush needs a short `ONESHOT_TIMEOUT` for the same reason (3000 → 1200).
+- **A tap-hold key with no hold-on-other-key-press has exactly one route to its hold: outlast the
+  term.** Fixing the space bars above left the thumbs at a 230 ms term with permissive hold
+  deliberately off, so reaching `_NUM` meant holding a thumb for a quarter of a second before the
+  chord key counted - and `action_tapping.c` parks every key pressed while a tap-hold is undecided
+  in the waiting buffer, so those keystrokes came out late in a burst. "Layers are slow to reach"
+  and "typing lags" were one bug. `get_hold_on_other_key_press()` returns true for the thumbs and
+  `LT(_NAV,KC_TAB)` once `timer_elapsed(record->event.time) >= THUMB_HOLD_ARM_TIME` (80 ms);
+  `record` is the tap-hold's *own* record (`action_tapping.c:242`), so that is how long the thumb
+  has been held. Measured 2026-08-18. **The arm window is not decoration** - from 0 ms this is bare
+  `HOLD_ON_OTHER_KEY_PRESS`, a strictly more aggressive permissive hold, and re-creates the
+  digit-instead-of-space bug. Flow Tap covers the mid-sentence roll, the arm window covers the roll
+  after a pause.
 - **"Some keys double type" is a firmware claim until measured.** `./chatter-watch.py` reads the
   board's own evdev node and flags any key re-pressed under 40 ms after its own release, which no
   finger can do. No hits means switch chatter is ruled out and `DEBOUNCE` is the wrong knob - go

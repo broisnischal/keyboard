@@ -327,6 +327,34 @@ bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
     return IS_QK_MOD_TAP(keycode);
 }
 
+// The third half of the space fix, and the one that was missing: how a thumb
+// becomes a layer QUICKLY.
+//
+// Permissive hold is off for the LT() thumbs and hold-on-other-key-press was off
+// for everything, which left the 230ms term as the only route into _NUM/_MEDIA/
+// _NAV. Reaching a layer therefore meant holding a thumb for a quarter of a
+// second before the chord key would even count - and worse, action_tapping.c
+// parks every key pressed while a tap-hold is undecided in the waiting buffer,
+// so those keystrokes came out late in a burst. Slow layers and "typing feels
+// laggy" were one bug wearing two hats.
+//
+// So: once the thumb has been down THUMB_HOLD_ARM_TIME, the next keydown settles
+// it as a hold immediately. record is the tap-hold key's own record (see
+// TAP_GET_HOLD_ON_OTHER_KEY_PRESS in action_tapping.c), so event.time is when the
+// thumb went down and timer_elapsed on it is how long it has been held.
+//
+// The arm window is the whole reason this is safe. Applying the rule from 0ms is
+// bare HOLD_ON_OTHER_KEY_PRESS, which is a strictly more aggressive version of
+// the permissive hold that produced digits instead of spaces. Flow Tap already
+// covers the in-flow roll by settling the space as a tap on its keydown; the arm
+// window covers the roll that starts after a pause, where Flow Tap is out.
+bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
+    if (is_thumb_layer_tap(keycode) || keycode == LT(_NAV, KC_TAB)) {
+        return timer_elapsed(record->event.time) >= THUMB_HOLD_ARM_TIME;
+    }
+    return false; // mod-taps keep permissive hold; nothing else is a tap-hold
+}
+
 // Which hand each key belongs to, for CHORDAL_HOLD. Same-hand chords settle as
 // taps; '*' keys (the three thumbs) may chord with either hand.
 // clang-format off
