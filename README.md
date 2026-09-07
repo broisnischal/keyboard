@@ -18,9 +18,13 @@ git clone https://github.com/broisnischal/keyboard.git && cd keyboard
 ## The keymap at a glance
 
 All eight layers, drawn from the real `keymap.c` by
-[keymap-drawer](https://github.com/caksoylar/keymap-drawer). Pink cells mark the key you're holding
-to be on that layer. On the layer-reach keys, **`while held`** means it dies when you let go and
-**`stay`** means it latches until you press it again.
+[keymap-drawer](https://github.com/caksoylar/keymap-drawer). Pink cells mark the key I'm holding
+to be on that layer. On the layer-reach keys, **`while held`** means it dies when I let go and
+**`stay`** means it latches until I press it again.
+
+The small grey letter in the top-left corner of a cell is **the base keycap that cell sits on** - so
+`[` on the Numbers layer is cornered `H`, and I press the `H` key. Cells showing `▽` fall straight
+through to Base, which is why they have no corner letter.
 
 ![The TH40 keymap: eight layers](drawings/keymap.svg)
 
@@ -44,15 +48,19 @@ What you're looking at (the full tour is [`FEATURES.md`](FEATURES.md)):
   pattern lock** - and opt-in home-row mods on their own base layer
 - **5,300+ scans/sec** - eager debounce, 1000 Hz USB, LTO; ~0.7 ms average input latency
 
-Regenerate after a keymap change (legends and the tri-layer chip live in [`drawings/`](drawings)):
+Regenerate after a keymap change. `postprocess.py` adds what `qmk c2json` cannot see (combos, the
+tri-layer chord, the key override, the pink held cells); `anchors.py` prints the base keycap in each
+cell's corner. The layer is named `Tmux Windows` without the `+` because keymap-drawer wraps a
+legend on whitespace, and three lines collided with the hold legend underneath.
 
 ```bash
 qmk c2json --no-cpp -kb epomaker/th40 -km tapdance -o /tmp/th40.json
 keymap -c drawings/config.yaml parse -q /tmp/th40.json \
-  -l Base "Home-Row Mods" Nav Numbers System "Tmux + Windows" "Spare 6" "Spare 7" \
+  -l Base "Home-Row Mods" Nav Numbers System "Tmux Windows" "Spare 6" "Spare 7" \
   | python3 drawings/postprocess.py > drawings/keymap.yaml
 keymap -c drawings/config.yaml draw drawings/keymap.yaml \
-  -j qmk/keyboards/epomaker/th40/keyboard.json > drawings/keymap.svg
+  -j qmk/keyboards/epomaker/th40/keyboard.json \
+  | python3 drawings/anchors.py drawings/keymap.yaml > drawings/keymap.svg
 ```
 
 ---

@@ -29,10 +29,11 @@ COMBOS = [
 # Draw them as what they do instead. Position -> legend, on the System layer only.
 SYSTEM_TRAVEL = {
     36: {"t": "Base", "h": "drop all"},
-    # "Tmux + Windows", not "WM": keymap-drawer turns a legend that matches a
+    # "Tmux Windows", not "WM": keymap-drawer turns a legend that matches a
     # layer name into a link to that layer's own diagram, and the abbreviation
-    # missed it.
-    41: {"t": "Tmux + Windows", "h": "stay"},
+    # missed it. Three words wrapped to three lines and collided with the hold
+    # legend, so the layer is named without the "+".
+    41: {"t": "Tmux Windows", "h": "stay"},
     42: {"t": "Spare 6", "h": "stay"},
     43: {"t": "Spare 7", "h": "stay"},
 }
@@ -41,9 +42,24 @@ SYSTEM_TRAVEL = {
 # say the difference that matters: Nav's route dies when you let go, System's does
 # not. Spell it out, so the drawing teaches the distinction on its own.
 NAV_TRAVEL = {
-    41: {"t": "Tmux + Windows", "h": "while held"},
+    41: {"t": "Tmux Windows", "h": "while held"},
     42: {"t": "Spare 6", "h": "while held"},
     43: {"t": "Spare 7", "h": "while held"},
+}
+
+# raw_binding_map replaces the parsed LT()/MO() binding wholesale, so the parser
+# loses the layer reference and never marks the destination layer's own activator
+# as "held" - the pink cell the README promises. Put it back by hand: position ->
+# what that key is on Base, plus how holding it gets you here.
+HELD = {
+    "Nav":          {12: {"t": "Tab", "h": "held"},   40: {"t": "Space", "h": "held"}},
+    "Numbers":      {24: {"t": "Num", "h": "tapped"}, 38: {"t": "Space", "h": "held"}},
+    "System":       {39: {"t": "Fn", "h": "held"},
+                     38: {"t": "Space", "h": "both spaces"},
+                     40: {"t": "Space", "h": "both spaces"}},
+    "Tmux Windows": {41: {"t": "\u25c6", "h": "from Nav"}},
+    "Spare 6":      {42: {"t": "\u2713", "h": "from Nav"}},
+    "Spare 7":      {43: {"t": "\u2715", "h": "from Nav"}},
 }
 
 doc = yaml.safe_load(sys.stdin)
@@ -62,6 +78,8 @@ for name, keys in doc["layers"].items():
             keys[i] = {"t": "held", "type": "held"}
     if name.startswith("Base"):
         keys[11] = {"t": "BSPC", "s": "⇧ Del"}       # key override, shifted legend
+    for pos, legend in HELD.get(name, {}).items():
+        keys[pos] = {**legend, "type": "held"}
     if name.startswith("Numbers"):
         # keymap-drawer gives KC_NUBS a "|" shifted legend but KC_BSLS none, which
         # is backwards - KC_BSLS is the key that actually types the pipe. Put it back.

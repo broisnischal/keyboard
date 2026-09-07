@@ -134,8 +134,9 @@ layers:
   - F9
   - F10
   - DEL
-  - t: ▽
-    type: trans
+  - t: Tab
+    h: held
+    type: held
   - HOME
   - PGDN
   - PGUP
@@ -172,8 +173,9 @@ layers:
   - t: ▽
     type: trans
   - t: Space
-    h: hold Num
-  - t: Tmux + Windows
+    h: held
+    type: held
+  - t: Tmux Windows
     h: while held
   - t: Spare 6
     h: while held
@@ -207,8 +209,9 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - t: ▽
-    type: trans
+  - t: Num
+    h: tapped
+    type: held
   - t: ▽
     type: trans
   - t: ▽
@@ -233,11 +236,12 @@ layers:
     type: trans
   - t: ▽
     type: trans
+  - t: Space
+    h: held
+    type: held
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
-  - SPC
+  - Space
   - t: ▽
     type: trans
   - t: ▽
@@ -286,14 +290,14 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: LSFT
-    h: sticky
-  - t: LCTL
-    h: sticky
-  - t: LALT
-    h: sticky
-  - t: LGUI
-    h: sticky
+  - t: Shift
+    h: one-shot
+  - t: Ctrl
+    h: one-shot
+  - t: Alt
+    h: one-shot
+  - t: Gui
+    h: one-shot
   - t: Key
     h: lock
   - t: ⏺ 1
@@ -314,19 +318,22 @@ layers:
     h: drop all
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: Tmux + Windows
+  - t: Space
+    h: both spaces
+    type: held
+  - t: Fn
+    h: held
+    type: held
+  - t: Space
+    h: both spaces
+    type: held
+  - t: Tmux Windows
     h: stay
   - t: Spare 6
     h: stay
   - t: Spare 7
     h: stay
-  Tmux + Windows:
+  Tmux Windows:
   - t: ▽
     type: trans
   - t: '1'
@@ -409,8 +416,9 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
+  - t: ◆
+    h: from Nav
+    type: held
   - t: ▽
     type: trans
   - t: ▽
@@ -500,8 +508,9 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
+  - t: ✓
+    h: from Nav
+    type: held
   - t: ▽
     type: trans
   Spare 7:
@@ -591,8 +600,9 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
+  - t: ✕
+    h: from Nav
+    type: held
 combos:
 - p:
   - 1

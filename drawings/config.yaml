@@ -19,18 +19,26 @@ parse_config:
     "T_DETACH": {t: "detach", h: "⌃b d"}
     # --- plain keys and layer taps, spelled out rather than left as raw QMK ---
     "KC_LCTL": "Ctrl"
+    # "Space", not "SPC": anchors.py skips a cell whose legend already matches
+    # the base keycap, and only an exact match counts.
+    "KC_SPC": "Space"
     "LT(_NAV,KC_TAB)": {t: "Tab", h: "hold Nav"}
     "OSL(_NUM)": {t: "Num", h: "one-shot"}
     "LT(_NUM,KC_SPC)": {t: "Space", h: "hold Num"}
     "LT(_NAV,KC_SPC)": {t: "Space", h: "hold Nav"}
     "LT(_MEDIA,KC_SPC)": {t: "Fn", h: "hold System"}
     "TO(_BASE)": {t: "Base", h: "drop all"}
-    "MO(_WM)": {t: "Tmux + Windows", h: "while held"}
+    "MO(_WM)": {t: "Tmux Windows", h: "while held"}
     "MO(_SPR1)": {t: "Spare 6", h: "while held"}
     "MO(_SPR2)": {t: "Spare 7", h: "while held"}
-    "TG(_WM)": {t: "Tmux + Windows", h: "stay"}
+    "TG(_WM)": {t: "Tmux Windows", h: "stay"}
     "TG(_SPR1)": {t: "Spare 6", h: "stay"}
     "TG(_SPR2)": {t: "Spare 7", h: "stay"}
+    # --- one-shot mods (the System layer bottom row) ---
+    "OSM(MOD_LGUI)": {t: "Gui", h: "one-shot"}
+    "OSM(MOD_LALT)": {t: "Alt", h: "one-shot"}
+    "OSM(MOD_LCTL)": {t: "Ctrl", h: "one-shot"}
+    "OSM(MOD_LSFT)": {t: "Shift", h: "one-shot"}
     # --- persistent settings keys ---
     "UC_LOCKB": {t: "Lock", h: "at boot"}
     "UC_CLEDS": {t: "Lamps", h: "on/off"}
@@ -113,3 +121,12 @@ draw_config:
     text.trans { opacity: 0.35; }
     text.label { font-weight: 650; font-size: 15px; }
     text.combo { font-size: 10px; }
+    /* the base keycap each cell sits on, injected by anchors.py */
+    text.anchor {
+      font-size: 8px; font-weight: 700; text-anchor: start; opacity: 0.55;
+      /* halo in the key colour, so the anchor stays readable where a two-line
+         legend reaches into the corner ("last win", "Lamp -") */
+      stroke: #f6f8fa; stroke-width: 2.5px; paint-order: stroke;
+    }
+    rect.held + text.anchor, .held text.anchor { stroke: #fdd; }
+    @media (prefers-color-scheme: dark) { text.anchor { stroke: #3f4750; } }

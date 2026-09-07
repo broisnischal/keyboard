@@ -98,6 +98,17 @@ EOF
   `SUB_CFG_SET`. `config`, `scan-rate` and `unlock` are fine. Not yet fixed.
 - **Key overrides match the literal keymap keycode.** An `LT(n,KC_SPC)` space bar can never
   trigger a `KC_SPC` override - don't re-attempt shift+space→underscore.
+- **`raw_binding_map` silently kills keymap-drawer's held-cell marking.** Overriding a binding
+  replaces the parsed `LT()`/`MO()` wholesale, so the parser loses the layer reference and never
+  marks the destination layer's own activator as `type: held` - the pink "you are holding this" cell
+  the README promises. `mark_alternate_layer_activators: true` does not bring it back; the config's
+  `raw_binding_map` covers every layer-travel key here. `postprocess.py` has a `HELD` table instead.
+  Same root cause as the missing corner letters: **a layer diagram never says which physical key a
+  cell is**, and keymap-drawer has only three legend slots (`t`, `h`, `s`), with `s` already taken by
+  the Numbers backslash. `drawings/anchors.py` runs on the finished SVG - each cell is a
+  `<g class="key keypos-N">` inside a `<g class="layer-NAME">`, so position is addressable - and
+  prints the Base legend in the corner. It needs the halo (`paint-order: stroke` in the key colour):
+  a two-line legend like "last win" reaches into that corner.
 - **The drawing is not evidence that a key works.** `KC_NUBS` sat on the Numbers layer for a month
   as the backslash key; it is the *ISO* extra key, unmapped in the `us` xkb layout, so it typed
   nothing - while keymap-drawer rendered it "\ |" and made the drawing look right. Worse, the two
