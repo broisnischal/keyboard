@@ -144,6 +144,16 @@ work correctly.
 
 **Layers 6-7 - spare.** All `_______`. Reaching one is a no-op until something is put on it.
 
+**Tap-`Super` / hold-`Super`+`Alt` was tried and does not work here.** `MT(MOD_LGUI | MOD_LALT,
+KC_LGUI)` on the base Gui key is the obvious shape for the "multi-modifier chords are awkward on a
+40%" complaint. `get_permissive_hold()` returns `IS_QK_MOD_TAP(keycode)`, so the mod-tap resolves as
+*hold* the moment another key joins it, and `Super`+`W` emits `Gui`+`Alt`+`W`; omarchy's entire
+`Super` map breaks. Turning permissive hold off for it does not help either, because outlasting the
+term becomes the only route to the hold and holding `Super` is exactly how those chords are typed.
+Holding the Gui key is already spoken for. A one-shot-mod layer on one of the spares was built as
+the alternative and then removed - the taps-instead-of-a-chord idea is more to remember than the
+chord it replaces. The `OSM()` keys on `_MEDIA`'s bottom row already cover the occasional one.
+
 ### `_MEDIA` - media + system
 
 The old media layer had three empty rows, so the settings keys live there:

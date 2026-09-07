@@ -178,6 +178,15 @@ EOF
   `keymap_introspection.c` static-asserts `keymaps[]` against it. Eight layers is a hard ceiling, not
   a target. `_SPR1`/`_SPR2` are declared and fully transparent so the count is accounted for and no
   index below them ever has to move.
+- **Tap-Super / hold-Super+Alt is impossible on this board, so don't re-attempt it.**
+  `MT(MOD_LGUI|MOD_LALT, KC_LGUI)` resolves as *hold* as soon as another key joins it -
+  `get_permissive_hold()` returns `IS_QK_MOD_TAP(keycode)` - so `Super`+`W` emits `Gui`+`Alt`+`W` and
+  omarchy's whole `Super` map dies. Disabling permissive hold for it makes outlasting the term the
+  only route to the hold, which is exactly how `Super` chords are typed. Holding Gui is spoken for.
+  A `_MODS` layer on spare 6 - stacking `OSM()` keys on the home row, dropped by `process_record_kb`
+  on the first non-`OSM()` press - was built as the alternative and **removed on request**: it is
+  more to remember than the chord it replaces. Don't add it back. The `OSM()` keys already on
+  `_MEDIA`'s bottom row cover the occasional multi-mod chord.
 
 ## Verifying, rather than assuming
 
