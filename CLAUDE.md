@@ -89,8 +89,9 @@ EOF
   scans `layer_state | default_layer_state` from the highest index down, so `_HRM` parked at 7 - a
   persisted default layer with no transparent keys - answered every lookup first and killed layers
   1-6 outright. Worse, the way back (`Fn`+`T` = `UC_HRM`) resolved to plain `T`, so the keyboard
-  could not undo it; recovery was writing `UC_HRM` into the dynamic keymap over raw HID. `_HRM` is
-  index 1 now and every layer reference in `keymap.c` is symbolic. Never write `LT(2,...)`.
+  could not undo it; recovery was writing `UC_HRM` into the dynamic keymap over raw HID. `_HRM` moved
+  to index 1, then was removed with the home row mods (2026-10-05); index 1 is the `_SPR1` spare.
+  Every layer reference in `keymap.c` is symbolic. Never write `LT(2,...)`.
 - **Echo-check every VIA read.** Rapid back-to-back raw HID calls on one handle can return the
   *previous* request's reply, which reads as a scrambled keymap and sends you diagnosing a
   non-existent bug. `id_dynamic_keymap_get_keycode` echoes layer/row/col at bytes 1-3 - assert them.
@@ -98,6 +99,11 @@ EOF
   `SUB_CFG_SET`. `config`, `scan-rate` and `unlock` are fine. Not yet fixed.
 - **Key overrides match the literal keymap keycode.** An `LT(n,KC_SPC)` space bar can never
   trigger a `KC_SPC` override - don't re-attempt shift+space→underscore.
+- **Backspace must never become Delete under a modifier or layer you are likely still holding.**
+  `Shift`+`Bspc`→`Del` (key override) and `_NAV`'s `KC_DEL` on the Backspace position both made
+  corrections delete *forward*: `Shift` is still down from a capital, `Space R` from the space.
+  Removed on request 2026-10-05, `KEY_OVERRIDE_ENABLE = no`. Don't add either back. Delete is `N`+`M`
+  or `Fn`+`Bspc` (requested the same day): `Fn` is the small middle key, never held from a space.
 - **`raw_binding_map` silently kills keymap-drawer's held-cell marking.** Overriding a binding
   replaces the parsed `LT()`/`MO()` wholesale, so the parser loses the layer reference and never
   marks the destination layer's own activator as `type: held` - the pink "you are holding this" cell
@@ -105,7 +111,7 @@ EOF
   `raw_binding_map` covers every layer-travel key here. `postprocess.py` has a `HELD` table instead.
   Same root cause as the missing corner letters: **a layer diagram never says which physical key a
   cell is**, and keymap-drawer has only three legend slots (`t`, `h`, `s`), with `s` already taken by
-  the Numbers backslash. `drawings/anchors.py` runs on the finished SVG - each cell is a
+  the Symbols backslash. `drawings/anchors.py` runs on the finished SVG - each cell is a
   `<g class="key keypos-N">` inside a `<g class="layer-NAME">`, so position is addressable - and
   prints the Base legend in the corner. It needs the halo (`paint-order: stroke` in the key colour):
   a two-line legend like "last win" reaches into that corner.
@@ -122,7 +128,9 @@ EOF
     keydown of every key belonging to any combo until the combo is ruled out (next keydown, release,
     or `COMBO_TERM`), and the nine here cover `Q W Z X C V N M , . ' J K P`. Picking rare digraphs
     prevents false triggers, not the delay. They were removed once as a latency fix that was never
-    asked for, and had to be restored. `COMBO_TERM` is the only legitimate knob.
+    asked for, and had to be restored. `COMBO_TERM` is the only legitimate knob - plus, since
+    2026-10-05, `combo_should_trigger()` skipping combos mid-word (`COMBO_FLOW_TERM`), which keeps
+    every combo and removes the wait from `Q W Z X C V N P` while typing.
   - **Leader** (`LEADER_ENABLE = no`). Arming on a double-tap forces the trigger to be a tap dance;
     it was on left Ctrl, so every Ctrl chord sat inside a 200 ms state machine. Registering the mod
     in `on_each_tap` makes it *functionally* instant and it still felt late. A leader needs a
@@ -131,12 +139,14 @@ EOF
     fired until the finger came up, and holding Tab past 130 ms gave the layer and no Tab at all.
     Tab was made plain, then the hold was restored on request - see the `pre_process_record_kb` note
     below, which is what makes both work at once.
+- **Home row mods were removed on request, 2026-10-05. Don't add them back.** `CHORDAL_HOLD` stays:
+  with the thumbs `'*'` it now governs only `LT(_NAV,KC_TAB)`, settling Tab + a left-hand key as a
+  Tab so a Tab-into-letter roll can't land on Nav.
 - **`PERMISSIVE_HOLD` must not apply to the `LT(n,KC_SPC)` thumbs.** Its rule - held tap-hold key,
   another key pressed *and released*, resolve as hold - is exactly the shape of rolling through the
   space bar, so a fast roll produced a digit instead of "space letter". `CHORDAL_HOLD` cannot catch
-  it: the thumbs are `'*'` in `chordal_hold_layout` by design. `get_permissive_hold()` returns
-  `IS_QK_MOD_TAP(keycode)` and nothing else. `PERMISSIVE_HOLD_PER_KEY` wins over the bare
-  `PERMISSIVE_HOLD` in `action_tapping.c`, so only the per-key define is present.
+  it: the thumbs are `'*'` in `chordal_hold_layout` by design. It was per-key, mod-taps only, until
+  the home row mods went; now neither define is present. Never add the bare one.
 - **Never give a tap-hold key a term shorter than an ordinary press of its tap.** The three
   `LT(n,KC_SPC)` thumbs sat at the global `TAPPING_TERM` of 130 ms for two weeks. A thumb rests on
   the space bar - 130-250 ms is a normal space - so the term expired *on its own*, with nothing else
@@ -176,11 +186,13 @@ EOF
   still emits keys.
 - **`DYNAMIC_KEYMAP_LAYER_COUNT` is 8** (`lib/rdmctmzt_common/fs026_eeprom.h`), and
   `keymap_introspection.c` static-asserts `keymaps[]` against it. Eight layers is a hard ceiling, not
-  a target. `_SPR1`/`_SPR2` are declared and fully transparent so the count is accounted for and no
-  index below them ever has to move.
+  a target. `_SPR2` is declared and fully transparent so the count is accounted for and no index
+  below it ever has to move. Spare 6 became `_DIG` (digits plus `_NUM`'s symbols, `OSL(_DIG)` left of Z) on 2026-10-05,
+  when `_NUM`'s top row turned into `! @ # $ % ^ & * ( )`. `_NUM` kept its name and its index: Space L's
+  layer must sit below `_MEDIA` or the both-spaces chord resolves to `_NUM` instead of System.
 - **Tap-Super / hold-Super+Alt is impossible on this board, so don't re-attempt it.**
   `MT(MOD_LGUI|MOD_LALT, KC_LGUI)` resolves as *hold* as soon as another key joins it -
-  `get_permissive_hold()` returns `IS_QK_MOD_TAP(keycode)` - so `Super`+`W` emits `Gui`+`Alt`+`W` and
+  permissive hold was on for mod-taps then - so `Super`+`W` emits `Gui`+`Alt`+`W` and
   omarchy's whole `Super` map dies. Disabling permissive hold for it makes outlasting the term the
   only route to the hold, which is exactly how `Super` chords are typed. Holding Gui is spoken for.
   A `_MODS` layer on spare 6 - stacking `OSM()` keys on the home row, dropped by `process_record_kb`

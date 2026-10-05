@@ -14,7 +14,8 @@ RGB_MATRIX_CUSTOM_USER = yes
 # but they are wanted; see the note above key_combos[] in keymap.c.
 # LTO: this bootloader has failed to boot every image with >~83 KB of real code; LTO keeps us far below that.
 LTO_ENABLE = yes
-KEY_OVERRIDE_ENABLE = yes
+# No key overrides left: Shift+Backspace=Delete was removed (Backspace must always go backward).
+KEY_OVERRIDE_ENABLE = no
 LAYER_LOCK_ENABLE = yes
 KEY_LOCK_ENABLE = yes
 DYNAMIC_MACRO_ENABLE = yes

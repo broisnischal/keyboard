@@ -2,13 +2,13 @@
 """Print the base keycap in the corner of every cell that isn't the base.
 
 A layer diagram on its own tells me what a key does, never which key it is. `[`
-on the Numbers layer is the eighth cell of the second row, and finding it means
+on the Symbols layer is the eighth cell of the second row, and finding it means
 counting columns across to the Base diagram. So each overlay cell gets the Base
 legend for that position in its top-left corner: `[` reads "H", and I press the
 key my finger already knows.
 
 keymap-drawer has no field for a fourth legend - `t`, `h` and `s` are the three,
-and `s` is taken on the Numbers backslash - so this runs on the finished SVG.
+and `s` is taken on the Symbols backslash - so this runs on the finished SVG.
 Each cell is a `<g class="key keypos-N">` inside a `<g class="layer-NAME">`, so
 the position is addressable and the injection is a text node after the rect.
 

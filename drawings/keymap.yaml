@@ -15,8 +15,7 @@ layers:
   - I
   - O
   - P
-  - t: BSPC
-    s: ⇧ Del
+  - BSPC
   - t: Tab
     h: hold Nav
   - A
@@ -31,7 +30,7 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - t: Num
+  - t: '123'
     h: one-shot
   - Z
   - X
@@ -47,7 +46,7 @@ layers:
   - LGUI
   - LALT
   - t: Space
-    h: hold Num
+    h: hold Sym
   - t: Fn
     h: hold System
   - t: Space
@@ -58,68 +57,95 @@ layers:
     h: approve
   - t: ✕
     h: interrupt
-  Home-Row Mods:
-  - t: Esc
-    s: '~'
-  - Q
-  - W
-  - E
-  - R
-  - T
-  - Y
-  - U
-  - I
-  - O
-  - P
-  - BSPC
-  - t: Tab
-    h: hold Nav
-  - t: A
-    h: Gui
-  - t: S
-    h: Alt
-  - t: D
-    h: Ctrl
-  - t: F
-    h: Shift
-  - G
-  - H
-  - t: J
-    h: Shift
-  - t: K
-    h: Ctrl
-  - t: L
-    h: Alt
-  - ENT
-  - t: ⇧
-    h: tap ×2 Caps
-  - t: Num
-    h: one-shot
-  - Z
-  - X
-  - C
-  - V
-  - B
-  - N
-  - M
-  - ','
-  - .
-  - ''''
-  - Ctrl
-  - LGUI
-  - LALT
-  - t: Space
-    h: hold Num
-  - t: Fn
-    h: hold System
-  - t: Space
-    h: hold Nav
-  - t: ◆
-    h: Claude
-  - t: ✓
-    h: approve
-  - t: ✕
-    h: interrupt
+  Spare 1:
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
   Nav:
   - t: Esc
     s: '~'
@@ -133,7 +159,7 @@ layers:
   - F8
   - F9
   - F10
-  - DEL
+  - BSPC
   - t: Tab
     h: held
     type: held
@@ -177,23 +203,22 @@ layers:
     type: held
   - t: Tmux Windows
     h: while held
-  - t: Spare 6
+  - t: Digits
     h: while held
   - t: Spare 7
     h: while held
-  Numbers:
-  - t: Esc
-    s: '~'
-  - '1'
-  - '2'
-  - '3'
-  - '4'
-  - '5'
-  - '6'
-  - '7'
-  - '8'
-  - '9'
-  - '0'
+  Symbols:
+  - '`'
+  - '!'
+  - '@'
+  - '#'
+  - $
+  - '%'
+  - ^
+  - '&'
+  - '*'
+  - (
+  - )
   - BSPC
   - t: ▽
     type: trans
@@ -209,9 +234,8 @@ layers:
   - ENT
   - t: ⇧
     h: tap ×2 Caps
-  - t: Num
-    h: tapped
-    type: held
+  - t: ▽
+    type: trans
   - t: ▽
     type: trans
   - t: ▽
@@ -259,8 +283,7 @@ layers:
     h: bright
   - t: Lamp +
     h: bright
-  - t: HRM
-    h: base swap
+  - ''
   - t: Aura
     h: effect
   - t: Rain
@@ -269,8 +292,7 @@ layers:
     h: on/off
   - ''
   - ''
-  - t: ▽
-    type: trans
+  - DEL
   - t: ▽
     type: trans
   - t: Lock
@@ -329,7 +351,7 @@ layers:
     type: held
   - t: Tmux Windows
     h: stay
-  - t: Spare 6
+  - t: Digits
     h: stay
   - t: Spare 7
     h: stay
@@ -423,7 +445,39 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  Spare 6:
+  Digits:
+  - t: ▽
+    type: trans
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  - '8'
+  - '9'
+  - '0'
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - '-'
+  - '='
+  - ;
+  - ''''
+  - '`'
+  - '['
+  - ']'
+  - /
+  - '?'
+  - t: ▽
+    type: trans
+  - t: ▽
+    type: trans
+  - t: '123'
+    h: tapped
+    type: held
   - t: ▽
     type: trans
   - t: ▽
@@ -436,58 +490,8 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
-  - t: ▽
-    type: trans
+  - t: \
+    s: '|'
   - t: ▽
     type: trans
   - t: ▽

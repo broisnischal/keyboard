@@ -23,16 +23,16 @@ parse_config:
     # the base keycap, and only an exact match counts.
     "KC_SPC": "Space"
     "LT(_NAV,KC_TAB)": {t: "Tab", h: "hold Nav"}
-    "OSL(_NUM)": {t: "Num", h: "one-shot"}
-    "LT(_NUM,KC_SPC)": {t: "Space", h: "hold Num"}
+    "OSL(_DIG)": {t: "123", h: "one-shot"}
+    "LT(_NUM,KC_SPC)": {t: "Space", h: "hold Sym"}
     "LT(_NAV,KC_SPC)": {t: "Space", h: "hold Nav"}
     "LT(_MEDIA,KC_SPC)": {t: "Fn", h: "hold System"}
     "TO(_BASE)": {t: "Base", h: "drop all"}
     "MO(_WM)": {t: "Tmux Windows", h: "while held"}
-    "MO(_SPR1)": {t: "Spare 6", h: "while held"}
+    "MO(_DIG)": {t: "Digits", h: "while held"}
     "MO(_SPR2)": {t: "Spare 7", h: "while held"}
     "TG(_WM)": {t: "Tmux Windows", h: "stay"}
-    "TG(_SPR1)": {t: "Spare 6", h: "stay"}
+    "TG(_DIG)": {t: "Digits", h: "stay"}
     "TG(_SPR2)": {t: "Spare 7", h: "stay"}
     # --- one-shot mods (the System layer bottom row) ---
     "OSM(MOD_LGUI)": {t: "Gui", h: "one-shot"}
@@ -44,7 +44,6 @@ parse_config:
     "UC_CLEDS": {t: "Lamps", h: "on/off"}
     "UC_BRTU": {t: "Lamp +", h: "bright"}
     "UC_BRTD": {t: "Lamp −", h: "bright"}
-    "UC_HRM": {t: "HRM", h: "base swap"}
     "UC_AURA": {t: "Aura", h: "effect"}
     "UC_RAIN": {t: "Rain", h: "effect"}
     "RM_TOGG": {t: "Backlight", h: "on/off"}
@@ -66,14 +65,6 @@ parse_config:
     "KC_F21": {t: "◆", h: "Claude"}
     "KC_F22": {t: "✓", h: "approve"}
     "KC_F23": {t: "✕", h: "interrupt"}
-    # --- home row mods (HRM layer) ---
-    "HM_A": {t: "A", h: "Gui"}
-    "HM_S": {t: "S", h: "Alt"}
-    "HM_D": {t: "D", h: "Ctrl"}
-    "HM_F": {t: "F", h: "Shift"}
-    "HM_J": {t: "J", h: "Shift"}
-    "HM_K": {t: "K", h: "Ctrl"}
-    "HM_L": {t: "L", h: "Alt"}
     # --- media ---
     "KC_MPRV": "Prev"
     "KC_MNXT": "Next"

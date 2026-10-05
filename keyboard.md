@@ -78,12 +78,12 @@ matter if you ever redo that conversion:
 | Layer | Reached by | Contents |
 |---|---|---|
 | 0 `_BASE` | - | alphas, three Claude keys |
-| 1 `_HRM` | `UC_HRM` swaps the default layer here, persisted | same base plus home row mods on ASDF/JKL |
+| 1 `_SPR1` | nothing | empty, fully transparent. Was `_HRM` (home row mods) until they were removed on 2026-10-05 |
 | 2 `_NAV` | `LT(_NAV,KC_TAB)`, or `LT(_NAV,SPC)` (right space) | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/fwd, `QK_REP`/`QK_AREP` |
-| 3 `_NUM` | `OSL(_NUM)`, or `LT(_NUM,SPC)` | digits, everyday symbols |
+| 3 `_NUM` | `LT(_NUM,SPC)` (left space) | symbols: the shifted number row `! @ # $ % ^ & * ( )` on top, so no Shift; `` ` `` on Esc. Must stay below `_MEDIA` or the both-spaces chord loses System |
 | 4 `_MEDIA` | `LT(_MEDIA,SPC)`, or both outer spaces together (tri layer) | transport, volume, dynamic macros, **and the system/settings keys** |
 | 5 `_WM` | `MO()` on **`_NAV` + bottom-right key 1**, or `TG()` on **`_MEDIA` + the same key** | tmux + window management, merged |
-| 6 `_SPR1` | `MO()` on **`_NAV` + bottom-right key 2**, or `TG()` on **`_MEDIA` + the same key** | empty, fully transparent |
+| 6 `_DIG` | `OSL(_DIG)` left of Z (double-tap locks, `ONESHOT_TAP_TOGGLE 2`), `MO()` on **`_NAV` + bottom-right key 2**, or `TG()` on **`_MEDIA` + the same key** | `1`-`0` on the top row, `_NUM`'s home/bottom-row symbols below, thumbs transparent. The instant route to symbols: `OSL` has no tap-hold decision. Took spare 6 on 2026-10-05; above `_NAV`/`_NUM`/`_MEDIA`, so locked it masks their top rows |
 | 7 `_SPR2` | `MO()` on **`_NAV` + bottom-right key 3**, or `TG()` on **`_MEDIA` + the same key** | empty, fully transparent |
 
 **`LT(_NAV,KC_TAB)` is only safe because of `pre_process_record_kb()`.** On its own it broke
@@ -104,7 +104,8 @@ board would still emit Tab, since `pre_process` runs before the swallow in `proc
 Consequence, accepted deliberately: `_NAV` is unreachable from Tab while a modifier is held. The
 right space bar is the other route and is unaffected.
 
-**`_HRM` is at index 1 and that is not cosmetic.** It is a *default* layer, and
+**Index 1 is where a default layer goes, and that is not cosmetic.** `_HRM` (home row mods, removed
+2026-10-05) was a *default* layer, and
 `layer_switch_get_layer()` ORs `default_layer_state` in with the active layers and scans from the
 highest index down. Parked at 7 - above every overlay, with no transparent keys - it answered every
 lookup first and made layers 1-6 completely unreachable, with no way back from the keyboard because
@@ -116,9 +117,9 @@ The bottom-right cluster is the Claude keys on layer 0 and the layer-reach keys 
 `_NAV`/`_MEDIA`, so everything "extra" lives under one thumb-adjacent group. Exactly eight
 dynamic-keymap layers exist (`DYNAMIC_KEYMAP_LAYER_COUNT` in
 `lib/rdmctmzt_common/fs026_eeprom.h`), and `keymap_introspection.c` static-asserts that `keymaps[]`
-does not exceed it - so eight is a hard ceiling, and all eight are declared. `_SPR1`/`_SPR2` are
-fully transparent rather than absent: a declared spare is editable in VIA and keeps every index
-below it fixed, which matters because indices are load-bearing here (see `_HRM` above).
+does not exceed it - so eight is a hard ceiling, and all eight are declared. `_SPR2` is
+fully transparent rather than absent (as `_SPR1` was before it became `_DIG`): a declared spare is editable in VIA and keeps every index
+below it fixed, which matters because indices are load-bearing here (see index 1 above).
 
 The `TG()` route on `_MEDIA` exists because the `MO()` route is only half usable: it costs two
 held fingers, so on `_WM` you can only reach the half of the layer your free hand still covers -
@@ -142,11 +143,14 @@ is dropped, which looks exactly like a dead key). The window side sends the `LGU
 already binds. Workspace binds use `code:10..19`, i.e. physical keycodes, so the shifted variants
 work correctly.
 
-**Layers 6-7 - spare.** All `_______`. Reaching one is a no-op until something is put on it.
+**Layer 6 - digits.** `1`-`0` on the top row, `_NUM`'s symbols on the two rows below, thumb row `_______`.
+
+**Layers 1 and 7 - spare.** All `_______`. Reaching one is a no-op until something is put on it;
+nothing reaches layer 1 at all.
 
 **Tap-`Super` / hold-`Super`+`Alt` was tried and does not work here.** `MT(MOD_LGUI | MOD_LALT,
 KC_LGUI)` on the base Gui key is the obvious shape for the "multi-modifier chords are awkward on a
-40%" complaint. `get_permissive_hold()` returns `IS_QK_MOD_TAP(keycode)`, so the mod-tap resolves as
+40%" complaint. `get_permissive_hold()` returned `IS_QK_MOD_TAP(keycode)` at the time, so the mod-tap resolved as
 *hold* the moment another key joins it, and `Super`+`W` emits `Gui`+`Alt`+`W`; omarchy's entire
 `Super` map breaks. Turning permissive hold off for it does not help either, because outlasting the
 term becomes the only route to the hold and holding `Super` is exactly how those chords are typed.
@@ -163,7 +167,7 @@ The old media layer had three empty rows, so the settings keys live there:
 | top | `UC_LOCKB` (toggle lock-on-boot) · `UC_CLEDS` (toggle Claude LEDs) · `UC_BRTD` / `UC_BRTU` (LED brightness) |
 | home | `SE_LOCK` · `SH_TOGG` (one-handed) · `CW_TOGG` (Caps Word) · `QK_REP` · then prev/play/next/vol− /vol+ (play is a tap dance: 1=play 2=next 3=prev) |
 | bottom | one-shot `Shift` · `Ctrl` · `Alt` · `GUI` · `QK_LOCK` (key lock) · `DM_REC1`/`DM_PLY1`/`DM_REC2`/`DM_PLY2`/`DM_RSTP` · `QK_LLCK` on the quote key |
-| thumb | `TO(_BASE)` on Gui (panic) · `TG(_WM)` / `TG(_SPR1)` / `TG(_SPR2)` on the three Claude keys |
+| thumb | `TO(_BASE)` on Gui (panic) · `TG(_WM)` / `TG(_DIG)` / `TG(_SPR2)` on the three Claude keys |
 
 The dynamic macro keys moved here from the deleted `_GIT` layer, into slots that were `XXXXXXX`.
 
@@ -326,9 +330,6 @@ in English, so fast typing can't fire them:
 | `.`+`'` | `:` | not a letter pair; `:` otherwise needs `_NUM` + shift |
 | `Q`+`P` | lock keyboard | opposite corners, needs both hands |
 
-None touch the home-row-mod keys, so combos and mods can't interfere. `J`+`K` keeps that true by
-being defined on the plain keycodes only - on `_HRM` those keys are `HM_J`/`HM_K`, so the combo
-simply doesn't exist there.
 
 **Known cost, so it is not rediscovered as a bug.** `process_combo()` buffers the keydown of every key
 belonging to any combo and only releases it once the combo is ruled out - by the next keydown, by the
@@ -336,6 +337,15 @@ release, or by `COMBO_TERM` expiring. These nine cover `Q W Z X C V N M , . ' J 
 not commit on press. Choosing rare digraphs prevents false triggers; it does nothing about the delay,
 which is inherent. Combos were removed once in 2026-08-05 as an unrequested latency fix and had to be
 restored - `COMBO_TERM` is the knob, removal is not.
+
+**Mid-word, most combos skip the wait (`COMBO_SHOULD_TRIGGER`, 2026-10-05).** `combo_should_trigger()`
+returns false for a keydown that comes within `COMBO_FLOW_TERM` (120 ms) of the previous keydown, so
+the key is not a combo key for that press and commits on the keydown. The second key of a chord is
+always let through (`combo->state` non-zero means the first is down), so a chord started after a pause
+still completes. Exempt, because they are typed mid-word: `,`+`.`, `M`+`,`, `.`+`'` and `J`+`K`. Net:
+`Q W Z X C V N P` commit on press while typing; `M , . ' J K` still wait. Timestamps come from
+`pre_process_record_kb()`, which runs before `process_combo()` (`quantum.c:278`). Releases take the
+stock path. The 120 is a guess, not measured.
 
 One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` - tap twice to lock a mod on.
 
@@ -358,9 +368,13 @@ One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` - tap twice 
 - **Layer lock** (`QK_LLCK`) sits on the quote-key position of `_NAV`, `_NUM` and `_MEDIA`,
   replacing the `MO(0)` placeholders that did nothing. `LAYER_LOCK_IDLE_TIMEOUT 60000` releases a
   forgotten lock - a stuck layer is indistinguishable from a broken board.
-- **Key overrides**: only `Shift+Backspace → Delete`. The trigger has to be the *literal* keymap
-  keycode (`process_key_override.c` compares `override->trigger == keycode`), so the `LT(n,KC_SPC)`
-  space bars cannot carry the classic shift+space→underscore - the `,`+`.` combo covers `_`.
+- **Key overrides**: none, `KEY_OVERRIDE_ENABLE = no`. The only one was `Shift+Backspace → Delete`,
+  removed 2026-10-05 because `Shift` lingering from a capital turned the correction into a forward
+  delete. `_NAV`'s Backspace position went from `KC_DEL` to `KC_BSPC` the same day for the same
+  reason (`Space R` still held from the space). Delete is the `N`+`M` combo, or `_MEDIA`'s Backspace
+  position (`Fn`+`Bspc`, added on request: `Fn` is never still held from a space). If overrides ever come
+  back: the trigger has to be the *literal* keymap keycode (`process_key_override.c` compares
+  `override->trigger == keycode`), so the `LT(n,KC_SPC)` space bars cannot carry shift+space→underscore.
 - **Dynamic macros** (`DM_REC1/PLY1/REC2/PLY2/DM_RSTP` on `_MEDIA`'s bottom row) - RAM only,
   cleared on reboot.
 - **Key lock** (`QK_LOCK`, `_MEDIA`) pins the next basic keycode down until pressed again.
@@ -403,35 +417,29 @@ The code paths remain behind `#ifdef` guards, so re-enabling is a one-line `rule
 have different key spans on this board (row 1 is cols 1-11, row 2 is cols 0-10, row 4 is sparse), so
 a uniform mirror would map several keys onto holes.
 
-### Home row mods (GACS)
+### Tap-hold settings
 
-`A S D F` = GUI / Alt / Ctrl / Shift, mirrored on `J K L`. Three settings make this usable
-rather than infuriating:
+The home row mods (`A S D F` / `J K L` as GUI/Alt/Ctrl/Shift) were removed on request 2026-10-05,
+along with `UC_HRM` and the `_HRM` layer. The only tap-hold keys left are the three `LT(n,KC_SPC)`
+thumbs and `LT(_NAV,KC_TAB)`. What remains, and why:
 
 | Setting | Why |
 |---|---|
-| `CHORDAL_HOLD` | Same-hand chords settle as **taps**, so rolling `df` types "df" instead of firing Ctrl. Handedness comes from `chordal_hold_layout` in `keymap.c`; the three thumbs are `'*'` so they chord with either hand. |
-| `FLOW_TAP_TERM 200` | While you're actually typing, holds are disabled outright - **no home-row-mod latency mid-word**. Mods only engage after a pause. |
-| `PERMISSIVE_HOLD_PER_KEY` | Opposite-hand mods engage without waiting out the tapping term. Safe here because Chordal Hold already guards same-hand rolls. **Mod-taps only** - see below. |
-| `QUICK_TAP_TERM 0` | Holding `A` after tapping it gives GUI, not "aaaa". Key repeat moved to `QK_REP`. |
+| `CHORDAL_HOLD` | Same-hand chords settle as **taps**. The thumbs are `'*'` in `chordal_hold_layout`, so the one key it still governs is Tab: Tab + a left-hand key settles as Tab on that key's press (`action_tapping.c:455`, consulted before hold-on-other-key-press). A Tab rolled into the next letter can't land on Nav; the cost is that Nav's left half is reached from `Space R`, not Tab. Read from the source, not measured. |
+| `FLOW_TAP_TERM 200` | The define is the Flow Tap switch. The value was the mods' window and is unused: `get_flow_tap_term()` gives the thumbs `FLOW_TAP_TERM_THUMB` (110 ms) and everything else 0. |
+| no `PERMISSIVE_HOLD` | See below. |
+| `QUICK_TAP_TERM 0` | Tap a thumb, then hold it, and you get the layer rather than auto-repeating spaces. Key repeat is `QK_REP`. |
 
-Tapping term is **130 ms** for plain keys, **180 ms** for the seven mod keys and for
-`LT(_NAV,KC_TAB)`, **200 ms** for the shift dance, and **230 ms** for the three `LT(n,KC_SPC)`
-thumbs, via `get_tapping_term()`. The thumb figure is not taste - see below.
+Tapping term is **130 ms** for plain keys, **180 ms** for `LT(_NAV,KC_TAB)`, **200 ms** for the shift
+dance, and **230 ms** for the three `LT(n,KC_SPC)` thumbs, via `get_tapping_term()`. The thumb figure
+is not taste - see below.
 
-**Permissive hold is per-key because it is wrong for layer taps.** `get_permissive_hold()` returns
-`IS_QK_MOD_TAP(keycode)` - nothing else. The bare `PERMISSIVE_HOLD` applied to the three
-`LT(n,KC_SPC)` thumbs, and its rule ("held tap-hold key, another key pressed *and released*, resolve
-as hold") is exactly the shape of rolling through the space bar: space down, next letter down and
-up, space up. That resolved as a hold, so a fast roll silently produced a digit instead of
-"space letter". Chordal Hold cannot catch it - the thumbs are `'*'` in `chordal_hold_layout`, so they
-are allowed to chord with either hand by design. `PERMISSIVE_HOLD_PER_KEY` takes precedence over
-`PERMISSIVE_HOLD` in `action_tapping.c`, so the bare define is gone rather than left as decoration.
-
-Want mods to engage even harder? Add `#define HOLD_ON_OTHER_KEY_PRESS` - safe alongside
-Chordal Hold, at the cost of more misfires on fast opposite-hand rolls. On the **thumbs** the bare
-define is the digit-instead-of-space bug all over again; what is safe there is the armed version,
-below.
+**There is no permissive hold, bare or per-key.** Its rule ("held tap-hold key, another key pressed
+*and released*, resolve as hold") is exactly the shape of rolling through the space bar: space down,
+next letter down and up, space up. When the bare `PERMISSIVE_HOLD` applied to the thumbs, a fast
+roll silently produced a digit instead of "space letter". Chordal Hold cannot catch it - the thumbs
+are `'*'`, allowed to chord with either hand by design. It was `PERMISSIVE_HOLD_PER_KEY` returning
+`IS_QK_MOD_TAP(keycode)` until the mods went; with no mod-taps left it was dead code and is gone.
 
 ### The space bars: a 130 ms term on `LT(n,KC_SPC)` is a broken keyboard
 
@@ -570,7 +578,7 @@ finishes it at `count == 1` and resets on release, so the next shift press start
 
 The dance gets a **200 ms** per-key term so the double tap is comfortable without loosening
 anything else. Every term lives in `get_tapping_term()` in `keymap.c`, switched on by
-`TAPPING_TERM_PER_KEY` in `keymaps/tapdance/config.h`; the full table is under Home row mods above.
+`TAPPING_TERM_PER_KEY` in `keymaps/tapdance/config.h`; the full table is under Tap-hold settings above.
 
 `keymaps/tapdance/rules.mk` is the whole feature switch - VIA/dynamic keymap, tap dance, repeat,
 Caps Word, combos, Secure, swap hands, custom RGB, key overrides, layer lock, key lock, dynamic
@@ -584,7 +592,7 @@ earlier `yes` (make keeps the last one) and produced a confusing "`COMBO_END` un
 
 The **bottom-right three keys** (the Alt / Menu / Ctrl positions right of the third space -
 matrix `4,8` `4,9` `4,10`) arrived as `KC_NO` on layer 0 from the VIA export, i.e. dead. They now
-carry `KC_F21`/`F22`/`F23` (the Claude keys) on layer 0, `MO()` for `_WM`/`_SPR1`/`_SPR2` on `_NAV`,
+carry `KC_F21`/`F22`/`F23` (the Claude keys) on layer 0, `MO()` for `_WM`/`_DIG`/`_SPR2` on `_NAV`,
 and `TG()` for the same three on `_MEDIA`. Nothing on this board is dead any more.
 
 ---

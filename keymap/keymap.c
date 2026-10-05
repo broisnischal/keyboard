@@ -102,19 +102,20 @@ void housekeeping_task_kb(void) {
 
 // ORDER IS LOAD-BEARING. layer_switch_get_layer() ORs default_layer_state into
 // the active layers and scans from the HIGHEST index down, so a default layer
-// above an overlay makes that overlay unreachable. _HRM is a default layer
-// (UC_HRM persists it), and it has no transparent keys - parked at 7 it answered
-// every lookup first and killed layers 1-6 outright, with no way back from the
-// keyboard because Fn+T resolved to plain T. It must stay below every overlay.
-// Measured 2026-08-04. Never reference these as bare numbers.
+// above an overlay makes that overlay unreachable. The home-row-mod base (_HRM,
+// removed 2026-10-05) was a persisted default layer with no transparent keys -
+// parked at 7 it answered every lookup first and killed layers 1-6 outright, with
+// no way back from the keyboard because Fn+T resolved to plain T. Measured
+// 2026-08-04. Any future default layer goes at index 1, below every overlay.
+// Never reference these as bare numbers.
 enum layers {
     _BASE = 0,
-    _HRM,   // 1  same base, but with home row mods - opt-in via UC_HRM
+    _SPR1,  // 1  spare - was the home-row-mod base; kept so no index above it moves
     _NAV,   // 2  F-keys, arrows, browser
-    _NUM,   // 3  digits and the common symbols
+    _NUM,   // 3  symbols on Space L; digits moved to _DIG (name kept, the history docs use it)
     _MEDIA, // 4  transport, volume, settings; also NAV+NUM held together
     _WM,    // 5  tmux and window management, merged onto one layer
-    _SPR1,  // 6  spare - empty, transparent, reachable via Nav/Fn + F22
+    _DIG,   // 6  digits on the top row - the one-shot key left of Z, or Nav/Fn + F22
     _SPR2,  // 7  spare - empty, transparent, reachable via Nav/Fn + F23
 };
 
@@ -159,7 +160,6 @@ enum custom_keycodes {
     UC_CLEDS, // toggle the Claude indicator LEDs
     UC_BRTU,  // Claude LED brightness up
     UC_BRTD,  // Claude LED brightness down
-    UC_HRM,   // switch the default layer to the home-row-mod base (persisted)
     UC_AURA,  // whole-board Claude-reactive effect
     UC_RAIN,  // Matrix rain, seeded by typing
 };
@@ -187,16 +187,8 @@ static bool send_macro(uint16_t keycode) {
 }
 
 // ===========================================================================
-// Home row mods (GACS) and the shift tap dance
+// The shift tap dance
 // ===========================================================================
-
-#define HM_A LGUI_T(KC_A)
-#define HM_S LALT_T(KC_S)
-#define HM_D LCTL_T(KC_D)
-#define HM_F LSFT_T(KC_F)
-#define HM_J RSFT_T(KC_J)
-#define HM_K RCTL_T(KC_K)
-#define HM_L LALT_T(KC_L)
 
 enum tap_dance_index {
     TD_SFT_CAPS,
@@ -292,9 +284,6 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case TD_SFT:
             return 200;
-        case HM_A: case HM_S: case HM_D: case HM_F:
-        case HM_J: case HM_K: case HM_L:
-            return 180;
         case LT(_NAV, KC_TAB):
             // Same failure mode, smaller blast radius: Tab held a touch past 130ms
             // put _NAV on and the next letter became an F-key or an arrow. Free for
@@ -312,19 +301,6 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 // clears the priming, so a real layer chord never emits a stray space.
 bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
     return is_thumb_layer_tap(keycode);
-}
-
-// Permissive hold is right for the home row MODS and wrong for the LT() space
-// bars. Rolling space into the next letter - space down, letter down, letter up,
-// space up - matches permissive hold's rule exactly, so it resolved as a hold
-// and the roll produced a digit instead of "space letter". Restricting it to
-// mod-taps means a layer tap is decided by the tapping term alone.
-//
-// That was only half the answer, and the missing half is what kept the bug alive:
-// "the tapping term alone" is fine as long as the term is longer than a plain
-// press of the key. At 130ms it was not - see get_tapping_term() above.
-bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
-    return IS_QK_MOD_TAP(keycode);
 }
 
 // The third half of the space fix, and the one that was missing: how a thumb
@@ -352,11 +328,12 @@ bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
     if (is_thumb_layer_tap(keycode) || keycode == LT(_NAV, KC_TAB)) {
         return timer_elapsed(record->event.time) >= THUMB_HOLD_ARM_TIME;
     }
-    return false; // mod-taps keep permissive hold; nothing else is a tap-hold
+    return false; // nothing else is a tap-hold
 }
 
 // Which hand each key belongs to, for CHORDAL_HOLD. Same-hand chords settle as
-// taps; '*' keys (the three thumbs) may chord with either hand.
+// taps; '*' keys (the three thumbs) may chord with either hand. With the home row
+// mods gone, the one key this still governs is LT(_NAV,KC_TAB) - see config.h.
 // clang-format off
 const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_ansi(
     'L', 'L', 'L', 'L', 'L', 'L', 'R', 'R', 'R', 'R', 'R', 'R',
@@ -366,14 +343,13 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_an
 );
 // clang-format on
 
-// Flow Tap is what makes home row mods feel like plain keys: while you are in a
-// typing flow it settles a mod-tap as a tap on the KEYDOWN, instead of waiting
-// for the release to find out which you meant.
+// Flow Tap: while you are in a typing flow it settles a space thumb as a tap on
+// the KEYDOWN, instead of waiting for the release to find out which you meant.
+// (It was here for the home row mods first; they are gone, the thumbs remain.)
 //
 // The two roles are NOT symmetric, and conflating them is what made typing drag:
 //
-//   - as the key being pressed, a layer-tap gets a SHORTER window than a mod-tap,
-//     not none at all. "None at all" was the original reading and it left the
+//   - as the key being pressed, a thumb gets a SHORT window, not none at all. "None at all" was the original reading and it left the
 //     space bar landing on the finger lift for every word; the short window keeps
 //     the space instant without stranding the thumb layers;
 //   - as the PREVIOUS key, a layer-tap absolutely must count as typing -
@@ -384,13 +360,15 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_an
 // get_flow_tap_term() takes precedence over is_flow_tap_key(), so this is the
 // only hook needed.
 
-// Does this key mean "the user is mid-flow"? Judged on the tap keycode, so the
-// space bar counts even though it is really LT(_NUM,KC_SPC).
+// Does this key mean "I am mid-flow"? Judged on the tap keycode, so the space bar
+// counts even though it is really LT(_NUM,KC_SPC). Shifted keycodes are judged on
+// their base key: _NUM's top row is KC_EXLM..KC_RPRN (S(KC_1)..S(KC_0)), and "!"
+// followed by a space has to count as typing just like Shift+1 did.
 static bool flow_prev_is_typing(uint16_t keycode) {
     if (IS_QK_LAYER_TAP(keycode)) {
         keycode = QK_LAYER_TAP_GET_TAP_KEYCODE(keycode);
-    } else if (IS_QK_MOD_TAP(keycode)) {
-        keycode = QK_MOD_TAP_GET_TAP_KEYCODE(keycode);
+    } else if (IS_QK_MODS(keycode)) {
+        keycode = QK_MODS_GET_BASIC_KEYCODE(keycode);
     }
     switch (keycode) {
         case KC_A ... KC_Z:
@@ -410,7 +388,9 @@ static bool flow_prev_is_typing(uint16_t keycode) {
 }
 
 uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t *record, uint16_t prev_keycode) {
-    if (!IS_QK_MOD_TAP(keycode) && !IS_QK_LAYER_TAP(keycode)) {
+    // LT(_NAV,KC_TAB) stays out: Alt+Tab is already handled in
+    // pre_process_record_kb and Tab-as-Nav is deliberate.
+    if (!is_thumb_layer_tap(keycode)) {
         return 0;
     }
     if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
@@ -419,20 +399,16 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t *record, uint16_t prev_
     if (!flow_prev_is_typing(prev_keycode)) {
         return 0;
     }
-    if (IS_QK_LAYER_TAP(keycode)) {
-        // This used to be a blanket `return 0` reasoned as "a layer hold must
-        // always be reachable", and that is what made every space in every
-        // sentence land on the finger LIFT rather than the press. Flow Tap settles
-        // a tap-hold key as a tap on the KEYDOWN, so inside this window the space
-        // is instant and cannot become a layer at all.
-        //
-        // 110ms rather than the mods' 200ms so that "type a word, then hold the
-        // thumb for digits" still reaches _NUM - that reach always has a pause in
-        // front of it, a roll never does. LT(_NAV,KC_TAB) stays out: Alt+Tab is
-        // already handled in pre_process_record_kb and Tab-as-Nav is deliberate.
-        return is_thumb_layer_tap(keycode) ? FLOW_TAP_TERM_THUMB : 0;
-    }
-    return FLOW_TAP_TERM;
+    // This used to be a blanket `return 0` reasoned as "a layer hold must always
+    // be reachable", and that is what made every space in every sentence land on
+    // the finger LIFT rather than the press. Flow Tap settles a tap-hold key as a
+    // tap on the KEYDOWN, so inside this window the space is instant and cannot
+    // become a layer at all.
+    //
+    // 110ms, short on purpose, so that "type a word, then hold the thumb for
+    // symbols" still reaches _NUM - that reach always has a pause in front of it,
+    // a roll never does.
+    return FLOW_TAP_TERM_THUMB;
 }
 
 // ===========================================================================
@@ -744,7 +720,8 @@ bool caps_word_press_user(uint16_t keycode) {
 // the next keydown, by the release, or by COMBO_TERM. These nine cover
 // Q W Z X C V N M , . ' J K P. Picking rare digraphs prevents false triggers, it
 // does not remove the delay; that is inherent to combos. Kept because they are
-// wanted. Lower COMBO_TERM to trade recognition slack for less of it.
+// wanted. Lower COMBO_TERM to trade recognition slack for less of it. Mid-word
+// most of them skip the wait entirely - see combo_should_trigger() below.
 const uint16_t PROGMEM combo_esc[]   = {KC_Q, KC_W, COMBO_END};
 const uint16_t PROGMEM combo_undo[]  = {KC_Z, KC_X, COMBO_END};
 const uint16_t PROGMEM combo_caps[]  = {KC_C, KC_V, COMBO_END};
@@ -752,12 +729,39 @@ const uint16_t PROGMEM combo_del[]   = {KC_N, KC_M, COMBO_END};
 const uint16_t PROGMEM combo_mins[]  = {KC_M, KC_COMM, COMBO_END};
 const uint16_t PROGMEM combo_unds[]  = {KC_COMM, KC_DOT, COMBO_END};
 const uint16_t PROGMEM combo_lock[]  = {KC_Q, KC_P, COMBO_END}; // opposite corners, two hands
-// jk is the vim escape; the digraph is absent from English. Defined on the
-// plain keycodes only, so on _HRM (HM_J/HM_K) it simply doesn't exist and the
-// "no combos on home-row-mod keys" rule holds.
+// jk is the vim escape; the digraph is absent from English.
 const uint16_t PROGMEM combo_vimesc[] = {KC_J, KC_K, COMBO_END};
 // Colon otherwise needs layer 2 plus shift; ".'" never occurs in prose.
 const uint16_t PROGMEM combo_coln[]   = {KC_DOT, KC_QUOT, COMBO_END};
+
+// Combos skip themselves while I'm typing. A combo key's keydown is withheld
+// until the combo is ruled out (up to COMBO_TERM), and mid-word that is pure lag:
+// nobody chords Z+X for undo halfway through a word. So a key pressed within
+// COMBO_FLOW_TERM of the previous keypress is not a combo key at all and types on
+// its keydown. A combo still fires when its FIRST key comes after a pause; the
+// second key is always let through (combo->state says the first is down), or the
+// chord could never complete. Added on request 2026-10-05, unmeasured.
+//
+// Exempt, because they ARE used mid-word: ,+. (_ in snake_case), M+, (-), .+'
+// (:), and J+K (vim's escape, typed straight after the text). So M , . ' J K
+// still wait; Q W Z X C V N P type instantly in flow.
+//
+// pre_process_record_kb() stamps every physical keydown before process_combo()
+// runs (quantum.c:278), so prev_press_time is the press BEFORE this one. Releases
+// take the stock path: with combo->state clear, process_single_combo() files a
+// release under "not part of a combo" regardless, so a skipped key can't stick.
+static uint16_t last_press_time = 0;
+static uint16_t prev_press_time = 0;
+
+bool combo_should_trigger(uint16_t combo_index, combo_t *combo, uint16_t keycode, keyrecord_t *record) {
+    if (!record->event.pressed || combo->state) {
+        return true;
+    }
+    if (combo->keys == combo_unds || combo->keys == combo_mins || combo->keys == combo_coln || combo->keys == combo_vimesc) {
+        return true;
+    }
+    return TIMER_DIFF_16(record->event.time, prev_press_time) >= COMBO_FLOW_TERM;
+}
 
 combo_t key_combos[] = {
     COMBO(combo_esc,    KC_ESC),
@@ -772,17 +776,13 @@ combo_t key_combos[] = {
 };
 
 // ===========================================================================
-// Key overrides, tri layer
+// Tri layer
 // ===========================================================================
 
-// Shift+Backspace = Delete, mods suppressed. Overrides match the literal
-// keymap keycode, so the LT() space bars can't carry one - which is why there
-// is no shift+space=underscore here (the ,+. combo covers _ instead).
-#ifdef KEY_OVERRIDE_ENABLE
-const key_override_t shift_bspc_del = ko_make_basic(MOD_MASK_SHIFT, KC_BSPC, KC_DEL);
-
-const key_override_t *key_overrides[] = {&shift_bspc_del};
-#endif
+// There used to be a Shift+Backspace = Delete key override here. Removed by
+// request, 2026-10-05: Shift is still down from the capital just typed when you
+// reach for Backspace to fix it, so the correction deleted forward instead of
+// back. Backspace now only ever deletes backward; N+M is Delete.
 
 // Hold both outer space bars (Nav + Num) together to get _MEDIA, so the system
 // layer is reachable without moving a thumb to the middle Fn key.
@@ -883,6 +883,12 @@ void keyboard_post_init_kb(void) {
 static bool tab_mod_bypass = false;
 
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    // Keydown timestamps for combo_should_trigger(). First, before any early
+    // return, and before process_combo() sees this event.
+    if (record->event.type == KEY_EVENT && record->event.pressed) {
+        prev_press_time = last_press_time;
+        last_press_time = record->event.time;
+    }
     if (keycode == LT(_NAV, KC_TAB) && !secure_is_locked()) {
         uint8_t mods = get_mods();
 #ifndef NO_ACTION_ONESHOT
@@ -952,14 +958,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 user_config.led_brightness = (user_config.led_brightness > 223) ? 255 : user_config.led_brightness + 32;
                 user_config_save();
                 return false;
-            case UC_HRM: {
-                // Swap the default layer rather than trying to defeat tap-hold
-                // at runtime: _HRM is the same base with plain letters.
-                // set_single_persistent_default_layer() writes it to EEPROM.
-                uint8_t next = (get_highest_layer(default_layer_state) == _HRM) ? _BASE : _HRM;
-                set_single_persistent_default_layer(next);
-                return false;
-            }
             case UC_BRTD:
                 // floor at 16 rather than 0, so this can never look like a fault
                 user_config.led_brightness = (user_config.led_brightness < 48) ? 16 : user_config.led_brightness - 32;
@@ -975,7 +973,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    // Base. Plain letters - home row mods live on _HRM (layer 1) instead.
+    // Base. Plain letters.
     //
     // Ctrl is a plain KC_LCTL (it was a tap dance, which is what made Ctrl+A feel
     // late). Tab keeps its Nav hold, but only because pre_process_record_kb above
@@ -984,36 +982,51 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT_tkl_ansi(
         QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
         LT(_NAV,KC_TAB), KC_A     , KC_S        , KC_D        , KC_F        , KC_G        , KC_H        , KC_J        , KC_K        , KC_L        , KC_ENT,
-        TD_SFT      , OSL(_NUM)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
+        TD_SFT      , OSL(_DIG)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
         KC_LCTL     , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
     ),
-    // Identical to _BASE but with home row mods on ASDF / JKL. UC_HRM swaps the
-    // default layer here and persists it, so they are opt-in without reflashing.
+    // Spare. This was the home-row-mod base until 2026-10-05 (removed on request:
+    // not wanted). Fully transparent and reached by nothing, but it has to exist -
+    // dropping it would renumber every layer above it. Editable in VIA as layer 1.
     // Kept SECOND in this array on purpose: qmk c2json --no-cpp indexes layers by
     // their position in the source, not by the [_NAME] designator, so the drawing
     // mislabels every layer if source order and enum order disagree.
-    [_HRM] = LAYOUT_tkl_ansi(
-        QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
-        LT(_NAV,KC_TAB), HM_A     , HM_S        , HM_D        , HM_F        , KC_G        , KC_H        , HM_J        , HM_K        , HM_L        , KC_ENT,
-        TD_SFT      , OSL(_NUM)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        KC_LCTL     , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
+    [_SPR1] = LAYOUT_tkl_ansi(
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______
     ),
     // Nav / F-keys. Bottom-right cluster reaches _WM and the two spares
     // momentarily; the same three keys on _MEDIA latch them instead.
+    //
+    // The Backspace position is KC_BSPC, not KC_DEL. Space R arms this layer
+    // after 80 ms, so "word, space, oops, backspace" with the thumb still down
+    // landed here and deleted forward. N+M is Delete.
     [_NAV] = LAYOUT_tkl_ansi(
-        QK_GESC     , KC_F1       , KC_F2       , KC_F3       , KC_F4       , KC_F5       , KC_F6       , KC_F7       , KC_F8       , KC_F9       , KC_F10      , KC_DEL,
+        QK_GESC     , KC_F1       , KC_F2       , KC_F3       , KC_F4       , KC_F5       , KC_F6       , KC_F7       , KC_F8       , KC_F9       , KC_F10      , KC_BSPC,
         _______     , KC_HOME     , KC_PGDN     , KC_PGUP     , KC_END      , KC_INS      , KC_LEFT     , KC_DOWN     , KC_UP       , KC_RIGHT    , KC_ENT,
         TD_SFT      , _______     , KC_PSCR     , CG_TOGG     , KC_WBAK     , KC_WFWD     , QK_REP      , QK_AREP     , XXXXXXX     , KC_F11      , KC_F12      , QK_LLCK,
-        _______     , _______     , _______     , _______     , _______     , LT(_NUM,KC_SPC), MO(_WM)     , MO(_SPR1)   , MO(_SPR2)
+        _______     , _______     , _______     , _______     , _______     , LT(_NUM,KC_SPC), MO(_WM)     , MO(_DIG)     , MO(_SPR2)
     ),
-    // Digits and everyday symbols. Shift (the key that is TD_SFT here) reaches the
-    // shifted half of every one of them, so this layer covers the whole ASCII set.
+    // Symbols, no digits. The top row is the SHIFTED number row, so ! @ # ( ) and
+    // friends need no Shift - holding Shift on top of a thumb was the hard part.
+    // The digits moved to _DIG, behind the one-shot key left of Z. Shift (TD_SFT
+    // here) still reaches the shifted half of the home and bottom rows.
     //
     // The M position is KC_BSLS, not KC_NUBS. KC_NUBS is the *ISO* extra key; the
     // `us` xkb layout leaves it unmapped, so it typed nothing at all - while
     // keymap-drawer cheerfully rendered it as "\ |" and the drawing lied about it.
+    //
+    // The Esc position is KC_GRV, where the `~ key sits on a full-size board.
+    // QK_GESC can't do that job on base: it only sends ` when Shift or Gui is
+    // down, so a plain backtick never comes out of it and Gui+Esc is Super+`.
+    //
+    // This layer must stay BELOW _MEDIA. The both-spaces chord turns _MEDIA on
+    // while _NUM is still held, and layer_switch_get_layer() answers from the
+    // highest index down - _NUM above 4 would mask System on that chord.
     [_NUM] = LAYOUT_tkl_ansi(
-        QK_GESC   , KC_1      , KC_2      , KC_3      , KC_4      , KC_5      , KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_BSPC,
+        KC_GRV    , KC_EXLM   , KC_AT     , KC_HASH   , KC_DLR    , KC_PERC   , KC_CIRC   , KC_AMPR   , KC_ASTR   , KC_LPRN   , KC_RPRN   , KC_BSPC,
         _______   , KC_MINS   , KC_EQL    , KC_SCLN   , KC_QUOT   , KC_GRV    , KC_LBRC   , KC_RBRC   , KC_SLSH   , S(KC_SLSH), KC_ENT,
         TD_SFT    , _______   , _______   , _______   , _______   , _______   , _______   , _______   , KC_BSLS   , KC_COMM   , KC_DOT    , QK_LLCK,
         _______   , _______   , _______   , _______   , _______   , KC_SPC    , _______   , _______   , _______
@@ -1022,8 +1035,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // holds lock / one-handed / Caps Word next to the transport keys, and the
     // bottom row is one-shot mods.
     //
+    // Fn + Backspace is Delete (on request, 2026-10-05). Unlike Space R + Backspace,
+    // which was removed for deleting forward mid-correction, Fn is the small middle
+    // key: spaces come from the big bars, so it is never still held from a space.
+    //
     // The three Claude keys are the layer-travel keys here: TG() latches, so you
-    // let go of Fn and stay on WM / Spare 1 / Spare 2 with both hands free. The
+    // let go of Fn and stay on WM / Digits / Spare with both hands free. The
     // Nav route (hold Space R + the same key) is momentary and can only reach the
     // half of those layers your free hand can still get to - which is why the
     // latching route exists. Fn + the same key again comes back: the bottom row
@@ -1035,10 +1052,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // them. A latched _WM masks the whole alphabet with Super chords and reads as
     // a dead keyboard, so there has to be one key that always gets you home.
     [_MEDIA] = LAYOUT_tkl_ansi(
-        _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , UC_HRM , UC_AURA, UC_RAIN, RM_TOGG  , XXXXXXX, XXXXXXX , _______,
+        _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , XXXXXXX, UC_AURA, UC_RAIN, RM_TOGG  , XXXXXXX, XXXXXXX , KC_DEL ,
         _______, SE_LOCK      , SH_TOGG      , CW_TOGG      , QK_REP       , KC_MPRV, TD_MPLY, KC_MNXT, KC_VOLD  , KC_VOLU, _______,
         _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), QK_LOCK, DM_REC1, DM_PLY1, DM_REC2  , DM_PLY2, DM_RSTP , QK_LLCK,
-        _______, TO(_BASE)    , _______      , _______      , _______      , _______, TG(_WM), TG(_SPR1), TG(_SPR2)
+        _______, TO(_BASE)    , _______      , _______      , _______      , _______, TG(_WM), TG(_DIG), TG(_SPR2)
     ),
     // Tmux + windows, merged onto one layer. Left hand drives tmux, right hand
     // drives the window manager, and the split is the same on both rows:
@@ -1061,16 +1078,29 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, T_LASTW   , T_PREVW   , T_NEXTW   , T_LISTW   , T_SESS    , T_DETACH     , LGUI(KC_LEFT), LGUI(KC_DOWN), LGUI(KC_UP) , LGUI(KC_RIGHT), LGUI(KC_W),
         _______, TO(_BASE) , _______   , _______   , _______   , _______   , _______      , _______      , _______
     ),
-    // Two spares. Fully transparent, so reaching one changes nothing until you
-    // put something on it - in VIA (layers 6 and 7) or here. They exist so the
-    // eight layers the EEPROM allocates are all accounted for and nothing has to
-    // be renumbered later; layer indices are load-bearing on this board.
-    [_SPR1] = LAYOUT_tkl_ansi(
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+    // Digits on top, and the same symbols as _NUM below them. The key left of Z is
+    // OSL(_DIG): tap it and the next key comes from here, hold it through a whole
+    // number, or double-tap it to lock (ONESHOT_TAP_TOGGLE 2; one more press
+    // releases). Nav/Fn + F22 reach it too, so Fn + F22 latches.
+    //
+    // The symbols are here because this is the INSTANT route to them. OSL turns
+    // the layer on at the keydown with nothing to decide, while Space L has to
+    // guess space-or-layer (Flow Tap forces a space within 110 ms of a letter, and
+    // the hold arms only after 80 ms), so a quick "what?" came out "what l".
+    //
+    // The thumb row stays transparent for the travel keys and the Fn+Gui panic key.
+    // It took spare 6, so it sits ABOVE _NAV/_NUM/_MEDIA - while locked, their top
+    // rows are digits too (Fn + Q-P is not settings). Release it first.
+    [_DIG] = LAYOUT_tkl_ansi(
+        _______, KC_1   , KC_2   , KC_3   , KC_4   , KC_5   , KC_6   , KC_7   , KC_8   , KC_9   , KC_0   , _______,
+        _______, KC_MINS, KC_EQL , KC_SCLN, KC_QUOT, KC_GRV , KC_LBRC, KC_RBRC, KC_SLSH, S(KC_SLSH), _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, KC_BSLS, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______
     ),
+    // The last spare. Fully transparent, so reaching it changes nothing until you
+    // put something on it - in VIA (layer 7) or here. It exists so the eight
+    // layers the EEPROM allocates are all accounted for and nothing has to be
+    // renumbered later; layer indices are load-bearing on this board.
     [_SPR2] = LAYOUT_tkl_ansi(
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,

@@ -32,13 +32,18 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 | Layer | Hold | Contains |
 |---|---|---|
 | **2 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
-| **3 · Numbers** | `Space L` | digits, `- = ; ' \`` `[ ] / ? \` - hold `Shift` too for `_ + : " ~ { } |` |
+| **3 · Symbols** | `Space L` | `` ` `` on `Esc`, then `! @ # $ % ^ & * ( )` across the top row with no `Shift`; `- = ; ' \`` `[ ] / ? \` - hold `Shift` too for `_ + : " ~ { } |` |
 | **4 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
 | **5 · Tmux + Windows** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | tmux panes and windows, Hyprland workspaces |
-| **6, 7 · Spare** | `Tab` **+** `✓`/`✕`, or `Fn` **+** the same | empty - yours to fill |
+| **6 · Digits** | the key left of `Z` (tap, hold, or double-tap to lock), or `Tab` **+** `✓` / `Fn` **+** `✓` | `1`-`0` across the top row, and the symbols `- = ; ' \` [ ] / ? \` below them |
+| **7 · Spare** | `Tab` **+** `✕`, or `Fn` **+** `✕` | empty - yours to fill |
 
-Layer 0 is plain letters and layer 1 is the opt-in home-row-mod version of it (see *Home row
-mods* below) - neither is something you hold.
+**Backtick and tilde live on `Esc`.** `Space L` + `Esc` is `` ` `` and `Space L` + `Shift` + `Esc` is
+`~`, where the `` `~ `` key sits on a full-size keyboard. `Shift` + `Esc` alone also gives `~`. A bare
+`Esc` is still `Esc`.
+
+Layer 0 is plain letters. Layer 1 is an empty spare that nothing reaches - it used to hold the
+home row mods, which are gone.
 
 **Hold `Tab` for Nav still works, and `Alt`+`Tab` is now instant.** Those two used to be
 incompatible: a hold-or-tap key can't send its tap until you let go, so `Alt`+`Tab` fired nothing
@@ -78,10 +83,21 @@ wait came out late in a burst.
 The 80 ms is what keeps a fast space from becoming a layer chord. Roll straight from a letter into
 the space bar and the space wins; pause, then hold, and the layer wins.
 
-The `/` key next to left Shift is a **one-shot** for the Numbers layer: tap it, then press one key,
-and you get that key's Numbers meaning without holding anything. Tap it again to cancel. It now
-forgets itself after **1.2 s** rather than 3 s: it sits right where your hand goes for Shift, and a
-stray brush used to re-point a keystroke you made seconds later.
+**Digits are on the key next to left Shift** (left of `Z`), and symbols are on `Space L`. Holding
+`Shift` on top of a thumb to get `!` or `(` was the hard part, so the two swapped places:
+
+- **Tap it**, then press a top-row key: one digit. Nothing to hold.
+- **Hold it** and type a whole number.
+- **Double-tap it** and it stays on until you press it once more - a number lock. While it's locked
+  the home row gives symbols, not letters.
+
+**It's also the fast way to symbols.** `- = ; ' \` [ ] / ? \` sit on the same key, in the same places
+as on `Space L`. It switches on the instant you press it, while `Space L` has to guess whether you
+meant a space - which is why a quick `what?` used to come out as `what l`. So `?` is: tap the key,
+then `L`.
+
+A tap forgets itself after **1.2 s**: the key sits right where your hand goes for Shift, and a stray
+brush used to re-point a keystroke you made seconds later.
 
 ### Travelling to Tmux + Windows
 
@@ -106,7 +122,7 @@ and replugging also clears it; latched layers are never remembered.
 While holding a layer, tap the `'` key (bottom-right corner) and the layer **stays** when you let
 go - useful for one-handed arrow work or a run of digits. Tap the same key again to release it.
 Safety net: a locked layer releases itself after a minute of no typing, so it can never leave the
-board feeling broken. Works on Nav, Numbers and System.
+board feeling broken. Works on Nav, Symbols and System.
 
 ---
 
@@ -163,11 +179,15 @@ English, so fast typing can't trigger them by accident.
 | `.` + `'` | `:` (otherwise needs a layer plus shift) |
 | `Q` + `P` | **lock the keyboard** (see below) |
 
-One thing worth knowing about how they work: a key that belongs to a combo can't be sent the instant
-you press it - the firmware has to wait a moment to see whether its partner is coming. That wait is
-`COMBO_TERM` (40 ms), and it applies to `Q W Z X C V N M , . ' J K P`. If typing ever feels a touch
-soft on those letters, that's why, and lowering `COMBO_TERM` in `keymap/config.h` trades combo
-recognition slack for a snappier keydown.
+**Combos switch themselves off while you're typing.** A key that belongs to a combo normally can't be
+sent the instant you press it - the firmware waits up to 40 ms to see whether its partner is coming.
+Mid-word that wait is pure lag, so a combo key pressed within 120 ms of the previous key just types,
+instantly. A combo fires when you start it after a short pause, which is how you reach for one
+anyway.
+
+The exceptions are the combos you use mid-word: `_`, `-`, `:` and `J`+`K`. Those always work, so
+`M , . ' J K` still wait. `Q W Z X C V N P` are instant while you type. If a combo you meant comes
+out as two letters, pause a beat first, or lower `COMBO_FLOW_TERM` in `keymap/config.h`.
 
 ### The prefix key - removed
 
@@ -179,9 +199,13 @@ fixed something else at the same time: making a double-tap possible meant `Ctrl`
 The tmux commands it used to send are real keys now, on the Tmux + Windows layer below - and they
 send tmux's own `Ctrl-b` sequences, so there's no waiting for a timeout at all.
 
-### Shift+Backspace = Delete
+### Backspace always deletes backward
 
-Hold Shift and press Backspace to delete forward. Plain Backspace is unchanged.
+`Shift`+`Backspace` and `Space R`+`Backspace` both used to be Delete. Both bit mid-correction:
+`Shift` is still down from the capital you just typed, and `Space R` is still down from the space,
+so the fix deleted the character *after* the cursor. Backspace is now Backspace on every layer
+except one deliberate chord: **Delete is `Fn` + `Backspace`**, or `N`+`M` together. `Fn` is the small
+middle key - nothing types a space with it, so it is never still down from the last word.
 
 ### Recorded macros
 
@@ -230,18 +254,10 @@ mirrored: L K J H  G   F  D S A
 Muscle memory is the catch - your fingers know where letters are, and half of them have moved. It's
 a tool for occasional one-handed stretches, not a way to type all day.
 
-### Home row mods - off by default
+### Home row mods - removed
 
-**What it is:** holding `A` gives Super, `S` Alt, `D` Ctrl, `F` Shift, mirrored on `J K L`. Tapping
-them still types letters. Your hands never leave home position to reach a modifier.
-
-**They're switched off** because they made typing feel laggy - a mod-tap can't emit the letter until
-it knows whether you're tapping or holding, so it fires on release rather than press.
-
-**To try them again:** `Fn` + `T`. It swaps the base layer and remembers across reboots. Same key
-switches back. Chordal Hold and Flow Tap are configured, so same-hand rolls type letters normally
-and holds are suppressed entirely while you're mid-flow - but the first key after a pause still
-resolves late, and that's inherent to the technique.
+Gone, not just switched off: holding a letter never gives a modifier. `Fn` + `T`, which used to
+switch them on, does nothing now.
 
 ### Keyboard lock
 
@@ -285,16 +301,25 @@ The two nav rows line up on purpose: `H J K L` moves you between tmux **panes**,
 directly below moves you between **windows on the desktop**. Same shape, one level out.
 
 Workspaces get the whole top row because on a 40% they're otherwise unreachable - `Super`+`3` on the
-base layer would mean holding `Gui` *and* the Numbers thumb *and* `E`.
+base layer would mean holding `Gui` *and* the Digits key *and* `E`.
 
 **If your tmux prefix isn't `Ctrl-b`,** it's one line: `TMUX_PFX` at the top of the macro table in
 `keymap/keymap.c`. Every sequence follows from it.
 
-## Layers 6 and 7 · Spare
+## Layer 6 · Digits
 
-Empty and pass-through - reaching one changes nothing. They exist so there's somewhere to put the
-next idea without renumbering anything (layer numbers are load-bearing on this board). Fill them in
-VIA as layers 6 and 7, or in `keymap.c`.
+`1`-`0` on the top row, the Symbols-layer symbols on the rows below, thumbs fall through. Reach it with the key left of
+`Z` (see *Getting to layers*), or `Tab` + `✓` while held, or `Fn` + `✓` to latch it.
+
+One catch while it's locked: it sits above Nav, Symbols and System, so their top two rows give
+digits and symbols too (`Fn` + `Q` is `1`, not a setting). Release Digits first. `Fn` + `Gui` drops it like any other
+latched layer.
+
+## Layer 7 · Spare
+
+Empty and pass-through - reaching it changes nothing. It exists so there's somewhere to put the
+next idea without renumbering anything (layer numbers are load-bearing on this board). Fill it in
+VIA as layer 7, or in `keymap.c`.
 
 ---
 
@@ -307,10 +332,10 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `Q` | require the unlock pattern at power-up (off by default) |
 | `W` | turn the Claude lamps on/off |
 | `E` / `R` | lamp brightness down / up |
-| `T` | switch the base layer to the home-row-mod version |
 | `Y` | **Aura** effect - board mirrors the lamps |
 | `U` | **Rain** effect - Matrix rain, seeded by your typing |
 | `I` | backlight off (keys dark, lamps stay alive) |
+| `Backspace` | Delete (forward) |
 | `A` | lock the keyboard |
 | `S` | one-handed mode |
 | `D` | Caps Word |
@@ -319,7 +344,7 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `/` `Z` `X` `C` | one-shot Shift / Ctrl / Alt / Gui |
 | `V` | key lock - pin the next key down |
 | `B` `N` `M` `,` `.` | macro: record 1 · play 1 · record 2 · play 2 · stop |
-| `◆` `✓` `✕` | travel to Tmux+Windows / Spare 6 / Spare 7 and stay there |
+| `◆` `✓` `✕` | travel to Tmux+Windows / Digits / Spare 7 and stay there |
 | `Gui` | panic - drop every latched layer |
 
 The play key (`H`) is earbud-style: tap for play/pause, double-tap for next track, triple-tap for
@@ -420,8 +445,7 @@ works; use `Space R` instead.
 
 **Keyboard completely dead.** You may have locked it - press the top-left key, then type `N E E S`.
 
-**Typing feels laggy.** Check you haven't switched to the home-row-mod layer with `Fn` + `T`. Press
-it again to go back. The other place a keypress waits is the combo keys (`Q W Z X C V N M , . ' J K P`)
+**Typing feels laggy.** The one place a keypress waits is the combo keys (`Q W Z X C V N M , . ' J K P`)
 - see *Combos* above for the knob. `Tab` keeps its Nav hold without any wait, because a held modifier
 bypasses the tap-hold decision entirely.
 

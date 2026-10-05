@@ -50,11 +50,11 @@ prefix if yours isn't `Ctrl-b`.
 | Layer | Hold | What's on it |
 |---|---|---|
 | Nav | `Tab` or `Space R` | F1–F12, arrows, Home/End/PgUp/PgDn |
-| Numbers | `Space L` | digits and everyday symbols |
+| Symbols | `Space L` | `! @ # $ % ^ & * ( )` on the top row with no Shift, plus everyday symbols |
 | System | `Fn`, **or both spaces together** (tri layer) | media, volume, macros, every setting |
 | Tmux + Windows | `Tab`+`◆`, or `Fn`+`◆` to stay | the layer above |
-| Spare ×2 | `Tab`+`✓`/`✕`, or `Fn`+ the same | empty and transparent, waiting for an idea |
-| Home-row mods | opt-in, persisted | GACS mods on ASDF/JKL for those who want them |
+| Digits | the key left of `Z`: tap, hold, or double-tap to lock | `1`-`0` on the top row, symbols below - the instant route to `?` and friends |
+| Spare | `Tab`+`✕`, or `Fn`+`✕` | empty and transparent, waiting for an idea |
 
 **Layer lock:** tap `'` while holding any layer and it sticks — one-handed arrows, a run of
 digits — and it releases itself after a minute so the board can never feel broken.
@@ -71,7 +71,6 @@ digits — and it releases itself after a minute so the board can never feel bro
   so `MAX_RETRY_COUNT` comes out whole
 - **Double-tap Shift → Caps Lock** — with zero added latency on normal shifting
 - **Repeat & Alt-Repeat keys** — repeat the last keystroke, or do its opposite (undo↔redo)
-- **Shift+Backspace → Delete** — no reaching for a nav layer
 - **Dynamic macros** — record any key sequence on the fly, two slots, replay all day
 - **Key lock** — pin a key down (scrolling, games) until you press it again
 - **One-shot modifiers** — tap a mod, then the key; tap twice to latch it

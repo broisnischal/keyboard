@@ -31,11 +31,12 @@
 #define DEBUG_MATRIX_SCAN_RATE
 
 // ---------------------------------------------------------------------------
-// Tap-hold / home row mods
+// Tap-hold
 //
-// 130ms is the floor for plain keys. The home row mods, the shift tap dance and
-// - critically - the three LT(n,KC_SPC) thumbs get longer terms via
-// get_tapping_term(); see the table above it for what 130ms on a space bar did.
+// 130ms is the floor for plain keys. Tab, the shift tap dance and - critically -
+// the three LT(n,KC_SPC) thumbs get longer terms via get_tapping_term(); see the
+// table above it for what 130ms on a space bar did. (The home row mods that this
+// section was first written for were removed 2026-10-05.)
 // ---------------------------------------------------------------------------
 #define TAPPING_TERM 130
 #define TAPPING_TERM_PER_KEY
@@ -48,38 +49,30 @@
 // missing one.
 #define RETRO_TAPPING_PER_KEY
 
-// Same-hand chords settle as taps, so rolling "df" types df instead of firing
-// Ctrl. Handedness comes from chordal_hold_layout in keymap.c.
+// Same-hand chords settle as taps. Written for the home row mods; with those
+// gone the only tap-hold key it governs is LT(_NAV,KC_TAB) (the thumbs are '*').
+// So Tab + a LEFT-hand key settles as Tab + that key on the keydown
+// (action_tapping.c:455, consulted before hold-on-other-key-press): a Tab rolled
+// into the next letter can't land on Nav, and Nav's left half (Home/End/PgUp/
+// PgDn, F1-F5) is reached from Space R rather than Tab. Handedness comes from
+// chordal_hold_layout in keymap.c.
 #define CHORDAL_HOLD
 
-// A tap-hold key held while another key is pressed AND released resolves as
-// hold. Correct for the home row MODS - an opposite-hand chord engages without
-// waiting out the tapping term.
-//
-// WRONG for the LT() space bars, which is why this is per-key now. Rolling
-// "e" + space + "a" fast means space goes down, 'a' goes down and up, space
-// comes up - permissive hold called that a HOLD, so the roll silently typed a
-// digit instead of "space a". get_permissive_hold() in keymap.c restricts it to
-// mod-taps; layer taps decide on the tapping term alone.
-//
-// Which only works if that term is longer than a plain press of the key, and at
-// the global 130ms it was not - an ordinary space bar press sailed past it and
-// turned its layer on by itself. THUMB_TAPPING_TERM below is the other half.
-#define PERMISSIVE_HOLD_PER_KEY
+// NO PERMISSIVE_HOLD, bare or per-key. Its rule - tap-hold key held while another
+// key is pressed AND released resolves as hold - was only ever right for the home
+// row mods, and on the LT() space bars it was a bug: rolling "e" + space + "a"
+// means space down, 'a' down and up, space up, which it called a HOLD, so the
+// roll typed a digit instead of "space a". It was per-key, mod-taps only, until
+// the mods went; nothing left wants it. Layer taps decide on their term plus the
+// armed hold-on-other-key-press below.
 
-// No hold-to-repeat on the mod keys: holding A after tapping it gives GUI, not
-// "aaaa". Key repeat lives on QK_REP instead.
+// No hold-to-repeat: tap a thumb, then hold it, and you get the layer, not a
+// stream of spaces. Key repeat lives on QK_REP instead.
 #define QUICK_TAP_TERM 0
 
-// While you are actually typing, holds are disabled outright - so mid-word
-// there is no home-row-mod latency at all. Only applies once you pause.
-//
-// 200ms not 150: this is the maximum gap between keystrokes that still counts
-// as "typing". At 150 an ordinary uneven rhythm kept dropping out of flow, and
-// every dropout is a keystroke that resolves on release instead of on press -
-// which is exactly the drag that gets described as "subtly slow". The cost is
-// that you must pause 200ms before a home row mod engages, which is roughly
-// what deliberately reaching for a modifier takes anyway.
+// Defining FLOW_TAP_TERM is what switches Flow Tap on. The 200 itself was the home
+// row mods' window and is unused now: get_flow_tap_term() in keymap.c answers for
+// every key, and only the thumbs get a window (FLOW_TAP_TERM_THUMB).
 #define FLOW_TAP_TERM 200
 
 // Flow Tap for the space thumbs, which the old get_flow_tap_term() refused
@@ -89,11 +82,11 @@
 // early. Inside this window the space is settled as a tap on the KEYDOWN, so it
 // is instant and the layer cannot engage by accident.
 //
-// Much shorter than the 200ms the mods get, on purpose. 110ms covers a genuine
+// Short on purpose. 110ms covers a genuine
 // roll - space and the next letter overlapping - while still leaving the thumb
 // layers reachable mid-sentence, because deliberately reaching for one always has
 // a beat of thought in front of it. Raise it if a fast space still turns a layer
-// on; lower it if "word then digits" stops reaching _NUM.
+// on; lower it if "word then symbols" stops reaching _NUM.
 #define FLOW_TAP_TERM_THUMB 110
 
 // A space bar tap is 80-250ms. A thumb deliberately held down for a layer is held
@@ -146,15 +139,24 @@
 // ---------------------------------------------------------------------------
 #define COMBO_TERM 40
 
+// Combos skip themselves while I'm typing - see combo_should_trigger() in
+// keymap.c. A combo key pressed within this long of the previous keypress types
+// on its keydown instead of waiting up to COMBO_TERM. 120 ms is one keystroke at
+// about 100 wpm; a deliberate chord comes after a longer pause than that. Raise
+// it to skip combos more often (less lag); lower it if a combo I meant comes out
+// as two letters. A guess, not measured.
+#define COMBO_SHOULD_TRIGGER
+#define COMBO_FLOW_TERM 120
+
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // One-shot keys
 // ---------------------------------------------------------------------------
-// 1200ms, not 3000. OSL(_NUM) sits between left Shift and Z, and a one-shot layer
-// re-points the NEXT keystroke with a single tap - no hold needed. At 3s a stray
-// brush of that key while reaching for Shift meant the next letter came off _NUM
-// up to three seconds later ("o" -> "9"), which is indistinguishable from the key
+// 1200ms, not 3000. The one-shot layer key sits between left Shift and Z (OSL(_NUM)
+// when this was measured, OSL(_DIG) now), and it re-points the NEXT keystroke with
+// a single tap - no hold needed. At 3s a stray brush of that key while reaching
+// for Shift meant the next letter came off that layer up to three seconds later ("o" -> "9"), which is indistinguishable from the key
 // being broken. A deliberate OSL-then-key is ~300ms, so 1200 loses nothing.
 #define ONESHOT_TIMEOUT 1200    // a pending one-shot mod/layer gives up after 1.2s
 #define ONESHOT_TAP_TOGGLE 2    // tap a one-shot mod twice to lock it on
