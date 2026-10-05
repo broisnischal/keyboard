@@ -34,7 +34,7 @@ Every layer is a **hold**. Nothing latches unless you ask it to.
 | **2 · Nav** | `Tab` or `Space R` | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/forward |
 | **3 · Symbols** | `Space L` | `` ` `` on `Esc`, then `! @ # $ % ^ & * ( )` across the top row with no `Shift`; `- = ; ' \`` `[ ] / ? \` - hold `Shift` too for `_ + : " ~ { } |` |
 | **4 · System** | `Fn`, or `Space L` **+** `Space R` together | media, volume, and every setting key |
-| **5 · Tmux + Windows** | `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | tmux panes and windows, Hyprland workspaces |
+| **5 · Tmux + Windows** | `◆`, or `Tab` **+** `◆`, or **travel:** `Fn` **+** `◆` | tmux panes and windows, Hyprland workspaces |
 | **6 · Digits** | the key left of `Z` (tap, hold, or double-tap to lock), or `Tab` **+** `✓` / `Fn` **+** `✓` | `1`-`0` across the top row, and the symbols `- = ; ' \` [ ] / ? \` below them |
 | **7 · Spare** | `Tab` **+** `✕`, or `Fn` **+** `✕` | empty - yours to fill |
 
@@ -102,10 +102,13 @@ brush used to re-point a keystroke you made seconds later.
 
 ### Travelling to Tmux + Windows
 
-That layer has two routes, and they are not equivalent:
+Tap `◆` and it focuses Claude Code, as before. **Hold it and you are on Tmux + Windows** for as long
+as you hold it. The routes are not equivalent:
 
-- **Hold `Tab` + `◆`** (or `Space R` + `◆`) - momentary. Two fingers are now busy, so you can only reach the keys
-  your free hand still covers. Fine for a workspace switch or one pane jump.
+- **Hold `◆`** - momentary, one key. Your right thumb or pinky is on `◆`, so the left hand has the
+  whole tmux half and workspaces. The layer engages once `◆` has been down about 80 ms, so a quick
+  tap that rolls into typing still just focuses Claude.
+- **Hold `Tab` + `◆`** (or `Space R` + `◆`) - also momentary, two keys. Still works.
 - **`Fn` + `◆`** - **latches.** Let go of everything and you are *on* the layer with both hands
   free, which is the only way to use both halves at once - splitting a pane and then moving the
   window.
@@ -394,7 +397,7 @@ instant - the board is split into thirds and each third follows the lamp above i
 
 | Key | Does |
 |---|---|
-| `◆` | focus the terminal running Claude Code, or launch it |
+| `◆` | tap: focus the terminal running Claude Code, or launch it · hold: Tmux + Windows |
 | `✓` | send Enter to it - approve a permission prompt |
 | `✕` | send Escape to it - interrupt |
 

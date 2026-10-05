@@ -82,7 +82,7 @@ matter if you ever redo that conversion:
 | 2 `_NAV` | `LT(_NAV,KC_TAB)`, or `LT(_NAV,SPC)` (right space) | F1-F12, arrows, Home/End/PgUp/PgDn, browser back/fwd, `QK_REP`/`QK_AREP` |
 | 3 `_NUM` | `LT(_NUM,SPC)` (left space) | symbols: the shifted number row `! @ # $ % ^ & * ( )` on top, so no Shift; `` ` `` on Esc. Must stay below `_MEDIA` or the both-spaces chord loses System |
 | 4 `_MEDIA` | `LT(_MEDIA,SPC)`, or both outer spaces together (tri layer) | transport, volume, dynamic macros, **and the system/settings keys** |
-| 5 `_WM` | `MO()` on **`_NAV` + bottom-right key 1**, or `TG()` on **`_MEDIA` + the same key** | tmux + window management, merged |
+| 5 `_WM` | hold the diamond (`DIAMOND` = `LT(_WM,KC_F21)` on layer 0), `MO()` on **`_NAV` + bottom-right key 1**, or `TG()` on **`_MEDIA` + the same key** | tmux + window management, merged |
 | 6 `_DIG` | `OSL(_DIG)` left of Z (double-tap locks, `ONESHOT_TAP_TOGGLE 2`), `MO()` on **`_NAV` + bottom-right key 2**, or `TG()` on **`_MEDIA` + the same key** | `1`-`0` on the top row, `_NUM`'s home/bottom-row symbols below, thumbs transparent. The instant route to symbols: `OSL` has no tap-hold decision. Took spare 6 on 2026-10-05; above `_NAV`/`_NUM`/`_MEDIA`, so locked it masks their top rows |
 | 7 `_SPR2` | `MO()` on **`_NAV` + bottom-right key 3**, or `TG()` on **`_MEDIA` + the same key** | empty, fully transparent |
 
@@ -612,6 +612,13 @@ The **bottom-right three keys** (the Alt / Menu / Ctrl positions right of the th
 matrix `4,8` `4,9` `4,10`) arrived as `KC_NO` on layer 0 from the VIA export, i.e. dead. They now
 carry `KC_F21`/`F22`/`F23` (the Claude keys) on layer 0, `MO()` for `_WM`/`_DIG`/`_SPR2` on `_NAV`,
 and `TG()` for the same three on `_MEDIA`. Nothing on this board is dead any more.
+
+Since 2026-10-05 the first of them is `DIAMOND`, `LT(_WM,KC_F21)`: tap still sends F21, hold is
+`_WM`. It shares the thumbs' rules - retro tapping (held alone and released, it still sends F21) and
+hold-on-other-key-press armed after `THUMB_HOLD_ARM_TIME`, so "tap the diamond, roll into a prompt"
+types the prompt. Its `chordal_hold_layout` slot is `'*'`: as `'R'`, diamond + any right-hand key
+settled as a tap before hold-on-other-key-press was consulted (`action_tapping.c:455`), which would
+have killed pane focus `H J K L` and window focus `N M , .` - the whole right half of the layer.
 
 ---
 

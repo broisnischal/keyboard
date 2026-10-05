@@ -199,6 +199,9 @@ enum tap_dance_index {
 };
 
 #define TD_SFT  TD(TD_SFT_CAPS)
+// The diamond Claude key: tap sends F21 (the desktop focuses Claude Code), hold
+// is Tmux + Windows - one key instead of Tab/Space R + diamond. Added 2026-10-05.
+#define DIAMOND LT(_WM, KC_F21)
 #define TD_MPLY TD(TD_MEDIA_TRANSPORT)
 
 // Register shift on the keydown itself, so shifted typing gains no latency.
@@ -302,8 +305,11 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 // it without pressing anything, and you still get your space - instead of losing it
 // because the key had already resolved as a hold. Pressing any key during the hold
 // clears the priming, so a real layer chord never emits a stray space.
+//
+// The diamond too: held through a pause and let go alone, it still focuses
+// Claude Code instead of silently doing nothing.
 bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
-    return is_thumb_layer_tap(keycode);
+    return is_thumb_layer_tap(keycode) || keycode == DIAMOND;
 }
 
 // The third half of the space fix, and the one that was missing: how a thumb
@@ -328,21 +334,27 @@ bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
 // covers the in-flow roll by settling the space as a tap on its keydown; the arm
 // window covers the roll that starts after a pause, where Flow Tap is out.
 bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
-    if (is_thumb_layer_tap(keycode) || keycode == LT(_NAV, KC_TAB)) {
+    // The diamond gets the same arm: tapping it to focus Claude Code and rolling
+    // straight into the first letter of a prompt must not turn that letter into
+    // a tmux command.
+    if (is_thumb_layer_tap(keycode) || keycode == LT(_NAV, KC_TAB) || keycode == DIAMOND) {
         return timer_elapsed(record->event.time) >= THUMB_HOLD_ARM_TIME;
     }
     return false; // nothing else is a tap-hold
 }
 
 // Which hand each key belongs to, for CHORDAL_HOLD. Same-hand chords settle as
-// taps; '*' keys (the three thumbs) may chord with either hand. With the home row
-// mods gone, the one key this still governs is LT(_NAV,KC_TAB) - see config.h.
+// taps; '*' keys may chord with either hand. With the home row mods gone, the one
+// key this still governs is LT(_NAV,KC_TAB) - see config.h. The diamond (41) is
+// '*' because it is a layer-tap now: as 'R', diamond + any right-hand key settled
+// as a TAP (action_tapping.c:455, before hold-on-other-key-press), which would
+// have killed pane focus H J K L and window focus N M , . outright.
 // clang-format off
 const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_ansi(
     'L', 'L', 'L', 'L', 'L', 'L', 'R', 'R', 'R', 'R', 'R', 'R',
     'L', 'L', 'L', 'L', 'L', 'L', 'R', 'R', 'R', 'R', 'R',
     'L', 'L', 'L', 'L', 'L', 'L', 'L', 'R', 'R', 'R', 'R', 'R',
-    'L', 'L', 'L',           '*', '*', '*', 'R', 'R', 'R'
+    'L', 'L', 'L',           '*', '*', '*', '*', 'R', 'R'
 );
 // clang-format on
 
@@ -1129,7 +1141,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         QK_GESC     , KC_Q        , KC_W        , KC_E        , KC_R        , KC_T        , KC_Y        , KC_U        , KC_I        , KC_O        , KC_P        , KC_BSPC,
         LT(_NAV,KC_TAB), KC_A     , KC_S        , KC_D        , KC_F        , KC_G        , KC_H        , KC_J        , KC_K        , KC_L        , KC_ENT,
         TD_SFT      , OSL(_DIG)      , KC_Z        , KC_X        , KC_C        , KC_V        , KC_B        , KC_N        , KC_M        , KC_COMM     , KC_DOT      , KC_QUOT,
-        KC_LCTL     , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), KC_F21      , KC_F22      , KC_F23
+        KC_LCTL     , KC_LGUI     , KC_LALT     , LT(_NUM,KC_SPC), LT(_MEDIA,KC_SPC), LT(_NAV,KC_SPC), DIAMOND     , KC_F22      , KC_F23
     ),
     // Spare. This was the home-row-mod base until 2026-10-05 (removed on request:
     // not wanted). Fully transparent and reached by nothing, but it has to exist -

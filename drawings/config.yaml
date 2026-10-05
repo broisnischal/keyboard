@@ -51,6 +51,7 @@ parse_config:
     # --- tap dances and specials ---
     "TD_SFT": {t: "⇧", h: "tap ×2 Caps"}
     "TD_MPLY": {t: "Play", h: "×2 next ×3 prev"}
+    "DIAMOND": {t: "◆", h: "hold Tmux"}
     "QK_GESC": {t: "Esc", s: "~"}
     "QK_LLCK": {t: "Layer", h: "lock"}
     "QK_LOCK": {t: "Key", h: "lock"}

@@ -327,7 +327,7 @@ rect.held + text.anchor, .held text.anchor { stroke: #fdd; }
 <g transform="translate(648, 224)" class="key keypos-41">
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key"/>
 <text x="0" y="0" class="key tap">◆</text>
-<text x="0" y="26" class="key hold">Claude</text>
+<text x="0" y="26" class="key hold">hold Tmux</text>
 </g>
 <g transform="translate(720, 224)" class="key keypos-42">
 <rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key"/>
@@ -1512,7 +1512,7 @@ rect.held + text.anchor, .held text.anchor { stroke: #fdd; }
 <g transform="translate(648, 224)" class="key held keypos-41">
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key held"/>
 <text x="0" y="0" class="key held tap">◆</text>
-<text x="0" y="26" class="key held hold">from Nav</text>
+<text x="0" y="26" class="key held hold">held</text>
 </g>
 <g transform="translate(720, 224)" class="key trans keypos-42">
 <rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key trans"/>

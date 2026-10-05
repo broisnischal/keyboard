@@ -56,7 +56,7 @@ HELD = {
     "System":       {39: {"t": "Fn", "h": "held"},
                      38: {"t": "Space", "h": "both spaces"},
                      40: {"t": "Space", "h": "both spaces"}},
-    "Tmux Windows": {41: {"t": "\u25c6", "h": "from Nav"}},
+    "Tmux Windows": {41: {"t": "\u25c6", "h": "held"}},
     "Digits":       {24: {"t": "123", "h": "tapped"}, 42: {"t": "\u2713", "h": "from Nav"}},
     "Spare 7":      {43: {"t": "\u2715", "h": "from Nav"}},
 }

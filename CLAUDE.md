@@ -141,7 +141,9 @@ EOF
     below, which is what makes both work at once.
 - **Home row mods were removed on request, 2026-10-05. Don't add them back.** `CHORDAL_HOLD` stays:
   with the thumbs `'*'` it now governs only `LT(_NAV,KC_TAB)`, settling Tab + a left-hand key as a
-  Tab so a Tab-into-letter roll can't land on Nav.
+  Tab so a Tab-into-letter roll can't land on Nav. **Any new layer-tap needs its `chordal_hold_layout`
+  slot checked**: the diamond (`LT(_WM,KC_F21)`) had to be `'*'`, or diamond + right-hand key would
+  settle as a tap and the layer's right half would be dead.
 - **`PERMISSIVE_HOLD` must not apply to the `LT(n,KC_SPC)` thumbs.** Its rule - held tap-hold key,
   another key pressed *and released*, resolve as hold - is exactly the shape of rolling through the
   space bar, so a fast roll produced a digit instead of "space letter". `CHORDAL_HOLD` cannot catch

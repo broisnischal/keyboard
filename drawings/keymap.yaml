@@ -52,7 +52,7 @@ layers:
   - t: Space
     h: hold Nav
   - t: ◆
-    h: Claude
+    h: hold Tmux
   - t: ✓
     h: approve
   - t: ✕
@@ -440,7 +440,7 @@ layers:
   - t: ▽
     type: trans
   - t: ◆
-    h: from Nav
+    h: held
     type: held
   - t: ▽
     type: trans
