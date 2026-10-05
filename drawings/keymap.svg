@@ -1026,6 +1026,9 @@ rect.held + text.anchor, .held text.anchor { stroke: #fdd; }
 </g>
 <g transform="translate(384, 32)" class="key keypos-5">
 <rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key"/>
+<text x="-24" y="-22" class="key anchor">T</text>
+<text x="0" y="0" class="key tap">Layer</text>
+<text x="0" y="26" class="key hold">lights</text>
 </g>
 <g transform="translate(448, 32)" class="key keypos-6">
 <rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key"/>
@@ -1682,9 +1685,11 @@ rect.held + text.anchor, .held text.anchor { stroke: #fdd; }
 <rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key trans"/>
 <text x="0" y="0" class="key trans tap">▽</text>
 </g>
-<g transform="translate(776, 160)" class="key trans keypos-34">
-<rect rx="6" ry="6" x="-53" y="-29" width="106" height="58" class="key trans"/>
-<text x="0" y="0" class="key trans tap">▽</text>
+<g transform="translate(776, 160)" class="key keypos-34">
+<rect rx="6" ry="6" x="-53" y="-29" width="106" height="58" class="key"/>
+<text x="-48" y="-22" class="key anchor">&#x27;</text>
+<text x="0" y="0" class="key tap">Layer</text>
+<text x="0" y="26" class="key hold">lock</text>
 </g>
 <g transform="translate(40, 224)" class="key trans keypos-35">
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key trans"/>

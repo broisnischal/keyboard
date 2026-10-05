@@ -40,6 +40,7 @@ typedef struct __attribute__((packed)) {
     uint8_t lock_on_boot   : 1; // require the unlock pattern after every power-up
     uint8_t claude_leds    : 1; // drive the three indicator LEDs from Claude Code
     uint8_t autoshift_on   : 1; // Auto Shift trades hold-latency for shifts - opt-in
+    uint8_t layer_lights   : 1; // light the active layer's keys (Fn+T)
     // (Autocorrect is NOT here: its state lives in keymap_config, which QMK
     // persists itself - defaulting to on via eeconfig.c.)
     uint8_t led_brightness;     // ceiling for the Claude animations, 0-255
@@ -56,6 +57,7 @@ void eeconfig_init_user(void) {
     user_config.led_brightness = 255;
     user_config.saved_rgb_mode = RGB_MATRIX_SOLID_COLOR;
     user_config.autoshift_on   = 0;
+    user_config.layer_lights   = 1;
     eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
 }
 
@@ -162,6 +164,7 @@ enum custom_keycodes {
     UC_BRTD,  // Claude LED brightness down
     UC_AURA,  // whole-board Claude-reactive effect
     UC_RAIN,  // Matrix rain, seeded by typing
+    UC_LAYL,  // layer lights on/off
 };
 
 static bool send_macro(uint16_t keycode) {
@@ -675,6 +678,68 @@ bool claude_current_frame(uint8_t *out_r, uint8_t *out_g, uint8_t *out_b, uint8_
     return true;
 }
 
+// ===========================================================================
+// Layer lights
+// ===========================================================================
+// While any layer above Base is on, the keys that do something on it glow in
+// that layer's colour, the key(s) that reach it glow white, and the rest go
+// dark. A latched or locked layer keeps glowing, so "stuck on a layer" is
+// visible instead of looking like a broken keyboard. Fn+T turns it off.
+//
+// The lit set is worked out once per layer change, not per frame: with VIA the
+// keymap lives in emulated EEPROM, and 44 lookups on every animation frame
+// would come straight out of the matrix scan. LED i is layout key i
+// (g_led_config in th40.c), so one 44-bit mask indexes both.
+#define LAYER_LIGHT_KEYS 44
+#define LL(i) ((uint64_t)1 << (i))
+static uint8_t  layer_light_layer = _BASE;
+static uint64_t layer_light_lit   = 0;
+
+// The key(s) held to be on each layer, by layout index.
+static uint64_t layer_light_reach(uint8_t layer) {
+    switch (layer) {
+        case _NAV:   return LL(12) | LL(40);          // Tab, Space R
+        case _NUM:   return LL(38);                   // Space L
+        case _MEDIA: return LL(38) | LL(39) | LL(40); // Fn, or both spaces
+        case _WM:    return LL(41);                   // the diamond key
+        case _DIG:   return LL(24);                   // 123
+        case _SPR2:  return LL(43);
+        default:     return 0;
+    }
+}
+
+// Saturated only, at least one channel at zero - see claude_led.h for why.
+static void layer_light_colour(uint8_t layer, uint8_t *r, uint8_t *g, uint8_t *b) {
+    switch (layer) {
+        case _NAV:   *r = 0;   *g = 120; *b = 255; break; // blue
+        case _NUM:   *r = 255; *g = 70;  *b = 0;   break; // orange
+        case _MEDIA: *r = 150; *g = 0;   *b = 255; break; // violet
+        case _WM:    *r = 0;   *g = 255; *b = 60;  break; // green
+        case _DIG:   *r = 255; *g = 190; *b = 0;   break; // yellow
+        default:     *r = 255; *g = 0;   *b = 120; break; // pink
+    }
+}
+
+static void layer_light_update(layer_state_t state) {
+    layer_light_layer = get_highest_layer(state | default_layer_state);
+    layer_light_lit   = 0;
+    if (layer_light_layer == _BASE) {
+        return;
+    }
+    for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+        for (uint8_t c = 0; c < MATRIX_COLS; c++) {
+            uint8_t led = g_led_config.matrix_co[r][c];
+            if (led >= LAYER_LIGHT_KEYS) {
+                continue; // NO_LED
+            }
+            uint16_t kc = keymap_key_to_keycode(layer_light_layer, (keypos_t){.row = r, .col = c});
+            if (kc != KC_TRNS && kc != KC_NO) {
+                layer_light_lit |= LL(led);
+            }
+        }
+    }
+}
+
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     uint8_t r, g, b, v[3];
     claude_current_frame(&r, &g, &b, v);
@@ -684,6 +749,27 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
         uint8_t s   = claude_scale(v[i], bright);
         uint8_t idx = CLAUDE_LED_A + i;
         RGB_MATRIX_INDICATOR_SET_COLOR(idx, claude_scale(r, s), claude_scale(g, s), claude_scale(b, s));
+    }
+
+    // Layer lights paint over whatever effect is running, including the
+    // blacked-out board, so the floor on brightness keeps them visible.
+    if (user_config.layer_lights && layer_light_layer != _BASE) {
+        uint8_t lr, lg, lb;
+        layer_light_colour(layer_light_layer, &lr, &lg, &lb);
+        uint8_t v = rgb_matrix_get_val();
+        if (v < 96) {
+            v = 96;
+        }
+        const uint64_t reach = layer_light_reach(layer_light_layer);
+        for (uint8_t i = led_min; i < led_max && i < LAYER_LIGHT_KEYS; i++) {
+            if (reach & LL(i)) {
+                rgb_matrix_set_color(i, v, v, v);
+            } else if (layer_light_lit & LL(i)) {
+                rgb_matrix_set_color(i, claude_scale(lr, v), claude_scale(lg, v), claude_scale(lb, v));
+            } else {
+                rgb_matrix_set_color(i, 0, 0, 0);
+            }
+        }
     }
 
     // Caps Lock keeps LED 44 - th40.c's _user handler repaints it after us.
@@ -811,7 +897,9 @@ layer_state_t layer_state_set_kb(layer_state_t state) {
         tri_owns_media = false;
         state &= ~media;
     }
-    return layer_state_set_user(state);
+    state = layer_state_set_user(state);
+    layer_light_update(state);
+    return state;
 }
 
 // One-handed mode: mirror each row across its own centre. The rows have
@@ -882,12 +970,33 @@ void keyboard_post_init_kb(void) {
 // held. Space R is the other Nav key and is unaffected.
 static bool tab_mod_bypass = false;
 
+// 123 pressed while Digits is already on and NOT a pending one-shot - locked
+// with the lock key, or latched with Fn+F22 - turns Digits off. Without this the
+// press started a fresh one-shot, and OSL's own cleanup switched the layer off
+// one keystroke LATER, which reads as random. A toggled one-shot (double-tap)
+// counts as active, so OSL's native "press again to release" still handles it.
+// Swallow the release too, or OSL sees a release with no press.
+static bool dig_exit_swallow = false;
+
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
     // Keydown timestamps for combo_should_trigger(). First, before any early
     // return, and before process_combo() sees this event.
     if (record->event.type == KEY_EVENT && record->event.pressed) {
         prev_press_time = last_press_time;
         last_press_time = record->event.time;
+    }
+    if (keycode == OSL(_DIG) && !secure_is_locked()) {
+        if (record->event.pressed) {
+            if (layer_state_is(_DIG) && !is_oneshot_layer_active()) {
+                layer_lock_off(_DIG);
+                layer_off(_DIG);
+                dig_exit_swallow = true;
+                return false;
+            }
+        } else if (dig_exit_swallow) {
+            dig_exit_swallow = false;
+            return false;
+        }
     }
     if (keycode == LT(_NAV, KC_TAB) && !secure_is_locked()) {
         uint8_t mods = get_mods();
@@ -907,6 +1016,20 @@ bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
         }
     }
     return pre_process_record_user(keycode, record);
+}
+
+// Is any key down besides this one? Read off the debounced matrix.
+static bool other_key_held(keypos_t self) {
+    for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
+        matrix_row_t row = matrix_get_row(r);
+        if (r == self.row) {
+            row &= ~((matrix_row_t)1 << self.col);
+        }
+        if (row) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
@@ -948,6 +1071,29 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 return false;
             case UC_LOCKB:
                 user_config.lock_on_boot = !user_config.lock_on_boot;
+                user_config_save();
+                return false;
+            case QK_LLCK:
+                // The lock key (right-Shift spot on Nav/Symbols/System/Digits)
+                // means one thing everywhere. Holding the layer, or with a 123
+                // one-shot pending: lock it (stock QK_LLCK, which also takes
+                // over the one-shot). With NOTHING held, the layer can only be
+                // on because something is keeping it there - a lock, a
+                // double-tapped 123, a Fn travel latch - so go back to Base and
+                // drop all of it. Stock only inverted the top layer's lock: on a
+                // double-tapped Digits it locked AGAIN instead of letting go,
+                // and a latched layer needed two presses. Runs before
+                // process_layer_lock (quantum.c), so returning false owns it.
+                if (other_key_held(record->event.key) || (is_oneshot_layer_active() && get_oneshot_layer_state() != ONESHOT_TOGGLED)) {
+                    layer_lock_invert(get_highest_layer(layer_state));
+                } else {
+                    layer_lock_all_off();
+                    reset_oneshot_layer();
+                    layer_clear();
+                }
+                return false;
+            case UC_LAYL:
+                user_config.layer_lights = !user_config.layer_lights;
                 user_config_save();
                 return false;
             case UC_CLEDS:
@@ -1052,7 +1198,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // them. A latched _WM masks the whole alphabet with Super chords and reads as
     // a dead keyboard, so there has to be one key that always gets you home.
     [_MEDIA] = LAYOUT_tkl_ansi(
-        _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , XXXXXXX, UC_AURA, UC_RAIN, RM_TOGG  , XXXXXXX, XXXXXXX , KC_DEL ,
+        _______, UC_LOCKB     , UC_CLEDS     , UC_BRTD      , UC_BRTU      , UC_LAYL, UC_AURA, UC_RAIN, RM_TOGG  , XXXXXXX, XXXXXXX , KC_DEL ,
         _______, SE_LOCK      , SH_TOGG      , CW_TOGG      , QK_REP       , KC_MPRV, TD_MPLY, KC_MNXT, KC_VOLD  , KC_VOLU, _______,
         _______, OSM(MOD_LSFT), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_LGUI), QK_LOCK, DM_REC1, DM_PLY1, DM_REC2  , DM_PLY2, DM_RSTP , QK_LLCK,
         _______, TO(_BASE)    , _______      , _______      , _______      , _______, TG(_WM), TG(_DIG), TG(_SPR2)
@@ -1094,7 +1240,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DIG] = LAYOUT_tkl_ansi(
         _______, KC_1   , KC_2   , KC_3   , KC_4   , KC_5   , KC_6   , KC_7   , KC_8   , KC_9   , KC_0   , _______,
         _______, KC_MINS, KC_EQL , KC_SCLN, KC_QUOT, KC_GRV , KC_LBRC, KC_RBRC, KC_SLSH, S(KC_SLSH), _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, KC_BSLS, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, KC_BSLS, _______, _______, QK_LLCK,
         _______, _______, _______, _______, _______, _______, _______, _______, _______
     ),
     // The last spare. Fully transparent, so reaching it changes nothing until you

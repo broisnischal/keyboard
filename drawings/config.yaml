@@ -46,6 +46,7 @@ parse_config:
     "UC_BRTD": {t: "Lamp −", h: "bright"}
     "UC_AURA": {t: "Aura", h: "effect"}
     "UC_RAIN": {t: "Rain", h: "effect"}
+    "UC_LAYL": {t: "Layer", h: "lights"}
     "RM_TOGG": {t: "Backlight", h: "on/off"}
     # --- tap dances and specials ---
     "TD_SFT": {t: "⇧", h: "tap ×2 Caps"}

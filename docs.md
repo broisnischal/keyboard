@@ -15,7 +15,7 @@ A user guide, not a build guide. For firmware internals, flashing and recovery s
  ├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┴────┤
  │Tab │ A  │ S  │ D  │ F  │ G  │ H  │ J  │ K  │ L  │  Enter  │
  ├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┬────┤
- │ ⇧  │ /  │ Z  │ X  │ C  │ V  │ B  │ N  │ M  │ ,  │ .  │ '  │
+ │ ⇧  │123 │ Z  │ X  │ C  │ V  │ B  │ N  │ M  │ ,  │ .  │ '  │
  ├────┼────┼────┼────┴────┴──┬─┴────┼────┴──┬─┴────┼────┼────┤
  │Ctrl│Gui │Alt │   Space L  │  Fn  │Space R│ ◆  │ ✓  │ ✕  │
  └────┴────┴────┴────────────┴──────┴───────┴────┴────┴────┘
@@ -69,8 +69,8 @@ Three things changed, and none of them made typing slower:
 - **A long space is still a space.** Hold a thumb through a pause, let go without pressing anything
   else, and you get your space. Press something during the hold and you get the layer, as before.
 - **A space typed inside 110 ms of the previous letter is sent on the keydown**, so mid-sentence it
-  is instant and cannot turn a layer on at all. To reach the digits mid-word, pause for a beat first
-  and then hold - which is what reaching for a layer feels like anyway.
+  is instant and cannot turn a layer on at all. To reach Symbols mid-word, pause for a beat first
+  and then hold (or tap `123` and the key, which never has to guess) - which is what reaching for a layer feels like anyway.
 
 Then a fourth, because the first three made the layers themselves slow to reach: 230 ms was the
 only way in, so every layer chord began with a quarter-second wait, and anything typed during that
@@ -88,8 +88,9 @@ the space bar and the space wins; pause, then hold, and the layer wins.
 
 - **Tap it**, then press a top-row key: one digit. Nothing to hold.
 - **Hold it** and type a whole number.
-- **Double-tap it** and it stays on until you press it once more - a number lock. While it's locked
-  the home row gives symbols, not letters.
+- **Double-tap it**, or tap it then the lock key (bottom right), and it stays on - a number lock.
+  `123` again, or the lock key, takes you back. While it's locked the home row gives symbols, not
+  letters.
 
 **It's also the fast way to symbols.** `- = ; ' \` [ ] / ? \` sit on the same key, in the same places
 as on `Space L`. It switches on the instant you press it, while `Space L` has to guess whether you
@@ -117,12 +118,27 @@ every latched layer at once. A latched Windows layer turns the whole alphabet in
 looks exactly like a broken keyboard, so this key always gets you back to plain typing. Unplugging
 and replugging also clears it; latched layers are never remembered.
 
+### Layer lights
+
+Hold or lock any layer and the board shows it: the keys that do something on that layer glow in
+its colour, the key you're holding glows white, and everything else goes dark. **Nav is blue,
+Symbols orange, System violet, Tmux + Windows green, Digits yellow.** A latched or locked layer
+keeps glowing, so a stuck layer is obvious at a glance. It works with the backlight off too.
+`Fn` + `T` turns it off and on, and the keyboard remembers.
+
 ### Locking a layer
 
-While holding a layer, tap the `'` key (bottom-right corner) and the layer **stays** when you let
-go - useful for one-handed arrow work or a run of digits. Tap the same key again to release it.
-Safety net: a locked layer releases itself after a minute of no typing, so it can never leave the
-board feeling broken. Works on Nav, Symbols and System.
+The bottom-right key (the right-Shift spot, `'` on Base) is the **lock key** on Nav, Symbols, System
+and Digits, and it follows one rule:
+
+- **Holding a layer? Tap it and the layer stays** after you let go. With Digits you don't even need
+  to hold: tap `123`, then the lock key.
+- **Holding nothing? Tap it and you're back on Base**, whatever was keeping you on the layer - a
+  lock, a double-tapped `123`, or an `Fn` travel.
+
+So: hold, lock, type, lock key again, home. The layer lights stay on the whole time it's locked.
+`123` pressed while Digits is locked also takes you home. Safety net: a locked layer releases
+itself after a minute of no typing.
 
 ---
 
@@ -332,6 +348,7 @@ Everything here persists to the keyboard's own memory and survives unplugging.
 | `Q` | require the unlock pattern at power-up (off by default) |
 | `W` | turn the Claude lamps on/off |
 | `E` / `R` | lamp brightness down / up |
+| `T` | layer lights on/off |
 | `Y` | **Aura** effect - board mirrors the lamps |
 | `U` | **Rain** effect - Matrix rain, seeded by your typing |
 | `I` | backlight off (keys dark, lamps stay alive) |
@@ -445,12 +462,12 @@ works; use `Space R` instead.
 
 **Keyboard completely dead.** You may have locked it - press the top-left key, then type `N E E S`.
 
-**Typing feels laggy.** The one place a keypress waits is the combo keys (`Q W Z X C V N M , . ' J K P`)
-- see *Combos* above for the knob. `Tab` keeps its Nav hold without any wait, because a held modifier
+**Typing feels laggy.** The one place a keypress waits is a combo key. Mid-word only
+`M , . ' J K` still wait (up to 40 ms); `Q W Z X C V N P` skip it - see *Combos* above for the knobs. `Tab` keeps its Nav hold without any wait, because a held modifier
 bypasses the tap-hold decision entirely.
 
 **A letter doesn't appear, or a character doubles.** Almost always an accidental layer: a space bar
-held long enough to become one, or the one-shot `/` key brushed. Both are much harder to trigger
+held long enough to become one, or the one-shot `123` key brushed. Both are much harder to trigger
 since the space bars went to a 230 ms hold, so if it is still happening, measure before assuming a
 firmware bug:
 
@@ -469,7 +486,7 @@ reflash.
 
 **Wrong letters after using one-handed mode.** It's still on. `Fn` + `S`.
 
-**Stuck on a layer.** You locked it - tap the `'` key, or just wait a minute and it releases
-itself.
+**Stuck on a layer.** Let go of everything and tap the bottom-right key: that always goes back to
+Base. Or wait a minute and a lock releases itself.
 
 **A key seems held down forever.** Key lock is pinning it - press that key once to release it.

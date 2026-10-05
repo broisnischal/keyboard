@@ -283,7 +283,8 @@ layers:
     h: bright
   - t: Lamp +
     h: bright
-  - ''
+  - t: Layer
+    h: lights
   - t: Aura
     h: effect
   - t: Rain
@@ -496,8 +497,8 @@ layers:
     type: trans
   - t: ▽
     type: trans
-  - t: ▽
-    type: trans
+  - t: Layer
+    h: lock
   - t: ▽
     type: trans
   - t: ▽

@@ -74,6 +74,7 @@ digits — and it releases itself after a minute so the board can never feel bro
 - **Dynamic macros** — record any key sequence on the fly, two slots, replay all day
 - **Key lock** — pin a key down (scrolling, games) until you press it again
 - **One-shot modifiers** — tap a mod, then the key; tap twice to latch it
+- **Layer lights** - hold or lock a layer and only its keys glow, in that layer's colour
 - **One-handed mode** — the whole board mirrors itself for coffee-in-hand moments
 - **Pattern lock** — the keyboard swallows every key until you type the unlock pattern
 

@@ -295,6 +295,15 @@ session start, so they take effect after a restart.
 | `CLAUDE_AURA` | `_MEDIA`, top row | whole board takes the Claude state colour: breathing while thinking, a band sweeping left-to-right while a tool runs, a hard full-board strobe when permission is needed |
 | `CLAUDE_RAIN` | `_MEDIA`, top row | Matrix rain in the Claude state colour, and **every keypress drops a fresh bright head on that column** |
 
+**Layer lights** are not an effect: they paint over whichever effect is running, from
+`rgb_matrix_indicators_advanced_kb()`, the same hook that draws the lamps. When a layer above Base is
+on, keys that are not `KC_TRNS`/`KC_NO` on it take the layer's colour, its activator keys go white,
+the rest go black. The lit set is a 44-bit mask rebuilt in `layer_state_set_kb()` on every layer
+change, never per frame: with VIA the keymap lives in emulated EEPROM, and 44 lookups per animation
+frame would come out of the scan rate. LED *i* is layout key *i* (`g_led_config`), so the mask
+indexes both. Brightness floors at 96 so it shows on a dimmed or blacked-out board. Toggle:
+`UC_LAYL` (`Fn`+`T`), persisted as `user_config.layer_lights`, default on.
+
 The rain seeds itself from `claude_rain_kick[]`, written by `process_record_kb` with the exact
 matrix column you hit - more precise than going through the hit tracker's pixel coordinates, and it
 costs nothing since that hook already sees every keypress. Column heads advance in 1/16-row units on
@@ -365,9 +374,18 @@ One-shot mods use `ONESHOT_TIMEOUT 3000` and `ONESHOT_TAP_TOGGLE 2` - tap twice 
   removes it again only if a `tri_owns_media` ownership flag says the chord is what put it there.
   Any tri-layer written this way has the same trap - so does `TRI_LAYER_ENABLE`, which calls the
   same helper.
-- **Layer lock** (`QK_LLCK`) sits on the quote-key position of `_NAV`, `_NUM` and `_MEDIA`,
+- **Layer lock** (`QK_LLCK`) sits on the quote-key position of `_NAV`, `_NUM`, `_MEDIA` and `_DIG`,
   replacing the `MO(0)` placeholders that did nothing. `LAYER_LOCK_IDLE_TIMEOUT 60000` releases a
-  forgotten lock - a stuck layer is indistinguishable from a broken board.
+  forgotten lock - a stuck layer is indistinguishable from a broken board. Since 2026-10-05
+  `process_record_kb` owns the press (it runs before `process_layer_lock`, `quantum.c:355` vs
+  `:435`): with another key down or a 123 one-shot pending it does the stock `layer_lock_invert()`;
+  with **nothing** held it is "go home" - `layer_lock_all_off()`, `reset_oneshot_layer()`,
+  `layer_clear()`. Stock only inverts the top layer's lock, so a double-tapped Digits (a toggled
+  one-shot, not a layer lock) got locked again instead of released. Nothing held is detected off
+  `matrix_get_row()`, excluding the lock key itself. Companion rule in `pre_process_record_kb`:
+  `OSL(_DIG)` pressed while `_DIG` is on and no one-shot is active turns `_DIG` off, press and
+  release both swallowed; otherwise OSL started a fresh one-shot and switched the layer off one
+  keystroke later.
 - **Key overrides**: none, `KEY_OVERRIDE_ENABLE = no`. The only one was `Shift+Backspace → Delete`,
   removed 2026-10-05 because `Shift` lingering from a capital turned the correction into a forward
   delete. `_NAV`'s Backspace position went from `KC_DEL` to `KC_BSPC` the same day for the same
