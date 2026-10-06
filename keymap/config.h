@@ -131,6 +131,13 @@
 #define HOLD_ON_OTHER_KEY_PRESS_PER_KEY
 #define THUMB_HOLD_ARM_TIME 80
 
+// A key pressed INSIDE the arm: the thumb becomes the layer if it is still down
+// this long after that key went down, and a space + letter if it lifts first.
+// Measured 2026-10-06 (th40 keylog): typing rolls lift the thumb 0-18 ms after the
+// next key, symbol chords hold it 250+ ms. 50 is ~3x the worst roll. Live:
+// `th40 tune overlap <ms>`. See get_tapping_term() in keymap.c.
+#define THUMB_CHORD_HOLD 50
+
 // ---------------------------------------------------------------------------
 // Combos
 //

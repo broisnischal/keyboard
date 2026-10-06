@@ -260,10 +260,26 @@ static inline bool is_thumb_layer_tap(uint16_t keycode) {
     }
 }
 
+// No space bar is an instant layer key. I type spaces with BOTH thumbs, the right
+// one a lot: Space R made instant (no Flow Tap, no arm) on 2026-10-06 sent fast
+// typing to Nav - Home, arrows - whenever a space rolled into the next letter.
+// Reverted the same day. Every thumb gets Flow Tap, the arm, and the chord-hold
+// rule in get_tapping_term().
+
 // A thumb layer already on means the thumb going down now is the second half of
 // a both-spaces System chord, not a space in a sentence.
 static inline bool thumb_layer_on(void) {
     return layer_state_is(_NAV) || layer_state_is(_NUM) || layer_state_is(_MEDIA);
+}
+
+// Is a space bar other than `self` physically down? Bottom row, matrix columns
+// 4, 6, 7 = Space L, Fn, Space R (read back over raw HID, 2026-10-06).
+static bool other_thumb_down(keypos_t self) {
+    matrix_row_t thumbs = matrix_get_row(4) & ((1 << 4) | (1 << 6) | (1 << 7));
+    if (self.row == 4) {
+        thumbs &= ~((matrix_row_t)1 << self.col);
+    }
+    return thumbs != 0;
 }
 
 // The space bar windows, live-tunable with `th40 tune` (RAM only - a replug goes
@@ -271,6 +287,12 @@ static inline bool thumb_layer_on(void) {
 // otherwise, and tuning them should not cost a flash each time.
 static uint16_t thumb_flow_term  = FLOW_TAP_TERM_THUMB;
 static uint16_t thumb_arm_time   = THUMB_HOLD_ARM_TIME;
+static uint16_t thumb_chord_hold = THUMB_CHORD_HOLD;
+
+// The first non-thumb key pressed while a space bar is down, stamped in
+// pre_process_record_kb. A thumb press clears it.
+static uint16_t chord_key_time = 0;
+static bool     chord_key_seen = false;
 
 // THE SPACE BARS NEED A LONG TERM. This is not tuning, it is the fix for a board
 // that looked broken - measured 2026-08-17.
@@ -295,8 +317,27 @@ static uint16_t thumb_arm_time   = THUMB_HOLD_ARM_TIME;
 // 230ms costs no typing latency whatsoever. The tap fires on RELEASE, so a 90ms
 // space still lands at 90ms no matter what the term is; the term only decides how
 // long a still-held thumb waits before it becomes a layer.
+//
+// One exception, measured 2026-10-06 with `th40 keylog`. A key pressed INSIDE the
+// arm is either a roll or a quick chord, and the release tells them apart:
+//
+//                          next key after thumb   thumb lifts after next key
+//   typing roll (Space R)  27-70 ms               0-18 ms
+//   symbol chord (Space L) 71, 79 ms              250-365 ms
+//
+// So once such a key is down, the term becomes "that key's press +
+// THUMB_CHORD_HOLD": lift the thumb before then and it is space + letter (the
+// letter waits only as long as the overlap), keep it down and the layer takes the
+// key. Before this, those two chords waited out the full 230 ms; with the
+// tap-inside-the-arm rule that preceded it, they typed "space + letter".
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     if (is_thumb_layer_tap(keycode)) {
+        if (chord_key_seen) {
+            uint16_t d = TIMER_DIFF_16(chord_key_time, record->event.time);
+            if (d + thumb_chord_hold < THUMB_TAPPING_TERM) {
+                return d + thumb_chord_hold;
+            }
+        }
         return THUMB_TAPPING_TERM;
     }
     switch (keycode) {
@@ -676,14 +717,17 @@ bool via_command_kb(uint8_t *data, uint8_t length) {
             return true;
         }
         case CLAUDE_SUB_TUNE: {
-            // data[2]: 0 read, 1 flow window, 2 arm.
+            // data[2]: 0 read, 1 flow window, 2 arm, 3 chord hold.
             uint16_t v = data[3] | (data[4] << 8);
             if (data[2] == 1 && v <= 500) thumb_flow_term = v;
             if (data[2] == 2 && v <= THUMB_TAPPING_TERM) thumb_arm_time = v;
+            if (data[2] == 3 && v <= THUMB_TAPPING_TERM) thumb_chord_hold = v;
             data[2] = thumb_flow_term & 0xFF;
             data[3] = thumb_flow_term >> 8;
             data[4] = thumb_arm_time & 0xFF;
             data[5] = thumb_arm_time >> 8;
+            data[6] = thumb_chord_hold & 0xFF;
+            data[7] = thumb_chord_hold >> 8;
             raw_hid_send(data, length);
             return true;
         }
@@ -1092,6 +1136,15 @@ static bool dig_exit_swallow = false;
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (record->event.type == KEY_EVENT) {
         keylog_record(record);
+        if (record->event.pressed) {
+            keypos_t k = record->event.key;
+            if (k.row == 4 && (k.col == 4 || k.col == 6 || k.col == 7)) {
+                chord_key_seen = false; // a space bar: start over
+            } else if (!chord_key_seen && other_thumb_down(k)) {
+                chord_key_time = record->event.time;
+                chord_key_seen = true;
+            }
+        }
     }
     // Keydown timestamps for combo_should_trigger(). First, before any early
     // return, and before process_combo() sees this event.
