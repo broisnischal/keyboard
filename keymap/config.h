@@ -82,6 +82,9 @@
 // early. Inside this window the space is settled as a tap on the KEYDOWN, so it
 // is instant and the layer cannot engage by accident.
 //
+// All three thumbs. A space just typed doesn't count as flow, so "x = 1" can
+// reach "=".
+//
 // Short on purpose. 110ms covers a genuine
 // roll - space and the next letter overlapping - while still leaving the thumb
 // layers reachable mid-sentence, because deliberately reaching for one always has

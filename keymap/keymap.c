@@ -379,16 +379,19 @@ const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT_tkl_an
 //   - as the key being pressed, a thumb gets a SHORT window, not none at all. "None at all" was the original reading and it left the
 //     space bar landing on the finger lift for every word; the short window keeps
 //     the space instant without stranding the thumb layers;
-//   - as the PREVIOUS key, a layer-tap absolutely must count as typing -
-//     LT(_NUM,KC_SPC) is the space bar, so excluding it broke the flow chain after
-//     every single space, and the first letter of every word went back to
-//     resolving on release.
+//   - as the PREVIOUS key, the space bar had to count as typing while the home
+//     row mods existed: the first letter of every word was a tap-hold key then.
+//     With them gone it only feeds a thumb pressed right after a space, and there
+//     it does harm - see flow_prev_is_typing().
 //
 // get_flow_tap_term() takes precedence over is_flow_tap_key(), so this is the
 // only hook needed.
 
-// Does this key mean "I am mid-flow"? Judged on the tap keycode, so the space bar
-// counts even though it is really LT(_NUM,KC_SPC). Shifted keycodes are judged on
+// Does this key mean "I am mid-flow"? Judged on the tap keycode. A space is NOT:
+// the only tap-hold keys left are the thumbs, so this only decides whether a
+// thumb pressed right after a space is another space - and two spaces in a row
+// are rare, while "x = 1" is Space L tapped then held for "=". Counting the space
+// made that second press a forced space. Shifted keycodes are judged on
 // their base key: _NUM's top row is KC_EXLM..KC_RPRN (S(KC_1)..S(KC_0)), and "!"
 // followed by a space has to count as typing just like Shift+1 did.
 static bool flow_prev_is_typing(uint16_t keycode) {
@@ -400,7 +403,6 @@ static bool flow_prev_is_typing(uint16_t keycode) {
     switch (keycode) {
         case KC_A ... KC_Z:
         case KC_1 ... KC_0:
-        case KC_SPC:
         case KC_DOT:
         case KC_COMM:
         case KC_SCLN:
