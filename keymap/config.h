@@ -83,7 +83,7 @@
 // is instant and the layer cannot engage by accident.
 //
 // All three thumbs. A space just typed doesn't count as flow, so "x = 1" can
-// reach "=".
+// reach "=". Live-tunable without a flash: `th40 tune flow <ms>`.
 //
 // Short on purpose. 110ms covers a genuine
 // roll - space and the next letter overlapping - while still leaving the thumb
@@ -124,7 +124,8 @@
 //     still sits below the fastest realistic space-to-letter overlap.
 //
 // Raise it if a leading space after a thinking pause starts producing digits;
-// lower it if layer entry still feels like it needs a deliberate wait.
+// lower it if layer entry still feels like it needs a deliberate wait. Live:
+// `th40 tune arm <ms>`, and `th40 keylog` shows where my presses actually land.
 //
 // Only the second thumb of a both-spaces chord skips the window.
 #define HOLD_ON_OTHER_KEY_PRESS_PER_KEY

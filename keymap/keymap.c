@@ -266,6 +266,12 @@ static inline bool thumb_layer_on(void) {
     return layer_state_is(_NAV) || layer_state_is(_NUM) || layer_state_is(_MEDIA);
 }
 
+// The space bar windows, live-tunable with `th40 tune` (RAM only - a replug goes
+// back to the config.h values). They are guesses until the keylog says
+// otherwise, and tuning them should not cost a flash each time.
+static uint16_t thumb_flow_term  = FLOW_TAP_TERM_THUMB;
+static uint16_t thumb_arm_time   = THUMB_HOLD_ARM_TIME;
+
 // THE SPACE BARS NEED A LONG TERM. This is not tuning, it is the fix for a board
 // that looked broken - measured 2026-08-17.
 //
@@ -349,7 +355,10 @@ bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
     if (is_thumb_layer_tap(keycode) && thumb_layer_on()) {
         return true;
     }
-    if (is_thumb_layer_tap(keycode) || keycode == LT(_NAV, KC_TAB) || keycode == DIAMOND) {
+    if (is_thumb_layer_tap(keycode)) {
+        return timer_elapsed(record->event.time) >= thumb_arm_time;
+    }
+    if (keycode == LT(_NAV, KC_TAB) || keycode == DIAMOND) {
         return timer_elapsed(record->event.time) >= THUMB_HOLD_ARM_TIME;
     }
     return false; // nothing else is a tap-hold
@@ -440,7 +449,7 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t *record, uint16_t prev_
     // 110ms, short on purpose, so that "type a word, then hold the thumb for
     // symbols" still reaches _NUM - that reach always has a pause in front of it,
     // a roll never does.
-    return FLOW_TAP_TERM_THUMB;
+    return thumb_flow_term;
 }
 
 // ===========================================================================
@@ -507,6 +516,8 @@ uint8_t claude_rain_kick[MATRIX_COLS] = {0};    // ditto
 #define CLAUDE_SUB_CFG_GET    0xB4
 #define CLAUDE_SUB_CFG_SET    0xB5
 #define CLAUDE_SUB_UNLOCK     0xB6
+#define CLAUDE_SUB_KEYLOG     0xB7
+#define CLAUDE_SUB_TUNE       0xB8
 
 #define CLAUDE_LED_A 44 // shared with the Caps Lock indicator
 #define CLAUDE_LED_B 45
@@ -551,6 +562,40 @@ static bool bus_slot_live(const bus_slot_t *s) {
     if (s->pattern == PAT_OFF) return false;
     if (s->ttl_ms && timer_elapsed32(s->set_at) > s->ttl_ms) return false;
     return true;
+}
+
+// Space bar timing log, read by `th40 keylog`. pre_process_record_kb sees every
+// physical event once, before combos and tap-hold reorder anything, so these are
+// the real press and release times. Combos replay through action_tapping_process,
+// not action_exec, so nothing is logged twice.
+//
+// It records only while a reader has polled in the last 2 s, and only the three
+// space bars keep their identity - every other key is logged as KEYLOG_OTHER.
+// Tuning needs thumb timing, not text, and a firmware log any process with hidraw
+// access can read must not be able to rebuild what I typed.
+#define KEYLOG_SIZE 32
+#define KEYLOG_OTHER 0xFF
+typedef struct {
+    uint8_t  key;     // matrix column for a space bar (row 4), else KEYLOG_OTHER
+    uint8_t  pressed;
+    uint16_t time;
+} keylog_t;
+static keylog_t keylog[KEYLOG_SIZE];
+static uint8_t  keylog_head   = 0; // free-running sequence number of the next entry
+static bool     keylog_armed  = false;
+static uint32_t keylog_polled = 0;
+
+static void keylog_record(keyrecord_t *record) {
+    if (!keylog_armed || timer_elapsed32(keylog_polled) > 2000) {
+        keylog_armed = false;
+        return;
+    }
+    keypos_t k  = record->event.key;
+    keylog_t *e = &keylog[keylog_head % KEYLOG_SIZE];
+    e->key      = (k.row == 4 && (k.col == 4 || k.col == 6 || k.col == 7)) ? k.col : KEYLOG_OTHER;
+    e->pressed  = record->event.pressed;
+    e->time     = record->event.time;
+    keylog_head++;
 }
 
 #ifdef VIA_ENABLE
@@ -605,6 +650,43 @@ bool via_command_kb(uint8_t *data, uint8_t length) {
             secure_unlock();
             raw_hid_send(data, length);
             return true;
+        case CLAUDE_SUB_KEYLOG: {
+            // in: data[2] = first sequence number wanted. out: data[2] = head,
+            // data[3] = first sequence number sent, data[4] = count (<= 6), then
+            // 4-byte entries. Older than the ring holds is skipped, and the
+            // reader sees the gap in data[3].
+            keylog_armed  = true;
+            keylog_polled = timer_read32();
+            uint8_t from  = data[2];
+            if ((uint8_t)(keylog_head - from) > KEYLOG_SIZE) {
+                from = keylog_head - KEYLOG_SIZE;
+            }
+            uint8_t n = 0;
+            for (; n < 6 && (uint8_t)(from + n) != keylog_head; n++) {
+                keylog_t *e      = &keylog[(uint8_t)(from + n) % KEYLOG_SIZE];
+                data[5 + n * 4]  = e->key;
+                data[6 + n * 4]  = e->pressed;
+                data[7 + n * 4]  = e->time & 0xFF;
+                data[8 + n * 4]  = e->time >> 8;
+            }
+            data[2] = keylog_head;
+            data[3] = from;
+            data[4] = n;
+            raw_hid_send(data, length);
+            return true;
+        }
+        case CLAUDE_SUB_TUNE: {
+            // data[2]: 0 read, 1 flow window, 2 arm.
+            uint16_t v = data[3] | (data[4] << 8);
+            if (data[2] == 1 && v <= 500) thumb_flow_term = v;
+            if (data[2] == 2 && v <= THUMB_TAPPING_TERM) thumb_arm_time = v;
+            data[2] = thumb_flow_term & 0xFF;
+            data[3] = thumb_flow_term >> 8;
+            data[4] = thumb_arm_time & 0xFF;
+            data[5] = thumb_arm_time >> 8;
+            raw_hid_send(data, length);
+            return true;
+        }
         default:
             break;
     }
@@ -1008,6 +1090,9 @@ static bool tab_mod_bypass = false;
 static bool dig_exit_swallow = false;
 
 bool pre_process_record_kb(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.type == KEY_EVENT) {
+        keylog_record(record);
+    }
     // Keydown timestamps for combo_should_trigger(). First, before any early
     // return, and before process_combo() sees this event.
     if (record->event.type == KEY_EVENT && record->event.pressed) {
