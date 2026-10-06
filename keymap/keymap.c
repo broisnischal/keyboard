@@ -260,6 +260,12 @@ static inline bool is_thumb_layer_tap(uint16_t keycode) {
     }
 }
 
+// A thumb layer already on means the thumb going down now is the second half of
+// a both-spaces System chord, not a space in a sentence.
+static inline bool thumb_layer_on(void) {
+    return layer_state_is(_NAV) || layer_state_is(_NUM) || layer_state_is(_MEDIA);
+}
+
 // THE SPACE BARS NEED A LONG TERM. This is not tuning, it is the fix for a board
 // that looked broken - measured 2026-08-17.
 //
@@ -337,6 +343,12 @@ bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
     // The diamond gets the same arm: tapping it to focus Claude Code and rolling
     // straight into the first letter of a prompt must not turn that letter into
     // a tmux command.
+    //
+    // The second thumb of a both-spaces chord skips the arm: a layer is already
+    // on, so it is not a space in a sentence.
+    if (is_thumb_layer_tap(keycode) && thumb_layer_on()) {
+        return true;
+    }
     if (is_thumb_layer_tap(keycode) || keycode == LT(_NAV, KC_TAB) || keycode == DIAMOND) {
         return timer_elapsed(record->event.time) >= THUMB_HOLD_ARM_TIME;
     }
@@ -407,6 +419,9 @@ uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t *record, uint16_t prev_
     // pre_process_record_kb and Tab-as-Nav is deliberate.
     if (!is_thumb_layer_tap(keycode)) {
         return 0;
+    }
+    if (thumb_layer_on()) {
+        return 0; // a chord's second thumb: never forced to a space
     }
     if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
         return 0; // mid-hotkey, leave the hold alone
@@ -1180,6 +1195,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // QK_GESC can't do that job on base: it only sends ` when Shift or Gui is
     // down, so a plain backtick never comes out of it and Gui+Esc is Super+`.
     //
+    // The Space R cell is transparent, not KC_SPC: with KC_SPC there, Space L then
+    // Space R typed a space instead of reaching System, so the both-spaces chord
+    // only worked right-thumb-first. Transparent, it is LT(_NAV,KC_SPC): a tap is
+    // still a space, a chord is System.
+    //
     // This layer must stay BELOW _MEDIA. The both-spaces chord turns _MEDIA on
     // while _NUM is still held, and layer_switch_get_layer() answers from the
     // highest index down - _NUM above 4 would mask System on that chord.
@@ -1187,7 +1207,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_GRV    , KC_EXLM   , KC_AT     , KC_HASH   , KC_DLR    , KC_PERC   , KC_CIRC   , KC_AMPR   , KC_ASTR   , KC_LPRN   , KC_RPRN   , KC_BSPC,
         _______   , KC_MINS   , KC_EQL    , KC_SCLN   , KC_QUOT   , KC_GRV    , KC_LBRC   , KC_RBRC   , KC_SLSH   , S(KC_SLSH), KC_ENT,
         TD_SFT    , _______   , _______   , _______   , _______   , _______   , _______   , _______   , KC_BSLS   , KC_COMM   , KC_DOT    , QK_LLCK,
-        _______   , _______   , _______   , _______   , _______   , KC_SPC    , _______   , _______   , _______
+        _______   , _______   , _______   , _______   , _______   , _______   , _______   , _______   , _______
     ),
     // Media + system. Settings on the top row persist to EEPROM; the home row
     // holds lock / one-handed / Caps Word next to the transport keys, and the

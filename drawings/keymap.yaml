@@ -265,7 +265,8 @@ layers:
     type: held
   - t: ▽
     type: trans
-  - Space
+  - t: ▽
+    type: trans
   - t: ▽
     type: trans
   - t: ▽

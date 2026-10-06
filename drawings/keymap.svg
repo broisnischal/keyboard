@@ -971,9 +971,9 @@ rect.held + text.anchor, .held text.anchor { stroke: #fdd; }
 <rect rx="6" ry="6" x="-29" y="-29" width="58" height="58" class="key trans"/>
 <text x="0" y="0" class="key trans tap">▽</text>
 </g>
-<g transform="translate(520, 224)" class="key keypos-40">
-<rect rx="6" ry="6" x="-85" y="-29" width="170" height="58" class="key"/>
-<text x="0" y="0" class="key tap">Space</text>
+<g transform="translate(520, 224)" class="key trans keypos-40">
+<rect rx="6" ry="6" x="-85" y="-29" width="170" height="58" class="key trans"/>
+<text x="0" y="0" class="key trans tap">▽</text>
 </g>
 <g transform="translate(648, 224)" class="key trans keypos-41">
 <rect rx="6" ry="6" x="-37" y="-29" width="74" height="58" class="key trans"/>

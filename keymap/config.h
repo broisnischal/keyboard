@@ -122,6 +122,8 @@
 //
 // Raise it if a leading space after a thinking pause starts producing digits;
 // lower it if layer entry still feels like it needs a deliberate wait.
+//
+// Only the second thumb of a both-spaces chord skips the window.
 #define HOLD_ON_OTHER_KEY_PRESS_PER_KEY
 #define THUMB_HOLD_ARM_TIME 80
 
