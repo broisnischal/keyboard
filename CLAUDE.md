@@ -192,6 +192,21 @@ EOF
   below it ever has to move. Spare 6 became `_DIG` (digits plus `_NUM`'s symbols, `OSL(_DIG)` left of Z) on 2026-10-05,
   when `_NUM`'s top row turned into `! @ # $ % ^ & * ( )`. `_NUM` kept its name and its index: Space L's
   layer must sit below `_MEDIA` or the both-spaces chord resolves to `_NUM` instead of System.
+- **I type spaces with BOTH thumbs, the right one a lot. No space bar may be an instant layer
+  key.** I first answered "left thumb"; `Space R` made instant on that answer sent fast typing to
+  Nav (Home, arrows), and `th40 keylog` showed `Space R` typing spaces. Symbols stay on `Space L`:
+  moving them to `Space R` was tried and reverted on request, 2026-10-06. Don't re-propose either.
+  Both windows are live: `th40 tune flow|arm <ms>` (RAM only), and `th40 keylog` shows the real
+  press timings to tune from. Measure with it before changing `FLOW_TAP_TERM_THUMB` or
+  `THUMB_HOLD_ARM_TIME` in `config.h`.
+- **Inside the arm, the thumb's RELEASE decides, not the next key's press.** Measured with
+  `th40 keylog` 2026-10-06: typing rolls lift the thumb 0-18 ms after the next key, symbol chords
+  hold it 250+ ms, but the next key's press time overlaps (rolls 27-70 ms, chords 71-93 ms).
+  `get_tapping_term()` shortens a pending thumb's term to `next key + THUMB_CHORD_HOLD` (50 ms).
+  Settling the thumb as a tap on that keypress (a `get_chordal_hold()` override) was tried the
+  same day and typed "space, letter" for real chords. Don't bring it back. Flow Tap's window runs
+  from the previous key's *release* (`action_tapping.c:1005`), and a space no longer counts as
+  flow for the next thumb.
 - **Tap-Super / hold-Super+Alt is impossible on this board, so don't re-attempt it.**
   `MT(MOD_LGUI|MOD_LALT, KC_LGUI)` resolves as *hold* as soon as another key joins it -
   permissive hold was on for mod-taps then - so `Super`+`W` emits `Gui`+`Alt`+`W` and

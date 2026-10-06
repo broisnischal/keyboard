@@ -547,6 +547,57 @@ lower it if layer entry still feels like it needs a deliberate wait. The 230 ms 
 standalone path - a thumb held with nothing else pressed - and Retro Tapping still returns the space
 on release.
 
+### No waiting inside the arm, and the windows became live (2026-10-06)
+
+Reported as "the symbol layer still gives me spaces" and "typing is laggy". A layer swap (symbols
+to `Space R`) was tried the same day and reverted on request; symbols stay on the spacing thumb.
+
+**Inside the arm: the release decides, measured.** A key pressed under 80 ms after the thumb
+used to sit in the waiting buffer until the thumb lifted or reached 230 ms. The first attempt at
+fixing that (same day) overrode `get_chordal_hold()` to settle the thumb as a **tap** on that
+keypress. `th40 keylog` then showed that was wrong for chords:
+
+| | next key after thumb | thumb held | thumb lifts after next key |
+|---|---|---|---|
+| typing spaces (`Space R`, 40) | 27-70 ms, or none | 38-99 ms | 0-18 ms |
+| symbol attempts (`Space L`, 4) | 71, 79, 93, 402 ms | 346-800 ms | 250-365 ms |
+
+Two deliberate chords landed inside the arm, so the override typed "space, letter". The press
+time can't separate a roll from a chord; how long the thumb stays down after it can, by an order
+of magnitude. `get_tapping_term()` now returns `that key's press + THUMB_CHORD_HOLD` (50 ms)
+for a pending thumb once a non-thumb key is down (`chord_key_time`, stamped in
+`pre_process_record_kb` while a space bar is held). The tick event past that term settles the thumb
+as a hold (`action_tapping.c:546`) and the buffered key replays on the layer; a thumb lifted first
+is space + letter, and the letter waited only as long as the overlap. The override is gone. The
+same capture also contradicts "a thumb rests on space for 130-250 ms": my typing spaces are
+38-99 ms. The 230 ms term is still right, just not for that reason.
+
+**Flow Tap counts releases, and counted the space.** `flow_tap_update_last_event()`
+(`action_tapping.c:1005`) stamps the window on the previous key's release as well as its press,
+so the 110 ms runs from when the last finger *lifted*. And `flow_prev_is_typing()` counted
+`KC_SPC`, so `x =` (tap `Space L`, then hold it for `=`) forced a second space. `KC_SPC` is out:
+with the home row mods gone, the previous-key role only feeds a thumb pressed after a space.
+
+**No space bar is instant.** `Space R` was made one (`THUMB_INSTANT`: no Flow Tap,
+hold-on-other-key-press from 0 ms) on the answer "I space with my left thumb". The first keylog
+run showed `Space R` typing spaces, and fast typing went to Nav (Home, arrows) on every roll.
+Removed the same day. I type spaces with **both** thumbs, so every thumb keeps Flow Tap and the arm.
+
+**Both spaces, either order.** `_NUM` had `KC_SPC` on the `Space R` cell, so `Space L` first
+typed a space instead of reaching System. Transparent now (`LT(_NAV,KC_SPC)`), and
+`thumb_layer_on()` makes the second thumb skip Flow Tap and the arm.
+
+**Measuring instead of guessing.** `th40 keylog` streams a ring of physical press/release times
+(`CLAUDE_SUB_KEYLOG`, logged in `pre_process_record_kb`, so before combos and tap-hold reorder
+anything) and models each space bar press against the current windows. It records only while a
+reader polled in the last 2 s, and only the three space bars keep their identity; every other key
+is `0xFF`, so the log can't rebuild text. `th40 keylog`'s verdicts model the firmware rules on
+the host; they are not read from the firmware. Each request carries a nonce in byte 31, which the
+firmware echoes untouched; replies without it are the previous request's and are dropped (without
+that the first run read nothing but "255 events lost"). `th40 tune flow|arm|overlap <ms>` sets the space bars' windows in
+RAM (`CLAUDE_SUB_TUNE`); a replug restores `config.h`. Once the log settles the numbers, bake
+them into `config.h`.
+
 ### Typing latency: what was already optimal
 
 Worth recording so it isn't "optimised" again pointlessly:

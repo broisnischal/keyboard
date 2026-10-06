@@ -83,6 +83,27 @@ wait came out late in a burst.
 The 80 ms is what keeps a fast space from becoming a layer chord. Roll straight from a letter into
 the space bar and the space wins; pause, then hold, and the layer wins.
 
+Four more, 2026-10-06, after "symbols still give me spaces" and "typing is laggy":
+
+- **A key inside the 80 ms no longer waits out 230 ms.** It used to sit in a queue until the
+  thumb lifted or 230 ms passed. Now the thumb gets 50 ms after that key goes down: lift it in
+  that time and it's space + letter, keep holding and it's the layer. Measured with `th40 keylog`:
+  in a typing roll my thumb comes up 0-18 ms after the next key, and in a symbol chord it stays
+  down 250 ms or more. Two of my symbol attempts landed at 71 and 79 ms, inside the 80 ms, and
+  used to come out as "space, letter".
+- **`x = 1` reaches the `=`.** A space just typed no longer counts as typing for the next thumb
+  press, so tapping `Space L` and then holding it again for `=` isn't forced into a second space.
+- **Both spaces reach System in either order.** `Space L` first used to type a space when
+  `Space R` joined, because the Symbols layer had a plain space on that key.
+- **Tuning without a flash.** `th40 keylog` prints every space bar press: time since the previous
+  key, how long it was held, when the next key came, and what that resolves to. `th40 tune flow
+  <ms>`, `th40 tune arm <ms>` and `th40 tune overlap <ms>` change the space bars' windows live,
+  until the next replug.
+
+`Space R` was briefly made instant the same day, on the guess that I only type spaces with the
+left thumb. I type plenty with the right one, so fast typing landed on Nav (Home, arrows). Both
+space bars now follow the same rules.
+
 **Digits are on the key next to left Shift** (left of `Z`), and symbols are on `Space L`. Holding
 `Shift` on top of a thumb to get `!` or `(` was the hard part, so the two swapped places:
 
